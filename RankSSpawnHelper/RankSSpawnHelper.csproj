@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0-windows</TargetFramework>
+		<LangVersion>10</LangVersion>
+		<Version>1.1.0.0</Version>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<PlatformTarget>x64</PlatformTarget>
+		<Authors>Nuko</Authors>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="$(OutputPath)WastonWebsocket.dll" Pack="true" PackagePath="lib\$(TargetFramework)"></None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DalamudPackager" Version="2.1.6" />
+		<PackageReference Include="WatsonWebsocket" Version="2.3.4">
+		  <PrivateAssets>All</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="Dalamud">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="ImGui.NET">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="ImGuiScene">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\ImGuiScene.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Lumina">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Lumina.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Lumina.Excel">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Lumina.Excel.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Newtonsoft.Json.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="FFXIVClientStructs">
+			<HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+</Project>
