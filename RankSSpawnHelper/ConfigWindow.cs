@@ -128,7 +128,7 @@ public class ConfigWindow : Window
                 {
                     Service.Configuration._trackerShowCurrentInstance = showCurrentInstance;
                     Service.Counter.Overlay.IsOpen =
-                        Service.Counter.GetTracker().ContainsKey(Service.Counter.GetKey());
+                        Service.Counter.GetTracker().ContainsKey(Service.Counter.GetCurrentInstance());
                     Service.Configuration.Save();
                 }
 
@@ -151,6 +151,8 @@ public class ConfigWindow : Window
                 ImGui.InputTextWithHint("服务器链接", "比如ws://127.0.0.1:8000", ref _serverUrl, 256);
 
                 if (ImGui.Button("连接")) Service.Counter.Socket.Connect(_serverUrl);
+                ImGui.SameLine();
+                if (ImGui.Button("连接到临时服务器")) Service.Counter.Socket.Connect("ws://47.106.224.112:8000");
                 ImGui.SameLine();
                 if (ImGui.Button("断开连接")) Service.Counter.Socket.Disconnect();
 
@@ -189,7 +191,7 @@ public class ConfigWindow : Window
                 if (ImGui.Checkbox("小异亚计数", ref weeEaCounter))
                 {
                     Service.Configuration._weeEaCounter = weeEaCounter;
-                    Service.WeeEa._overlay.IsOpen = weeEaCounter && Service.ClientState.TerritoryType == 960;
+                    Service.WeeEa.overlay.IsOpen = weeEaCounter && Service.ClientState.TerritoryType == 960;
                     Service.Configuration.Save();
                 }
 

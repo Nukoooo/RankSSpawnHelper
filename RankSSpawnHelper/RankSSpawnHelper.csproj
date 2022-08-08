@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
 		<LangVersion>10</LangVersion>
-		<Version>1.1.1.0</Version>
+		<Version>1.1.2.0</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -24,7 +24,7 @@
 	<ItemGroup>
 		<PackageReference Include="DalamudPackager" Version="2.1.6" />
 		<PackageReference Include="WatsonWebsocket" Version="2.3.4">
-		  <PrivateAssets>All</PrivateAssets>
+			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 	</ItemGroup>
 

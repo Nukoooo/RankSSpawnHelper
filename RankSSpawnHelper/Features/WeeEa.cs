@@ -7,11 +7,11 @@ namespace RankSSpawnHelper.Features;
 
 public class WeeEa
 {
-    public Overlay _overlay;
+    public Overlay overlay;
 
     public WeeEa()
     {
-        _overlay = new Overlay();
+        overlay = new Overlay();
     }
 
     public class Overlay : Window

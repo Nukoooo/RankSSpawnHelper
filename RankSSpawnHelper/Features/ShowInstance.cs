@@ -18,6 +18,7 @@ public class ShowInstance : IDisposable
     {
         _dtrBarEntry.Dispose();
         Service.Framework.Update -= OnFrameworkUpdate;
+        GC.SuppressFinalize(this);
     }
 
     private void OnFrameworkUpdate(Framework framework)
@@ -32,7 +33,7 @@ public class ShowInstance : IDisposable
 
             _dtrBarEntry.Shown = true;
 
-            var key = Service.Counter.GetKey();
+            var key = Service.Counter.GetCurrentInstance();
             var split = key.Split('@');
             var instance = split[2].Replace("线", "");
 

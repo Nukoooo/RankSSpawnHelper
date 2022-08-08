@@ -27,7 +27,7 @@ public class Plugin : IDalamudPlugin
         _windowSystem = new WindowSystem("RankSSpawnHelper");
         _windowSystem.AddWindow(Service.ConfigWindow);
         _windowSystem.AddWindow(Service.Counter.Overlay);
-        _windowSystem.AddWindow(Service.WeeEa._overlay);
+        _windowSystem.AddWindow(Service.WeeEa.overlay);
         _windowSystem.AddWindow(Service.FateRecorder._overlay);
 
         Service.Interface.UiBuilder.BuildFonts += Fonts.OnBuildFonts;
