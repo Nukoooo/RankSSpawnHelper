@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,21 +22,45 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WatsonWebsocket;
 
+// ReSharper disable InconsistentNaming
+
 namespace RankSSpawnHelper.Features;
 
-public class Message
+internal class Message
 {
-    public long time;
+    public long time { get; set; }
     public string type { get; set; }
     public string instance { get; set; }
+    public string user { get; set; }
     public Dictionary<string, int> data { get; set; }
+}
+
+internal class NewConnectionMessage
+{
+    public string currentInstance;
+    public List<Tracker> trackers;
+    public string type;
+    public string user;
+
+    internal class Tracker
+    {
+        public Dictionary<string, int> data;
+        public string instance;
+        public long time;
+    }
 }
 
 public class SocketManager : IDisposable
 {
-    /*private readonly CancellationToken _cancellationToken = new();
-    private readonly CancellationTokenSource _eventLoopTokenSource = new();*/
     private WatsonWsClient ws;
+
+    public SocketManager()
+    {
+        ws = new WatsonWsClient(new Uri("ws://localhost:8000"));
+
+        ws.ServerConnected += Ws_ServerConnected;
+        ws.MessageReceived += Ws_MessageReceived;
+    }
 
     public void Dispose()
     {
@@ -48,12 +74,35 @@ public class SocketManager : IDisposable
 
     private void Ws_ServerConnected(object sender, EventArgs e)
     {
-        PluginLog.Debug("Connected to the server");
+        var key = Service.Counter.GetKey();
+        var tracker = Service.Counter.GetTracker();
+
+        var list = tracker.Select(t => new NewConnectionMessage.Tracker { data = t.Value.counter, time = t.Value.startTime, instance = t.Key }).ToList();
+
+        var msg = new NewConnectionMessage
+        {
+            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
+            currentInstance = key,
+            type = "newConnection",
+            trackers = list
+        };
+
+        var j = JsonConvert.SerializeObject(msg, Formatting.Indented);
+
+        // PluginLog.Debug($"{j}");
+
+        SendMessage(j);
     }
 
     private void Ws_MessageReceived(object sender, MessageReceivedEventArgs e)
     {
         var msg = Encoding.UTF8.GetString(e.Data);
+
+        if (msg.StartsWith("Error: "))
+        {
+            Service.ChatGui.PrintError(msg);
+            return;
+        }
 
         var json = JObject.Parse(msg);
 
@@ -74,13 +123,9 @@ public class SocketManager : IDisposable
 
     public void Disconnect()
     {
-        if (Connected())
-            Task.Run(async () =>
-            {
-                await ws?.StopAsync(WebSocketCloseStatus.NormalClosure, "Connect to other host");
-                ws.MessageReceived -= Ws_MessageReceived;
-                ws.ServerConnected -= Ws_ServerConnected;
-            });
+        if (!Connected()) return;
+
+        Task.Run(async () => { await ws?.StopAsync(WebSocketCloseStatus.NormalClosure, "Connect to other host"); });
     }
 
     public void Connect(string url)
@@ -102,17 +147,11 @@ public class SocketManager : IDisposable
             if (Connected())
                 PluginLog.Debug("Connected to websocket server");
         });
-
-        // PluginLog.Debug("Connected");
     }
 
     public void SendMessage(string msg)
     {
-        if (ws == null)
-        {
-            PluginLog.Error("ws is null");
-            return;
-        }
+        if (ws == null) return;
 
         if (ws.SendAsync(msg).Result) PluginLog.Debug("Successfully sent the message to server. msg: " + msg);
     }
@@ -125,6 +164,13 @@ public class SocketManager : IDisposable
 
 public class Counter : IDisposable
 {
+    public class Tracker
+    {
+        public Dictionary<string, int> counter;
+        public long lastUpdateTime;
+        public long startTime;
+    }
+
     private readonly Hook<ActorControlSelfDelegate> _actorControlSelfHook;
 
     private readonly Dictionary<ushort, string> _conditionName = new()
@@ -146,16 +192,16 @@ public class Counter : IDisposable
     private readonly ExcelSheet<TerritoryType> _terr;
 
     // currentworld+territory+instance, std::pair<time, std::unordered_map<monsterName, count>>
-    private readonly Dictionary<string, Tuple<DateTimeOffset, Dictionary<string, int>>> _tracker = new();
+    private readonly Dictionary<string, Tracker> _tracker = new();
 
-    public CounterOverlay _overlay;
+    public CounterOverlay Overlay;
 
     public SocketManager Socket;
 
     public Counter()
     {
         _terr = Service.DataManager.GetExcelSheet<TerritoryType>();
-        _overlay = new CounterOverlay();
+        Overlay = new CounterOverlay();
         Socket = new SocketManager();
 
         _instanceNumberAddress =
@@ -214,10 +260,10 @@ public class Counter : IDisposable
         if (!Service.Configuration._trackKillCount || !Service.Configuration._trackerShowCurrentInstance) return;
 
         Socket.SendMessage(FormatJsonString("changeArea"));
-        _overlay.IsOpen = _tracker.TryGetValue(GetKey(), out _);
+        Overlay.IsOpen = _tracker.TryGetValue(GetKey(), out _);
     }
 
-    public Dictionary<string, Tuple<DateTimeOffset, Dictionary<string, int>>> GetTracker()
+    public Dictionary<string, Tracker> GetTracker()
     {
         return _tracker;
     }
@@ -227,20 +273,20 @@ public class Counter : IDisposable
         if (!_tracker.TryGetValue(instance, out var result))
             return;
 
-        if (!result.Item2.ContainsKey(key))
+        if (!result.counter.ContainsKey(key))
         {
-            result.Item2.Add(key, value);
+            result.counter.Add(key, value);
             return;
         }
 
-        result.Item2[key] = value;
+        result.counter[key] = value;
         PluginLog.Debug($"[SetValue] instance: {instance}, key: {key}, value: {value}");
     }
 
     public void ClearTracker()
     {
         _tracker.Clear();
-        Service.Counter._overlay.IsOpen = false;
+        Service.Counter.Overlay.IsOpen = false;
     }
 
     public string GetKey()
@@ -315,15 +361,22 @@ public class Counter : IDisposable
 
     private void AddToTracker(string key, string targetName)
     {
+        PluginLog.Information($"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()} | {DateTimeOffset.Now.ToUnixTimeSeconds()}");
+
         if (!_tracker.ContainsKey(key))
         {
-            _tracker.Add(key, new Tuple<DateTimeOffset, Dictionary<string, int>>(DateTimeOffset.Now, new Dictionary<string, int>
+            _tracker.Add(key, new Tracker
                 {
-                    { targetName, 1 }
-                })
+                    counter = new Dictionary<string, int>
+                    {
+                        { targetName, 1 }
+                    },
+                    lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    startTime = DateTimeOffset.Now.ToUnixTimeSeconds()
+                }
             );
             PluginLog.Debug($"Added key \"{key}\" with value {{{targetName}, 1}}");
-            _overlay.IsOpen = Service.Configuration._trackKillCount;
+            Overlay.IsOpen = Service.Configuration._trackKillCount;
             Socket.SendMessage(FormatJsonString("addData", key, targetName));
             return;
         }
@@ -334,18 +387,20 @@ public class Counter : IDisposable
             return;
         }
 
-        if (!value.Item2.ContainsKey(targetName))
+        if (!value.counter.ContainsKey(targetName))
         {
-            value.Item2.Add(targetName, 1);
+            value.counter.Add(targetName, 1);
+            value.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
             PluginLog.Debug($"Added value [{targetName}, 1] to key \"{key}\"");
-            _overlay.IsOpen = Service.Configuration._trackKillCount;
+            Overlay.IsOpen = Service.Configuration._trackKillCount;
             Socket.SendMessage(FormatJsonString("addData", key, targetName));
             return;
         }
 
-        value.Item2[targetName]++;
+        value.counter[targetName]++;
+        value.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
         PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
-        _overlay.IsOpen = Service.Configuration._trackKillCount;
+        Overlay.IsOpen = Service.Configuration._trackKillCount;
 
         Socket.SendMessage(FormatJsonString("addData", key, targetName));
     }
@@ -362,21 +417,14 @@ public class Counter : IDisposable
         var msg = new Message
         {
             type = typeStr,
-            instance = instance
+            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString
         };
 
         if (typeStr != "changeArea")
         {
-            if (!GetTracker().TryGetValue(currentInstance, out var currentTracker))
-            {
-                msg.time = DateTimeOffset.Now.ToUnixTimeSeconds();
-                msg.data = new Dictionary<string, int> { { condition, value } };
-            }
-            else
-            {
-                msg.time = currentTracker.Item1.ToUnixTimeSeconds();
-                msg.data = typeStr == "newConnection" ? currentTracker.Item2 : new Dictionary<string, int> { { condition, value } };
-            }
+            msg.instance = instance;
+            msg.time = !GetTracker().TryGetValue(currentInstance, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime;
+            msg.data = new Dictionary<string, int> { { condition, value } };
         }
 
         var json = JsonConvert.SerializeObject(msg, Formatting.Indented);
@@ -423,9 +471,9 @@ public class Counter : IDisposable
                     var splitInLoop = k.Split('@');
 
                     ImGui.Text($"{splitInLoop[0]} - {splitInLoop[1]}" + (splitInLoop[2] == "0" ? string.Empty : $" - {splitInLoop[2]}线"));
-                    var timeInLoop = v.Item1.LocalDateTime;
+                    var timeInLoop = DateTimeOffset.FromUnixTimeSeconds(v.startTime).LocalDateTime;
                     ImGui.Text($"\t开始时间: {timeInLoop.Month}-{timeInLoop.Day}@{timeInLoop.ToShortTimeString()}");
-                    foreach (var (subK, subV) in v.Item2) ImGui.Text($"\t{subK} - {subV}");
+                    foreach (var (subK, subV) in v.counter) ImGui.Text($"\t{subK} - {subV}");
                 }
 
 
@@ -454,10 +502,10 @@ public class Counter : IDisposable
             }
 
             ImGui.Text($"{split[0]} - {split[1]}" + (split[2] == "0" ? string.Empty : $" - {split[2]}线"));
-            var time = value.Item1.LocalDateTime;
+            var time = DateTimeOffset.FromUnixTimeSeconds(value.startTime).LocalDateTime;
             ImGui.Text($"\t开始时间: {time.Month}-{time.Day}@{time.ToShortTimeString()}");
 
-            foreach (var (subKey, subValue) in value.Item2) ImGui.Text($"\t{subKey} - {subValue}");
+            foreach (var (subKey, subValue) in value.counter) ImGui.Text($"\t{subKey} - {subValue}");
 
             if (!Fonts.AreFontsBuilt()) return;
 

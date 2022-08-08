@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
@@ -59,7 +60,7 @@ public class ConfigWindow : Window
                     ImGui.Text(displayText);
 
                     ImGui.TableNextColumn();
-                    var time = mainValue.Item1.LocalDateTime;
+                    var time = DateTimeOffset.FromUnixTimeSeconds(mainValue.startTime).LocalDateTime;
                     displayText = $"{time.Month}-{time.Day} / {time.ToShortTimeString()}";
                     ImGui.SetNextItemWidth(ImGui.CalcTextSize(displayText).X);
                     ImGui.Text(displayText);
@@ -67,7 +68,7 @@ public class ConfigWindow : Window
                     ImGui.TableNextColumn();
                     var i = 0;
 
-                    foreach (var (subKey, subValue) in mainValue.Item2)
+                    foreach (var (subKey, subValue) in mainValue.counter)
                     {
                         ImGui.Text($"{subKey}: {subValue}");
                         ImGui.TableNextColumn();
@@ -105,7 +106,7 @@ public class ConfigWindow : Window
                 if (ImGui.Checkbox("启用", ref trackKillCount))
                 {
                     Service.Configuration._trackKillCount = trackKillCount;
-                    Service.Counter._overlay.IsOpen = trackKillCount;
+                    Service.Counter.Overlay.IsOpen = trackKillCount;
                     Service.Configuration.Save();
                 }
 
@@ -126,7 +127,7 @@ public class ConfigWindow : Window
                 if (ImGui.Checkbox("只显示当前区域", ref showCurrentInstance))
                 {
                     Service.Configuration._trackerShowCurrentInstance = showCurrentInstance;
-                    Service.Counter._overlay.IsOpen =
+                    Service.Counter.Overlay.IsOpen =
                         Service.Counter.GetTracker().ContainsKey(Service.Counter.GetKey());
                     Service.Configuration.Save();
                 }
