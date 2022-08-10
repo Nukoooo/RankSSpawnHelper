@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text;
@@ -18,8 +14,7 @@ using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using WatsonWebsocket;
+using RankSSpawnHelper.Misc;
 
 // ReSharper disable InconsistentNaming
 
@@ -32,6 +27,7 @@ internal class Message
     public string instance { get; set; }
     public string user { get; set; }
     public Dictionary<string, int> data { get; set; }
+    public bool failed { get; set; }
 }
 
 internal class NewConnectionMessage
@@ -46,174 +42,6 @@ internal class NewConnectionMessage
         public Dictionary<string, int> data;
         public string instance;
         public long time;
-    }
-}
-
-public class SocketManager : IDisposable
-{
-    private bool _oldRangeModeState;
-    private WatsonWsClient ws;
-
-    public SocketManager()
-    {
-        ws = new WatsonWsClient(new Uri("ws://localhost:8000"));
-
-        ws.ServerConnected += Ws_ServerConnected;
-        ws.MessageReceived += Ws_MessageReceived;
-    }
-
-    public void Dispose()
-    {
-        if (ws == null)
-            return;
-
-        Service.Configuration._trackRangeMode = _oldRangeModeState;
-
-        ws.MessageReceived -= Ws_MessageReceived;
-        ws.ServerConnected -= Ws_ServerConnected;
-        ws.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    private void Ws_ServerConnected(object sender, EventArgs e)
-    {
-        var key = Service.Counter.GetCurrentInstance();
-        var tracker = Service.Counter.GetTracker();
-
-        _oldRangeModeState = Service.Configuration._trackRangeMode;
-        Service.Configuration._trackRangeMode = false;
-
-        Service.ChatGui.PrintChat(new XivChatEntry
-        {
-            Message = "成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以在鸟区/猫区散触群@winter\n或者到Github上开Issue: https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new",
-            Name = "NukoOoOoOoO",
-            Type = XivChatType.TellIncoming
-        });
-
-        // 如果计数器是空的，或者localplayer无效那就没有发送的必要
-        if (tracker.Count == 0 || !Service.ClientState.LocalPlayer)
-            return;
-
-        var list = tracker.Select(t => new NewConnectionMessage.Tracker { data = t.Value.counter, time = t.Value.startTime, instance = t.Key }).ToList();
-
-        var msg = new NewConnectionMessage
-        {
-            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
-            currentInstance = key,
-            type = "newConnection",
-            trackers = list
-        };
-
-        var j = JsonConvert.SerializeObject(msg, Formatting.None);
-        SendMessage(j);
-    }
-
-    private void Ws_MessageReceived(object sender, MessageReceivedEventArgs e)
-    {
-        var msg = Encoding.UTF8.GetString(e.Data);
-        PluginLog.Debug($"Receive message: {msg}");
-
-        if (msg.StartsWith("Error: "))
-        {
-            Service.ChatGui.PrintError(msg);
-            return;
-        }
-
-        var json = JObject.Parse(msg);
-
-        try
-        {
-            var type = json["type"].ToObject<string>();
-
-            switch (type)
-            {
-                case "counter":
-                {
-                    var instance = json["instance"].ToObject<string>();
-                    var data = json["data"].ToObject<Dictionary<string, int>>();
-                    var time = json["startTime"].ToObject<long>();
-
-                    foreach (var (key, value) in data) Service.Counter.SetValue(instance, key, value, time);
-                    break;
-                }
-                case "ggnore":
-                {
-                    var instance = json["instance"].ToObject<string>();
-                    var time = json["time"].ToObject<long>();
-                    var counter = json["counter"].ToObject<Dictionary<string, int>>();
-                    // var userCounter = json["userCounter"].ToObject<Dictionary<string, int>>();
-                    var total = json["total"].ToObject<int>();
-                    var leader = json["leader"].ToObject<string>();
-
-                    var localTime = DateTimeOffset.FromUnixTimeSeconds(time).LocalDateTime;
-
-                    var chatMessage = $"不好啦！ {instance} 寄啦！\n";
-                    chatMessage += $"寄时: {localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n";
-                    chatMessage += $"计数总数: {total}\n";
-                    chatMessage += "计数详情:\n";
-                    foreach (var (k, v) in counter)
-                        chatMessage += $"  {k}: {v}\n";
-                    chatMessage += "\n"; /*
-                    foreach (var (k, v) in userCounter)
-                        chatMessage += $"  {k}: {v}\n";*/
-                    chatMessage += $"喊寄的人: {leader}";
-
-                    Service.Counter.SetLastCounterMessage(chatMessage);
-                    Service.Counter.ClearKey(instance);
-                    Service.ChatGui.PrintError(chatMessage + "\nPS: 本消息已复制到粘贴板，如果需要再次提示清输入/glcm\nPSS:本区域的计数已清除");
-                    ImGui.SetClipboardText(chatMessage);
-                    break;
-                }
-            }
-        }
-        catch (Exception exception)
-        {
-            PluginLog.Error(exception.ToString());
-        }
-    }
-
-    public void Disconnect()
-    {
-        if (!Connected()) return;
-
-        Task.Run(async () =>
-        {
-            await ws?.StopAsync(WebSocketCloseStatus.NormalClosure, "Connect to other host");
-            Service.Configuration._trackRangeMode = _oldRangeModeState;
-        });
-    }
-
-    public void Connect(string url)
-    {
-        Disconnect();
-
-        Task.Run(async () =>
-        {
-            ws = new WatsonWsClient(new Uri(url))
-            {
-                KeepAliveInterval = 30
-            };
-
-            await ws.StartAsync();
-            ws.ServerConnected += Ws_ServerConnected;
-            ws.MessageReceived += Ws_MessageReceived;
-
-            await Task.Delay(2000);
-            if (Connected())
-                PluginLog.Debug("Connected to websocket server");
-        });
-    }
-
-    public void SendMessage(string msg)
-    {
-        if (ws == null) return;
-
-        if (ws.SendAsync(msg).Result) PluginLog.Debug("Successfully sent the message to server. msg: " + msg);
-    }
-
-    public bool Connected()
-    {
-        return ws is { Connected: true };
     }
 }
 
@@ -257,9 +85,8 @@ public class Counter : IDisposable
         _instanceNumberAddress =
             Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");
 
-        _actorControlSelfHook =
-            new Hook<ActorControlSelfDelegate>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64"),
-                hk_ActorControlSelf);
+        _actorControlSelfHook = Hook<ActorControlSelfDelegate>.FromAddress(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64"),
+            hk_ActorControlSelf);
         _actorControlSelfHook.Enable();
 
         Service.ChatGui.ChatMessage += OnChatMessage;
@@ -362,13 +189,14 @@ public class Counter : IDisposable
             _tracker.Remove(key);
     }
 
-    public string FormatJsonString(string typeStr, string instance = "", string condition = "", int value = 1)
+    public string FormatJsonString(string typeStr, string instance = "", string condition = "", int value = 1, bool failed = false)
     {
         var currentInstance = GetCurrentInstance();
         var msg = new Message
         {
             type = typeStr,
-            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString
+            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
+            failed = failed,
         };
 
         if (typeStr != "changeArea")

@@ -3,6 +3,7 @@ using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
 
 // ReSharper disable InvertIf
@@ -115,12 +116,26 @@ public class ConfigWindow : Window
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("开始时间是按照本地时间，如果需要填农怪表格什么的需要自行转换到相对应的时区\n");
 
+                ImGui.SameLine();
+                if (ImGui.Button("提交BUG/反馈意见")) Util.OpenLink("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new");
+
                 var trackMode = Service.Configuration._trackRangeMode;
                 if (ImGui.Checkbox("范围计数", ref trackMode))
                 {
-                    Service.Configuration._trackRangeMode = trackMode;
-                    Service.Configuration.Save();
+                    if (!Service.Counter.Socket.Connected())
+                    {
+                        Service.Configuration._trackRangeMode = trackMode;
+                        Service.Configuration.Save();
+                    }
+                    else
+                    {
+                        Service.Configuration._trackRangeMode = false;
+                    }
                 }
+                ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("在联网计数时会暂时关闭\n");
+
 
                 ImGui.SameLine();
                 var showCurrentInstance = Service.Configuration._trackerShowCurrentInstance;
@@ -166,7 +181,6 @@ public class ConfigWindow : Window
                 ImGui.EndTabItem();
             }
 
-
             /*if (ImGui.BeginTabItem("定ET+喊话"))
             {
                 unsafe
@@ -179,7 +193,6 @@ public class ConfigWindow : Window
                     
                     ImGui.Text("在多久后定时(本地时间):");
                     ImGui.InputTextWithHint("##timeInputYes", "格式: 分钟:秒 如00:24, 00:01", ref _timeInput, 32);
-
 
                 }
                 ImGui.EndTabItem();

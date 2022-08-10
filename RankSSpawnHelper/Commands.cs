@@ -52,6 +52,7 @@ public class Commands : IDisposable
     public void Dispose()
     {
         Service.CommandManager.RemoveHandler(CommandName);
+        Service.CommandManager.RemoveHandler(LastCounterMessage);
 #if DEBUG
         Service.CommandManager.RemoveHandler(DebugCommand);
 #endif
@@ -91,11 +92,26 @@ public class Commands : IDisposable
     {
         if (!Service.Counter.Socket.Connected())
         {
-            Service.ChatGui.PrintError("你没联网你寄啥！");
+            var currentInstance = Service.Counter.GetCurrentInstance();
+            if (!Service.Counter.GetTracker().TryGetValue(currentInstance, out var tracker))
+                return;
+
+            var startTime = DateTimeOffset.FromUnixTimeSeconds(tracker.startTime).LocalDateTime;
+            var endTime = DateTimeOffset.Now.LocalDateTime;
+
+            var message = $"{currentInstance}的计数寄了！\n" +
+                          $"开始时间: {startTime.ToShortDateString()}/{startTime.ToShortTimeString()}\n" +
+                          $"结束时间: {endTime.ToShortDateString()}/{endTime.ToShortTimeString()}\n" +
+                          "计数详情: ";
+
+            foreach (var (k, v) in tracker.counter) message += $"    {k}: {v}\n";
+
+            Service.ChatGui.PrintError(message + "PS:消息已复制到剪贴板");
+            ImGui.SetClipboardText(message);
             return;
         }
 
-        var str = Service.Counter.FormatJsonString("ggnore", Service.Counter.GetCurrentInstance());
+        var str = Service.Counter.FormatJsonString("ggnore", Service.Counter.GetCurrentInstance(), string.Empty, 1, true);
         Service.Counter.Socket.SendMessage(str);
     }
 
