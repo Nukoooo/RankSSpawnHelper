@@ -9,6 +9,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
+using Dalamud.Plugin;
 using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel;
@@ -76,11 +77,11 @@ public class Counter : IDisposable
 
     public SocketManager Socket;
 
-    public Counter()
+    public Counter(DalamudPluginInterface pluginInterface)
     {
         _terr = Service.DataManager.GetExcelSheet<TerritoryType>();
         Overlay = new CounterOverlay();
-        Socket = new SocketManager();
+        Socket = new SocketManager(pluginInterface);
 
         _instanceNumberAddress =
             Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");

@@ -132,6 +132,7 @@ public class ConfigWindow : Window
                         Service.Configuration._trackRangeMode = false;
                     }
                 }
+                ImGui.SameLine();
                 ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip("在联网计数时会暂时关闭\n");
@@ -159,6 +160,13 @@ public class ConfigWindow : Window
                 if (ImGui.Checkbox("窗口无背景", ref noBackground))
                 {
                     Service.Configuration._trackerWindowNoBackground = noBackground;
+                    Service.Configuration.Save();
+                }
+
+                var noNotification = Service.Configuration._trackerNoNotification;
+                if (ImGui.Checkbox("连接服务器成功时不显示消息", ref noNotification))
+                {
+                    Service.Configuration._trackerNoNotification = noNotification;
                     Service.Configuration.Save();
                 }
 

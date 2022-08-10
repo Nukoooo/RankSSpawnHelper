@@ -6,7 +6,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.Text;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
+using Dalamud.Plugin;
 using ImGuiNET;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Features;
@@ -16,6 +19,9 @@ namespace RankSSpawnHelper.Misc;
 
 public class SocketManager : IDisposable
 {
+    private DalamudPluginInterface _pluginInterface;
+    private DalamudLinkPayload _linkPayload;
+
     private class Message
     {
         public string type { get; set; }
@@ -39,8 +45,11 @@ public class SocketManager : IDisposable
     private string _url = "ws://47.106.224.112:8000";
 #endif
 
-    public SocketManager()
+    public SocketManager(DalamudPluginInterface pluginInterface)
     {
+        
+        _pluginInterface = pluginInterface;
+        _linkPayload = _pluginInterface.AddChatLinkHandler(69420, LinkHandler);
         Task.Factory.StartNew(TryReconnect, TaskCreationOptions.LongRunning);
 
         Task.Run(async () =>
@@ -50,9 +59,16 @@ public class SocketManager : IDisposable
         });
     }
 
+    private void LinkHandler(uint id, SeString message)
+    {
+        var link = message.TextValue.Replace($"{(char)0x00A0}", "").Replace("\n", "").Replace("\r", "");
+        Dalamud.Utility.Util.OpenLink(link);
+    }
+
     public void Dispose()
     {
         Service.Configuration._trackRangeMode = _oldRangeModeState;
+        _pluginInterface.RemoveChatLinkHandler(69420);
 
         _eventLoopTokenSource.Cancel();
         _eventLoopTokenSource.Dispose();
@@ -109,12 +125,23 @@ public class SocketManager : IDisposable
         _oldRangeModeState = Service.Configuration._trackRangeMode;
         Service.Configuration._trackRangeMode = false;
 
-        Service.ChatGui.PrintChat(new XivChatEntry
+        if (!Service.Configuration._trackerNoNotification)
         {
-            Message = "成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以在鸟区/猫区散触群@winter\n或者到Github上开Issue: https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new",
-            Name = "NukoOoOoOoO",
-            Type = XivChatType.TellIncoming
-        });
+            // "成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以在鸟区/猫区散触群@winter\n或者到Github上开Issue: https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new",
+            Service.ChatGui.PrintChat(new XivChatEntry
+            {
+                Message = new SeString(new List<Payload>()
+                {
+                    new TextPayload("成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以在鸟区/猫区散触群@winter\n或者到Github上开Issue:"),
+                    new UIForegroundPayload(527),
+                    _linkPayload,
+                    new TextPayload("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new"),
+                    RawPayload.LinkTerminator,
+                    new UIForegroundPayload(0),
+                }),
+                Type = XivChatType.CustomEmote
+            });
+        }
 
         // 如果计数器是空的，或者localplayer无效那就没有发送的必要
         if (tracker.Count == 0 || !Service.ClientState.LocalPlayer)

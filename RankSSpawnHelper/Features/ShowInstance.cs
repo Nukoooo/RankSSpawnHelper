@@ -35,9 +35,8 @@ public class ShowInstance : IDisposable
 
             var key = Service.Counter.GetCurrentInstance();
             var split = key.Split('@');
-            var instance = split[2].Replace("线", "");
 
-            _dtrBarEntry.Text = instance switch
+            _dtrBarEntry.Text = split[2] switch
             {
                 "1" => "\xe0b1线",
                 "2" => "\xe0b2线",

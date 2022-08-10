@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using Dalamud.Game.Text;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Features;
 
 namespace RankSSpawnHelper;
@@ -20,7 +25,7 @@ public class Plugin : IDalamudPlugin
         Service.Commands = new Commands();
         Service.ConfigWindow = new ConfigWindow();
         Service.FateRecorder = new FateRecorder();
-        Service.Counter = new Counter();
+        Service.Counter = new Counter(pluginInterface);
         Service.WeeEa = new WeeEa();
         Service.ShowInstance = new ShowInstance();
 
@@ -34,6 +39,7 @@ public class Plugin : IDalamudPlugin
         Service.Interface.UiBuilder.RebuildFonts();
         Service.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
+
     }
 
     public string Name => "S怪触发小助手";
