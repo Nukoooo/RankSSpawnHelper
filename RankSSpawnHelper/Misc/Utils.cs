@@ -8,7 +8,7 @@ namespace RankSSpawnHelper.Misc;
 
 internal static class Utils
 {
-    private static void PrintAllUIColor()
+    public static void PrintAllUiColor()
     {
         foreach (var c in Service.DataManager.Excel.GetSheet<UIColor>())
         {

@@ -21,6 +21,12 @@ public class Commands : IDisposable
             ShowInHelp = true
         });
 
+        Service.CommandManager.AddHandler(LastCounterMessage, new CommandInfo(OnCommand)
+        {
+            HelpMessage = "获取上次计数的详情",
+            ShowInHelp = true
+        });
+
 #if DEBUG
         Service.CommandManager.AddHandler(DebugCommand, new CommandInfo(OnCommand)
         {
@@ -42,11 +48,6 @@ public class Commands : IDisposable
                 HelpMessage = "联网农怪 - 给服务器发送寄了的消息"
             });
 
-        Service.CommandManager.AddHandler(LastCounterMessage, new CommandInfo(OnCommand)
-        {
-            HelpMessage = "获取上次计数的详情",
-            ShowInHelp = true
-        });
     }
 
     public void Dispose()
@@ -133,15 +134,15 @@ public class Commands : IDisposable
             }
             case LastCounterMessage:
             {
-                var msg = Service.Counter.GetLastCounterMessage();
-                if (msg == string.Empty)
+                var messageTuple = Service.Counter.GetLastCounterMessage();
+                if (messageTuple.Item2 == string.Empty)
                 {
                     Service.ChatGui.PrintError("上一次计数的消息是空的");
-                    return;
+                    break;
                 }
 
-                Service.ChatGui.PrintError(msg + "\nPS: 本消息已复制到粘贴板");
-                ImGui.SetClipboardText(msg);
+                Service.ChatGui.Print(messageTuple.Item1);
+                ImGui.SetClipboardText(messageTuple.Item2);
 
                 break;
             }

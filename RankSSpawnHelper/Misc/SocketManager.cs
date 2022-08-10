@@ -10,6 +10,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Utility;
 using ImGuiNET;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Features;
@@ -19,8 +20,8 @@ namespace RankSSpawnHelper.Misc;
 
 public class SocketManager : IDisposable
 {
-    private DalamudPluginInterface _pluginInterface;
-    private DalamudLinkPayload _linkPayload;
+    private readonly DalamudPluginInterface _pluginInterface;
+    private readonly DalamudLinkPayload _linkPayload;
 
     private class Message
     {
@@ -33,6 +34,9 @@ public class SocketManager : IDisposable
         public int total { get; set; }
         public bool failed { get; set; }
         public string leader { get; set; }
+        public bool hasResult { get; set; }
+        public long expectMinTime { get; set; }
+        public ulong expectMaxTime { get; set; }
     }
 
     private readonly CancellationTokenSource _eventLoopTokenSource = new();
@@ -47,7 +51,6 @@ public class SocketManager : IDisposable
 
     public SocketManager(DalamudPluginInterface pluginInterface)
     {
-        
         _pluginInterface = pluginInterface;
         _linkPayload = _pluginInterface.AddChatLinkHandler(69420, LinkHandler);
         Task.Factory.StartNew(TryReconnect, TaskCreationOptions.LongRunning);
@@ -59,10 +62,10 @@ public class SocketManager : IDisposable
         });
     }
 
-    private void LinkHandler(uint id, SeString message)
+    private static void LinkHandler(uint id, SeString message)
     {
         var link = message.TextValue.Replace($"{(char)0x00A0}", "").Replace("\n", "").Replace("\r", "");
-        Dalamud.Utility.Util.OpenLink(link);
+        Util.OpenLink(link);
     }
 
     public void Dispose()
@@ -126,22 +129,19 @@ public class SocketManager : IDisposable
         Service.Configuration._trackRangeMode = false;
 
         if (!Service.Configuration._trackerNoNotification)
-        {
-            // "成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以在鸟区/猫区散触群@winter\n或者到Github上开Issue: https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new",
             Service.ChatGui.PrintChat(new XivChatEntry
             {
-                Message = new SeString(new List<Payload>()
+                Message = new SeString(new List<Payload>
                 {
-                    new TextPayload("成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以在鸟区/猫区散触群@winter\n或者到Github上开Issue:"),
+                    new TextPayload("成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以到Github上开Issue:"),
                     new UIForegroundPayload(527),
                     _linkPayload,
                     new TextPayload("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new"),
                     RawPayload.LinkTerminator,
-                    new UIForegroundPayload(0),
+                    new UIForegroundPayload(0)
                 }),
                 Type = XivChatType.CustomEmote
             });
-        }
 
         // 如果计数器是空的，或者localplayer无效那就没有发送的必要
         if (tracker.Count == 0 || !Service.ClientState.LocalPlayer)
@@ -189,27 +189,65 @@ public class SocketManager : IDisposable
 
                     var localTime = DateTimeOffset.FromUnixTimeSeconds(result.time).LocalDateTime;
 
-                    var chatMessage = (result.failed ? "不好啦！" : "太好啦！") + result.instance + (result.failed ? "寄啦！\n" : "出货啦！\n");
-                    chatMessage += (result.failed ? "寄时:" : "出时:") + $" {localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n";
-                    chatMessage += $"计数总数: {result.total}\n";
-                    chatMessage += "计数详情:\n";
-                    foreach (var (k, v) in result.counter)
-                        chatMessage += $"  {k}: {v}\n";
-                    /*
-                    foreach (var (k, v) in userCounter)
-                        chatMessage += $"  {k}: {v}\n";
-                    */
-                    if (result.failed)
-                        chatMessage += $"\n喊寄的人: {result.leader}";
-
-                    Service.Counter.SetLastCounterMessage(chatMessage);
-                    Service.Counter.ClearKey(result.instance);
-                    Service.ChatGui.PrintChat(new XivChatEntry()
+                    var payloads = new List<Payload>
                     {
-                        Message = chatMessage + "\nPS: 本消息已复制到粘贴板，如果需要再次提示清输入/glcm\nPSS:本区域的计数已清除\nPSSS:以上数据仅供参考",
-                        Name = "Joe",
-                        Type = result.failed ? XivChatType.Urgent : XivChatType.Shout
+                        new UIForegroundPayload((ushort)(result.failed ? 518 : 59)),
+                        new TextPayload((result.failed ? "不好啦！" : "太好啦！") + result.instance + (result.failed ? "寄啦！\n" : "出货啦！\n")),
+                        new TextPayload((result.failed ? "寄时:" : "出时:") + $" {localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n"),
+                        new TextPayload($"计数总数: {result.total}\n计数详情:\n")
+                    };
+                    /*
+                        foreach (var (k, v) in userCounter)
+                            chatMessage += $"  {k}: {v}\n";
+                    */
+
+                    if (result.failed)
+                    {
+                        payloads.Add(new TextPayload("\n喊寄的人: "));
+                        payloads.Add(new UIForegroundPayload(71));
+                        payloads.Add(new TextPayload(result.leader));
+                        payloads.Add(new UIForegroundPayload(0));
+                    }
+
+                    if (!result.failed && result.hasResult)
+                    {
+                        var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() > result.expectMinTime;
+                        if (isSpawnable)
+                        {
+                            payloads.Add(new TextPayload("\n当前可触发概率: "));
+                            payloads.Add(new UIForegroundPayload(71));
+                            payloads.Add(new TextPayload(
+                                $"{(DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (long)(result.expectMaxTime - (ulong)result.expectMinTime):F1}%"));
+                            payloads.Add(new UIForegroundPayload(0));
+                        }
+                        else
+                        {
+                            payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
+                            payloads.Add(new UIForegroundPayload(71));
+                            var minTime = DateTimeOffset.FromUnixTimeSeconds(result.expectMinTime);
+                            var delta = (minTime - localTime).TotalMinutes;
+
+                            payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
+                            payloads.Add(new UIForegroundPayload(0));
+                        }
+                    }
+
+                    payloads.Add(new TextPayload("\nPS: 本消息已复制到粘贴板，如果需要再次提示清输入/glcm\nPSS:以上数据仅供参考"));
+
+                    var chatMessage = payloads.Where(payload => payload.Type == PayloadType.RawText)
+                        .Aggregate<Payload, string>(null, (current, payload) => current + ((TextPayload)payload).Text);
+                    Service.Counter.SetLastCounterMessage(new SeString(payloads), chatMessage);
+
+                    payloads.Add(new TextPayload("\nPSSS:本区域的计数器已清零"));
+                    payloads.Add(new UIForegroundPayload(0));
+
+                    Service.Counter.ClearKey(result.instance);
+                    Service.ChatGui.PrintChat(new XivChatEntry
+                    {
+                        Message = new SeString(payloads),
+                        Type = XivChatType.Debug
                     });
+
                     ImGui.SetClipboardText(chatMessage);
                     break;
                 }

@@ -71,7 +71,7 @@ public class Counter : IDisposable
     // currentworld+territory+instance, std::pair<time, std::unordered_map<monsterName, count>>
     private readonly Dictionary<string, Tracker> _tracker = new();
 
-    private string _lastCounterMessage;
+    private Tuple<SeString, string> _lastCounterMessage;
 
     public CounterOverlay Overlay;
 
@@ -112,6 +112,13 @@ public class Counter : IDisposable
         var territory = Service.ClientState.TerritoryType;
         if (!_conditionName.TryGetValue(territory, out var targetName))
             return;
+
+        if (message.TextValue == "感觉到了强大的恶名精英的气息……")
+        {
+            var msg = FormatJsonString("ggnore", GetCurrentInstance());
+            Socket.SendMessage(msg);
+            return;
+        }
 
         var condition = targetName == ".*" ? "舍弃了" : "获得了";
 
@@ -211,12 +218,12 @@ public class Counter : IDisposable
         return json;
     }
 
-    public void SetLastCounterMessage(string msg)
+    public void SetLastCounterMessage(SeString seString, string msg)
     {
-        _lastCounterMessage = msg;
+        _lastCounterMessage = new Tuple<SeString, string>(seString, msg);
     }
 
-    public string GetLastCounterMessage()
+    public Tuple<SeString, string> GetLastCounterMessage()
     {
         return _lastCounterMessage;
     }
