@@ -36,7 +36,7 @@ public class SocketManager : IDisposable
         public string leader { get; set; }
         public bool hasResult { get; set; }
         public long expectMinTime { get; set; }
-        public ulong expectMaxTime { get; set; }
+        public long expectMaxTime { get; set; }
     }
 
     private readonly CancellationTokenSource _eventLoopTokenSource = new();
@@ -223,7 +223,7 @@ public class SocketManager : IDisposable
                             payloads.Add(new TextPayload("\n当前可触发概率: "));
                             payloads.Add(new UIForegroundPayload(71));
                             payloads.Add(new TextPayload(
-                                $"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (long)(result.expectMaxTime - (ulong)result.expectMinTime)):F1}%"));
+                                $"{100 * ((result.time - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
                             payloads.Add(new UIForegroundPayload(0));
                         }
                         else
