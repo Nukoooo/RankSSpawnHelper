@@ -194,8 +194,14 @@ public class SocketManager : IDisposable
                         new UIForegroundPayload((ushort)(result.failed ? 518 : 59)),
                         new TextPayload((result.failed ? "不好啦！" : "太好啦！") + result.instance + (result.failed ? "寄啦！\n" : "出货啦！\n")),
                         new TextPayload((result.failed ? "寄时:" : "出时:") + $" {localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n"),
-                        new TextPayload($"计数总数: {result.total}\n计数详情:\n")
+                        new TextPayload($"计数总数: {result.total}\n计数详情:\n"),
+                        new UIForegroundPayload(71)
                     };
+                    foreach (var (k, v) in result.counter)
+                    {
+                        payloads.Add(new TextPayload($"    {k}: {v}\n"));
+                    }
+                    payloads.Add(new UIForegroundPayload(0));
                     /*
                         foreach (var (k, v) in userCounter)
                             chatMessage += $"  {k}: {v}\n";
@@ -209,7 +215,7 @@ public class SocketManager : IDisposable
                         payloads.Add(new UIForegroundPayload(0));
                     }
 
-                    if (!result.failed && result.hasResult)
+                    if (result.hasResult)
                     {
                         var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() > result.expectMinTime;
                         if (isSpawnable)
@@ -217,7 +223,7 @@ public class SocketManager : IDisposable
                             payloads.Add(new TextPayload("\n当前可触发概率: "));
                             payloads.Add(new UIForegroundPayload(71));
                             payloads.Add(new TextPayload(
-                                $"{(DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (long)(result.expectMaxTime - (ulong)result.expectMinTime):F1}%"));
+                                $"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (long)(result.expectMaxTime - (ulong)result.expectMinTime)):F1}%"));
                             payloads.Add(new UIForegroundPayload(0));
                         }
                         else
