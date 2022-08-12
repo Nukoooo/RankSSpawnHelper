@@ -19,7 +19,7 @@ public class Plugin : IDalamudPlugin
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
         pluginInterface.Create<Service>();
-
+        
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         Service.Commands = new Commands();
