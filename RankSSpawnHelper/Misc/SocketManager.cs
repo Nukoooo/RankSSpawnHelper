@@ -202,6 +202,7 @@ public class SocketManager : IDisposable
                         payloads.Add(new TextPayload($"    {k}: {v}\n"));
                     }
                     payloads.Add(new UIForegroundPayload(0));
+
                     /*
                         foreach (var (k, v) in userCounter)
                             chatMessage += $"  {k}: {v}\n";

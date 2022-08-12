@@ -115,6 +115,10 @@ public class Counter : IDisposable
 
         if (message.TextValue == "感觉到了强大的恶名精英的气息……")
         {
+            // 如果没tracker就不发
+            if (!_tracker.ContainsKey(GetCurrentInstance()))
+                return;
+
             var msg = FormatJsonString("ggnore", GetCurrentInstance());
             Socket.SendMessage(msg);
             return;
