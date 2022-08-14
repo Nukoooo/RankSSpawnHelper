@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Features;
 
 namespace RankSSpawnHelper;
@@ -19,7 +14,7 @@ public class Plugin : IDalamudPlugin
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
     {
         pluginInterface.Create<Service>();
-        
+
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         Service.Commands = new Commands();
@@ -39,7 +34,6 @@ public class Plugin : IDalamudPlugin
         Service.Interface.UiBuilder.RebuildFonts();
         Service.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
-
     }
 
     public string Name => "S怪触发小助手";

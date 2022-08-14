@@ -1,26 +1,41 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
+using Dalamud.Game.Text;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using ImGuiNET;
+using Lumina.Excel.GeneratedSheets;
 
 // ReSharper disable InvertIf
 namespace RankSSpawnHelper;
 
 public class ConfigWindow : Window
 {
-    // private const double EORZEA_TIME_CONSTANT = 3600D / 175D;
     private const ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
-
-    // private const string TimeRegexPattern = @"([0-5]?\d):([0-5]?\d)";
+    private readonly List<ColorInfo> _colorInfos = new();
+    private ColorPickerType _colorPickerType = ColorPickerType.Failed;
     private string _serverUrl = string.Empty;
-    // private string _timeInput = string.Empty;
-    // private string _trackerInputText = string.Empty;
+    private bool _showColorPicker;
 
     public ConfigWindow() : base("S怪触发小助手##RankSSpawnHelper")
     {
+        var colorSheet = Service.DataManager.Excel.GetSheet<UIColor>();
+        foreach (var color in colorSheet)
+        {
+            var result = _colorInfos.Find(info => info.Color == color.UIForeground);
+            if (result == null)
+                _colorInfos.Add(new ColorInfo
+                {
+                    RowId = color.RowId,
+                    Color = color.UIForeground
+                });
+        }
+
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
     }
 
@@ -96,6 +111,19 @@ public class ConfigWindow : Window
         }
     }
 
+    private Vector4 GetColor(uint id)
+    {
+        try
+        {
+            var bytes = BitConverter.GetBytes(_colorInfos.Find(info => info.RowId == id).Color);
+            return new Vector4((float)bytes[3] / 255, (float)bytes[2] / 255, (float)bytes[1] / 255, (float)bytes[0] / 255);
+        }
+        catch (Exception)
+        {
+            return new Vector4(0f, 0f, 0f, 0f);
+        }
+    }
+
     public override void Draw()
     {
         ImGui.BeginTabBar("主菜单aaaaa");
@@ -132,6 +160,7 @@ public class ConfigWindow : Window
                         Service.Configuration._trackRangeMode = false;
                     }
                 }
+
                 ImGui.SameLine();
                 ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
                 if (ImGui.IsItemHovered())
@@ -189,23 +218,6 @@ public class ConfigWindow : Window
                 ImGui.EndTabItem();
             }
 
-            /*if (ImGui.BeginTabItem("定ET+喊话"))
-            {
-                unsafe
-                {
-                    var eorzeaTime = DateTimeOffset.FromUnixTimeSeconds(Framework.Instance()->EorzeaTime).DateTime;
-                    var localTime = Utils.LocalTimeToEorzeaTime();
-                    
-                    ImGui.Text($"FrameWork->eorzeaTime: {eorzeaTime.Hour}:{eorzeaTime.Minute}:{eorzeaTime.Second}");
-                    ImGui.Text($"LocalTimeToEorzeaTime: {localTime.Hour}:{localTime.Minute}:{localTime.Second}");
-                    
-                    ImGui.Text("在多久后定时(本地时间):");
-                    ImGui.InputTextWithHint("##timeInputYes", "格式: 分钟:秒 如00:24, 00:01", ref _timeInput, 32);
-
-                }
-                ImGui.EndTabItem();
-            }*/
-
             if (ImGui.BeginTabItem("其他"))
             {
                 var weeEaCounter = Service.Configuration._weeEaCounter;
@@ -223,10 +235,120 @@ public class ConfigWindow : Window
                     Service.Configuration.Save();
                 }
 
+                ImGui.NewLine();
+
+                ImGui.Text("触发失败消息颜色");
+                ImGui.SameLine();
+                if (ImGui.ColorButton("##触发失败", GetColor(Service.Configuration._failedMessageColor)))
+                {
+                    _showColorPicker = true;
+                    _colorPickerType = ColorPickerType.Failed;
+                }
+
+                ImGui.Text("触发成功消息颜色");
+                ImGui.SameLine();
+                if (ImGui.ColorButton("##触发成功", GetColor(Service.Configuration._spawnedMessageColor)))
+                {
+                    _showColorPicker = true;
+                    _colorPickerType = ColorPickerType.Spawned;
+                }
+
+                ImGui.Text("关键词颜色");
+                ImGui.SameLine();
+                if (ImGui.ColorButton("##高亮", GetColor(Service.Configuration._highlightColor)))
+                {
+                    _showColorPicker = true;
+                    _colorPickerType = ColorPickerType.Highlighted;
+                }
+
+                ImGui.SameLine();
+                if (ImGui.Button("预览"))
+                    Service.ChatGui.PrintChat(new XivChatEntry
+                    {
+                        Message = new SeString(new List<Payload>
+                        {
+                            new UIForegroundPayload((ushort)Service.Configuration._failedMessageColor),
+                            new TextPayload("Something came in the mail today... "),
+                            new UIForegroundPayload((ushort)Service.Configuration._highlightColor),
+                            new TextPayload("deez nuts! "),
+                            new UIForegroundPayload(0),
+                            new TextPayload("Ha! Got’em.\n"),
+                            new UIForegroundPayload((ushort)Service.Configuration._spawnedMessageColor),
+                            new TextPayload("Something came in the mail today... "),
+                            new UIForegroundPayload((ushort)Service.Configuration._highlightColor),
+                            new TextPayload("deez nuts! "),
+                            new UIForegroundPayload(0),
+                            new TextPayload("Ha! Got’em."),
+                            new UIForegroundPayload(0)
+                        }),
+                        Type = XivChatType.Debug
+                    });
+
                 ImGui.EndTabItem();
             }
         }
 
         ImGui.EndTabBar();
+    }
+
+    public override void PostDraw()
+    {
+        if (!_showColorPicker)
+            return;
+
+        ImGui.SetNextWindowSize(new Vector2(320, 360));
+
+        var type = _colorPickerType switch
+        {
+            ColorPickerType.Failed => "给触发失败消息",
+            ColorPickerType.Highlighted => "给关键词",
+            ColorPickerType.Spawned => "给触发成功消息",
+            _ => ""
+        };
+
+        if (ImGui.Begin(type + "选个颜色呗", ref _showColorPicker, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize))
+        {
+            ImGui.Columns(10, "##colorcolumns", false);
+
+            foreach (var info in _colorInfos)
+            {
+                if (ImGui.ColorButton("##" + info.RowId, GetColor(info.RowId)))
+                {
+                    switch (_colorPickerType)
+                    {
+                        case ColorPickerType.Failed:
+                            Service.Configuration._failedMessageColor = info.RowId;
+                            break;
+                        case ColorPickerType.Highlighted:
+                            Service.Configuration._highlightColor = info.RowId;
+                            break;
+                        case ColorPickerType.Spawned:
+                            Service.Configuration._spawnedMessageColor = info.RowId;
+                            break;
+                    }
+
+                    Service.Configuration.Save();
+                    _showColorPicker = false;
+                }
+
+                ImGui.NextColumn();
+            }
+
+            ImGui.Columns(1);
+            ImGui.End();
+        }
+    }
+
+    private enum ColorPickerType
+    {
+        Failed,
+        Spawned,
+        Highlighted
+    }
+
+    internal class ColorInfo
+    {
+        internal uint RowId { get; set; }
+        internal uint Color { get; set; }
     }
 }

@@ -47,7 +47,6 @@ public class Commands : IDisposable
                 ShowInHelp = true,
                 HelpMessage = "联网农怪 - 给服务器发送寄了的消息"
             });
-
     }
 
     public void Dispose()

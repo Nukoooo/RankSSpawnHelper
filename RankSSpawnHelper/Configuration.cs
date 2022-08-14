@@ -25,6 +25,10 @@ public class Configuration : IPluginConfiguration
     // 服务器信息显示几线
     public bool _showInstance { get; set; } = false;
 
+    public uint _failedMessageColor { get; set; } = 518;
+    public uint _spawnedMessageColor { get; set; } = 59;
+    public uint _highlightColor { get; set; } = 71;
+
     int IPluginConfiguration.Version { get; set; }
 
     public void Save()

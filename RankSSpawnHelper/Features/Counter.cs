@@ -208,7 +208,7 @@ public class Counter : IDisposable
         {
             type = typeStr,
             user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
-            failed = failed,
+            failed = failed
         };
 
         if (typeStr != "changeArea")

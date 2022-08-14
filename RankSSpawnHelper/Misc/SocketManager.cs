@@ -197,10 +197,7 @@ public class SocketManager : IDisposable
                         new TextPayload($"计数总数: {result.total}\n计数详情:\n"),
                         new UIForegroundPayload(71)
                     };
-                    foreach (var (k, v) in result.counter)
-                    {
-                        payloads.Add(new TextPayload($"    {k}: {v}\n"));
-                    }
+                    foreach (var (k, v) in result.counter) payloads.Add(new TextPayload($"    {k}: {v}\n"));
                     payloads.Add(new UIForegroundPayload(0));
 
                     /*
