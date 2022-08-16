@@ -15,36 +15,14 @@ using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
-using RankSSpawnHelper.Misc;
+using RankSSpawnHelper.Managers;
+using RankSSpawnHelper.Models;
 
 // ReSharper disable InconsistentNaming
 
 namespace RankSSpawnHelper.Features;
 
-internal class Message
-{
-    public long time { get; set; }
-    public string type { get; set; }
-    public string instance { get; set; }
-    public string user { get; set; }
-    public Dictionary<string, int> data { get; set; }
-    public bool failed { get; set; }
-}
 
-internal class NewConnectionMessage
-{
-    public string currentInstance;
-    public List<Tracker> trackers;
-    public string type;
-    public string user;
-
-    internal class Tracker
-    {
-        public Dictionary<string, int> data;
-        public string instance;
-        public long time;
-    }
-}
 
 public class Counter : IDisposable
 {
@@ -75,13 +53,10 @@ public class Counter : IDisposable
 
     public CounterOverlay Overlay;
 
-    public SocketManager Socket;
-
-    public Counter(DalamudPluginInterface pluginInterface)
+    public Counter()
     {
         _terr = Service.DataManager.GetExcelSheet<TerritoryType>();
         Overlay = new CounterOverlay();
-        Socket = new SocketManager(pluginInterface);
 
         _instanceNumberAddress =
             Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");
@@ -97,7 +72,7 @@ public class Counter : IDisposable
     public void Dispose()
     {
         _actorControlSelfHook.Dispose();
-        Socket.Dispose();
+        Service.SocketManager.Dispose();
         Service.ChatGui.ChatMessage -= OnChatMessage;
         Service.Condition.ConditionChange -= OnConditionChange;
         GC.SuppressFinalize(this);
@@ -120,7 +95,7 @@ public class Counter : IDisposable
                 return;
 
             var msg = FormatJsonString("ggnore", GetCurrentInstance());
-            Socket.SendMessage(msg);
+            Service.SocketManager.SendMessage(msg);
             return;
         }
 
@@ -149,7 +124,7 @@ public class Counter : IDisposable
 
         if (!Service.Configuration._trackKillCount || !Service.Configuration._trackerShowCurrentInstance) return;
 
-        Socket.SendMessage(FormatJsonString("changeArea"));
+        Service.SocketManager.SendMessage(FormatJsonString("changeArea"));
         Overlay.IsOpen = _tracker.TryGetValue(GetCurrentInstance(), out _);
     }
 
@@ -204,7 +179,7 @@ public class Counter : IDisposable
     public string FormatJsonString(string typeStr, string instance = "", string condition = "", int value = 1, bool failed = false)
     {
         var currentInstance = GetCurrentInstance();
-        var msg = new Message
+        var msg = new NetMessage
         {
             type = typeStr,
             user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
@@ -320,14 +295,7 @@ public class Counter : IDisposable
         PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
         Overlay.IsOpen = Service.Configuration._trackKillCount;
 
-        Socket.SendMessage(FormatJsonString("addData", key, targetName));
-    }
-
-    public class Tracker
-    {
-        public Dictionary<string, int> counter;
-        public long lastUpdateTime;
-        public long startTime;
+        Service.SocketManager.SendMessage(FormatJsonString("addData", key, targetName));
     }
 
     public class CounterOverlay : Window

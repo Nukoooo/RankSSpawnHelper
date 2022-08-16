@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Linq;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Utility;
+using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Features;
+using RankSSpawnHelper.Managers;
+using RankSSpawnHelper.Misc;
 
 namespace RankSSpawnHelper;
 
@@ -16,13 +22,16 @@ public class Plugin : IDalamudPlugin
         pluginInterface.Create<Service>();
 
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Service.SocketManager = new SocketManager(pluginInterface);
 
         Service.Commands = new Commands();
         Service.ConfigWindow = new ConfigWindow();
         Service.FateRecorder = new FateRecorder();
-        Service.Counter = new Counter(pluginInterface);
+        Service.Counter = new Counter();
         Service.WeeEa = new WeeEa();
         Service.ShowInstance = new ShowInstance();
+        Service.MonsterManager = new MonsterManager();
+        Utils.Initialize();
 
         _windowSystem = new WindowSystem("RankSSpawnHelper");
         _windowSystem.AddWindow(Service.ConfigWindow);

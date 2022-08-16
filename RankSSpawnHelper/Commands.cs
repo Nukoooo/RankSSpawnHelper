@@ -90,7 +90,7 @@ public class Commands : IDisposable
 
     private static void Command_GG(string cmd, string args)
     {
-        if (!Service.Counter.Socket.Connected())
+        if (!Service.SocketManager.Connected())
         {
             var currentInstance = Service.Counter.GetCurrentInstance();
             if (!Service.Counter.GetTracker().TryGetValue(currentInstance, out var tracker))
@@ -112,7 +112,7 @@ public class Commands : IDisposable
         }
 
         var str = Service.Counter.FormatJsonString("ggnore", Service.Counter.GetCurrentInstance(), string.Empty, 1, true);
-        Service.Counter.Socket.SendMessage(str);
+        Service.SocketManager.SendMessage(str);
     }
 
     private static void OnCommand(string command, string args)
@@ -128,7 +128,7 @@ public class Commands : IDisposable
             {
                 Service.ChatGui.Print($"territoryId: {Service.ClientState.TerritoryType}, classJob:{Service.ClientState.LocalPlayer.ClassJob.Id}, PartyLength: {Service.PartyList.Length}");
 
-                Service.Counter.Socket.Connect("ws://localhost:8000");
+                Service.SocketManager.Connect("ws://localhost:8000");
                 break;
             }
             case LastCounterMessage:

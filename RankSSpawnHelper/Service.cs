@@ -11,6 +11,7 @@ using Dalamud.Game.Gui.Dtr;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using RankSSpawnHelper.Features;
+using RankSSpawnHelper.Managers;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 namespace RankSSpawnHelper;
@@ -24,6 +25,8 @@ internal class Service
     internal static Counter Counter { get; set; } = null!;
     internal static WeeEa WeeEa { get; set; } = null!;
     internal static ShowInstance ShowInstance { get; set; } = null!;
+    internal static MonsterManager MonsterManager { get; set; } = null!;
+    internal static SocketManager SocketManager { get; set; } = null!;
 
     [PluginService] internal static DalamudPluginInterface Interface { get; private set; } = null!;
 

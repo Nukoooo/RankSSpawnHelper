@@ -14,9 +14,10 @@ using Dalamud.Utility;
 using ImGuiNET;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Features;
+using RankSSpawnHelper.Models;
 using WatsonWebsocket;
 
-namespace RankSSpawnHelper.Misc;
+namespace RankSSpawnHelper.Managers;
 
 public class SocketManager : IDisposable
 {
@@ -41,7 +42,7 @@ public class SocketManager : IDisposable
 
     private readonly CancellationTokenSource _eventLoopTokenSource = new();
     private bool _oldRangeModeState;
-    private WatsonWsClient ws;
+    private WatsonWsClient _ws;
     private bool _changeHost;
 #if DEBUG
     private string _url = "ws://127.0.0.1:8000";
@@ -76,11 +77,11 @@ public class SocketManager : IDisposable
         _eventLoopTokenSource.Cancel();
         _eventLoopTokenSource.Dispose();
 
-        if (ws != null)
+        if (_ws != null)
         {
-            ws.MessageReceived -= Ws_MessageReceived;
-            ws.ServerConnected -= Ws_ServerConnected;
-            ws.Dispose();
+            _ws.MessageReceived -= Ws_MessageReceived;
+            _ws.ServerConnected -= Ws_ServerConnected;
+            _ws.Dispose();
         }
 
         GC.SuppressFinalize(this);
@@ -93,17 +94,17 @@ public class SocketManager : IDisposable
         while (!token.IsCancellationRequested)
             try
             {
-                if (ws == null || ws.Connected || _changeHost)
+                if (_ws == null || _ws.Connected || _changeHost)
                 {
                     await Task.Delay(2000, token);
                     continue;
                 }
 
-                ws.Dispose();
-                ws = new WatsonWsClient(new Uri(_url));
-                ws.ServerConnected += Ws_ServerConnected;
-                ws.MessageReceived += Ws_MessageReceived;
-                await ws.StartAsync();
+                _ws.Dispose();
+                _ws = new WatsonWsClient(new Uri(_url));
+                _ws.ServerConnected += Ws_ServerConnected;
+                _ws.MessageReceived += Ws_MessageReceived;
+                await _ws.StartAsync();
                 await Task.Delay(5000, token);
             }
             catch (TaskCanceledException)
@@ -147,11 +148,11 @@ public class SocketManager : IDisposable
         if (tracker.Count == 0 || !Service.ClientState.LocalPlayer)
             return;
 
-        var list = tracker.Select(t => new NewConnectionMessage.Tracker { data = t.Value.counter, time = t.Value.startTime, instance = t.Key }).ToList();
+        var list = tracker.Select(t => new NetMessage_NewConnection.Tracker { data = t.Value.counter, time = t.Value.startTime, instance = t.Key }).ToList();
 
-        var msg = new NewConnectionMessage
+        var msg = new NetMessage_NewConnection
         {
-            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
+            user = Service.ClientState.LocalPlayer?.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
             currentInstance = key,
             type = "newConnection",
             trackers = list
@@ -161,10 +162,10 @@ public class SocketManager : IDisposable
         SendMessage(j);
     }
 
-    private void Ws_MessageReceived(object sender, MessageReceivedEventArgs e)
+    private static void Ws_MessageReceived(object sender, MessageReceivedEventArgs e)
     {
         var msg = Encoding.UTF8.GetString(e.Data);
-        PluginLog.Debug($"Receive message: {msg}");
+        // PluginLog.Debug($"Receive message: {msg}");
 
         if (msg.StartsWith("Error:"))
         {
@@ -191,7 +192,7 @@ public class SocketManager : IDisposable
 
                     var payloads = new List<Payload>
                     {
-                        new UIForegroundPayload((ushort)(result.failed ? 518 : 59)),
+                        new UIForegroundPayload((ushort)(result.failed ? Service.Configuration._failedMessageColor : Service.Configuration._spawnedMessageColor)),
                         new TextPayload((result.failed ? "不好啦！" : "太好啦！") + result.instance + (result.failed ? "寄啦！\n" : "出货啦！\n")),
                         new TextPayload((result.failed ? "寄时:" : "出时:") + $" {localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n"),
                         new TextPayload($"计数总数: {result.total}\n计数详情:\n"),
@@ -208,7 +209,7 @@ public class SocketManager : IDisposable
                     if (result.failed)
                     {
                         payloads.Add(new TextPayload("\n喊寄的人: "));
-                        payloads.Add(new UIForegroundPayload(71));
+                        payloads.Add(new UIForegroundPayload((ushort)Service.Configuration._highlightColor));
                         payloads.Add(new TextPayload(result.leader));
                         payloads.Add(new UIForegroundPayload(0));
                     }
@@ -219,7 +220,7 @@ public class SocketManager : IDisposable
                         if (isSpawnable)
                         {
                             payloads.Add(new TextPayload("\n当前可触发概率: "));
-                            payloads.Add(new UIForegroundPayload(71));
+                            payloads.Add(new UIForegroundPayload((ushort)Service.Configuration._highlightColor));
                             payloads.Add(new TextPayload(
                                 $"{100 * ((result.time - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
                             payloads.Add(new UIForegroundPayload(0));
@@ -227,7 +228,7 @@ public class SocketManager : IDisposable
                         else
                         {
                             payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
-                            payloads.Add(new UIForegroundPayload(71));
+                            payloads.Add(new UIForegroundPayload((ushort)Service.Configuration._highlightColor));
                             var minTime = DateTimeOffset.FromUnixTimeSeconds(result.expectMinTime);
                             var delta = (minTime - localTime).TotalMinutes;
 
@@ -269,7 +270,7 @@ public class SocketManager : IDisposable
 
         Task.Run(async () =>
         {
-            await ws?.StopAsync(WebSocketCloseStatus.NormalClosure, "Connect to other host");
+            await _ws?.StopAsync(WebSocketCloseStatus.NormalClosure, "Connect to other host");
             Service.Configuration._trackRangeMode = _oldRangeModeState;
         });
     }
@@ -282,13 +283,13 @@ public class SocketManager : IDisposable
         {
             _changeHost = true;
             _url = url;
-            ws?.Dispose();
+            _ws?.Dispose();
 
-            ws = new WatsonWsClient(new Uri(url));
-            ws.ServerConnected += Ws_ServerConnected;
-            ws.MessageReceived += Ws_MessageReceived;
+            _ws = new WatsonWsClient(new Uri(url));
+            _ws.ServerConnected += Ws_ServerConnected;
+            _ws.MessageReceived += Ws_MessageReceived;
 
-            await ws.StartAsync();
+            await _ws.StartAsync();
             await Task.Delay(500);
             if (Connected())
                 PluginLog.Debug("Connected to websocket server");
@@ -300,13 +301,13 @@ public class SocketManager : IDisposable
 
     public void SendMessage(string msg)
     {
-        if (ws == null) return;
+        if (_ws == null) return;
 
-        if (ws.SendAsync(msg).Result) PluginLog.Debug("Successfully sent the message to server. msg: " + msg);
+        if (_ws.SendAsync(msg).Result) PluginLog.Debug("Successfully sent the message to server. msg: " + msg);
     }
 
     public bool Connected()
     {
-        return ws is { Connected: true };
+        return _ws is { Connected: true };
     }
 }
