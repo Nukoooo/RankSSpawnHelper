@@ -104,11 +104,11 @@ public class Counter : IDisposable
         var reg = Regex.Match(message.ToString(), $"{condition}“({targetName})”");
         if (!reg.Success)
             return;
-
+        
         targetName = territory switch
         {
             // 云海的刚哥要各挖50个, 所以这里分开来
-            400 => reg.Groups[0].ToString(),
+            400 => reg.Groups[1].ToString(),
             // 因为正则所以得这样子搞..
             621 => "扔垃圾",
             _ => targetName
@@ -300,7 +300,7 @@ public class Counter : IDisposable
 
     public class CounterOverlay : Window
     {
-        private const ImGuiWindowFlags _windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
+        private const ImGuiWindowFlags _windowFlags = ImGuiWindowFlags.None;
 
         public CounterOverlay() : base("农怪计数##RankSSpawnHelper")
         {
@@ -313,6 +313,8 @@ public class Counter : IDisposable
                 var |= ImGuiWindowFlags.NoBackground;
             if (Service.Configuration._trackerWindowNoTitle)
                 var |= ImGuiWindowFlags.NoTitleBar;
+            if (Service.Configuration._trackerAutoResize)
+                var |= ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
             return var;
         }
 

@@ -282,6 +282,14 @@ public class ConfigWindow : Window
                 Service.Configuration._trackerWindowNoBackground = noBackground;
                 Service.Configuration.Save();
             }
+            
+            ImGui.SameLine();
+            var autoResize = Service.Configuration._trackerAutoResize;
+            if (ImGui.Checkbox("窗口自动调整大小", ref autoResize))
+            {
+                Service.Configuration._trackerAutoResize = autoResize;
+                Service.Configuration.Save();
+            }
 
             var noNotification = Service.Configuration._trackerNoNotification;
             if (ImGui.Checkbox("连接服务器成功时不显示消息", ref noNotification))

@@ -1,4 +1,5 @@
 ﻿using System;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
@@ -38,12 +39,13 @@ public class WeeEa
                 if (actor is not Npc npc)
                     continue;
 
-                if (npc.Address == IntPtr.Zero)
+                if (npc.Address == IntPtr.Zero || npc.ObjectKind != ObjectKind.Companion)
                     continue;
 
                 var delta = npc.Position - Service.ClientState.LocalPlayer.Position;
 
-                var length2D = Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
+                // xzy 
+                var length2D = Math.Sqrt(delta.X * delta.X + delta.Z * delta.Z);
 
                 if (length2D > 17.0)
                     continue;
