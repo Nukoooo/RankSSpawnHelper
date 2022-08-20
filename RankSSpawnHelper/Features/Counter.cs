@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text;
@@ -36,9 +38,10 @@ public class Counter : IDisposable
         { 147, "土元精" } // 北萨
     };
 
+    private readonly CancellationTokenSource _eventLoopTokenSource = new();
+
     private readonly IntPtr _instanceNumberAddress;
 
-    // currentworld+territory+instance, std::pair<time, std::unordered_map<monsterName, count>>
     private readonly Dictionary<string, Tracker> _localTracker = new();
 
     private readonly ExcelSheet<TerritoryType> _terr;
@@ -56,6 +59,7 @@ public class Counter : IDisposable
         _actorControlSelfHook = Hook<ActorControlSelfDelegate>.FromAddress(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64"),
             hk_ActorControlSelf);
         _actorControlSelfHook.Enable();
+        Task.Factory.StartNew(RemoveDeadTracker, TaskCreationOptions.LongRunning);
 
         Service.ChatGui.ChatMessage += OnChatMessage;
         Service.Condition.ConditionChange += OnConditionChange;
@@ -64,10 +68,44 @@ public class Counter : IDisposable
     public void Dispose()
     {
         _actorControlSelfHook.Dispose();
+        _eventLoopTokenSource.Dispose();
         Service.SocketManager.Dispose();
         Service.ChatGui.ChatMessage -= OnChatMessage;
         Service.Condition.ConditionChange -= OnConditionChange;
         GC.SuppressFinalize(this);
+    }
+
+    private async void RemoveDeadTracker()
+    {
+        var token = _eventLoopTokenSource.Token;
+
+        while (!token.IsCancellationRequested)
+            try
+            {
+                if (_tracker.Count == 0 || _localTracker.Count == 0)
+                    continue;
+
+                await Task.Delay(500, token);
+
+                foreach (var (k, v) in _tracker)
+                {
+                    var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
+                    if (delta.TotalMinutes <= 45.0)
+                        continue;
+
+                    _tracker.Remove(k);
+                    if (_localTracker.ContainsKey(k))
+                        _localTracker.Remove(k);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                break;
+            }
+            catch (ObjectDisposedException)
+            {
+                break;
+            }
     }
 
     private void OnChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -263,6 +301,23 @@ public class Counter : IDisposable
     private void AddToTracker(string key, string targetName)
     {
         // TODO: 简洁这部分的代码
+
+        if (!_localTracker.ContainsKey(key))
+        {
+            var tracker = new Tracker
+            {
+                counter = new Dictionary<string, int>
+                {
+                    { targetName, 1 }
+                },
+                lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                startTime = DateTimeOffset.Now.ToUnixTimeSeconds()
+            };
+
+            _localTracker.Add(key, tracker);
+        }
+
+
         if (!_tracker.ContainsKey(key))
         {
             var tracker = new Tracker
@@ -276,7 +331,7 @@ public class Counter : IDisposable
             };
 
             _tracker.Add(key, tracker);
-            _localTracker.Add(key, tracker);
+
             goto Post;
         }
 

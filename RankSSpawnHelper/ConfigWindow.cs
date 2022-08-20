@@ -26,6 +26,7 @@ public class ConfigWindow : Window
     private List<string> _monsterNames;
     private int _selectedExpansion;
     private int _selectedMonster;
+    private int _selectedInstance;
 
     private int _selectedServer;
     private List<string> _servers;
@@ -139,11 +140,16 @@ public class ConfigWindow : Window
         }
 
         ImGui.Combo("S怪", ref _selectedMonster, _monsterNames.ToArray(), _monsterNames.Count);
+        if (ImGui.InputInt("几线", ref _selectedInstance, 1))
+        {
+            _selectedInstance = Math.Clamp(_selectedInstance, 0, 3);
+        }
+
         ImGui.SameLine();
 
         {
             ImGui.PushFont(UiBuilder.IconFont);
-            if (ImGui.Button(FontAwesomeIcon.Search.ToIconString())) Service.MonsterManager.FetchData(_servers[_selectedServer], _monsterNames[_selectedMonster]);
+            if (ImGui.Button(FontAwesomeIcon.Search.ToIconString())) Service.MonsterManager.FetchData(_servers[_selectedServer], _monsterNames[_selectedMonster], _selectedInstance);
             ImGui.PopFont();
         }
 
@@ -163,7 +169,7 @@ public class ConfigWindow : Window
                 if (status == null)
                     return;
 
-                ImGui.Text($"{status.localizedName}@{status.worldName} 的状态:");
+                ImGui.Text($"{status.localizedName}@{status.worldName}@{status.instance} 的状态:");
 
                 var lastDeathTime = DateTimeOffset.FromUnixTimeMilliseconds(status.lastDeathTime).ToLocalTime().DateTime;
                 ImGui.Text($"上一次死亡时间: {lastDeathTime.ToShortDateString()} {lastDeathTime.ToLongTimeString()}");

@@ -12,4 +12,5 @@ public class HuntStatus
     public long expectMinTime;
     public long expectMaxTime;
     public string localizedName;
+    public int instance;
 }

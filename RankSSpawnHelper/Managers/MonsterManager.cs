@@ -27,6 +27,7 @@ public class MonsterManager
     public MonsterManager()
     {
         _httpClient = new HttpClient();
+        _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
         var bNpcNames = Service.DataManager.GetExcelSheet<BNpcName>();
 
@@ -140,7 +141,7 @@ public class MonsterManager
         return _sRankMonsters.Where(i => expansion == i.expansion).Select(i => i.localizedName).ToList();
     }
 
-    public void FetchData(string server, string monsterName)
+    public void FetchData(string server, string monsterName, int instance)
     {
         if (IsFetchingData)
             return;
@@ -153,11 +154,12 @@ public class MonsterManager
         {
             var body = new Dictionary<string, string>
             {
-                { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName },
+                { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
                 { "WorldName", server }
             };
 
             var response = await _httpClient.PostAsync(Url + "api/huntStatus", new FormUrlEncodedContent(body));
+            
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 ErrorMessage = "HttpStatusCode:" + response.StatusCode;
@@ -175,6 +177,7 @@ public class MonsterManager
                     _lastHuntStatus.localizedName = monsterName;
                     _lastHuntStatus.expectMaxTime /= 1000;
                     _lastHuntStatus.expectMinTime /= 1000;
+                    _lastHuntStatus.instance = instance;
                 }
 
                 IsDataReady = true;
