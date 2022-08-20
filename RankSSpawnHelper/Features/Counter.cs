@@ -83,9 +83,13 @@ public class Counter : IDisposable
             try
             {
                 if (_tracker.Count == 0 || _localTracker.Count == 0)
-                    continue;
+                {
+                    await Task.Delay(5000, token);
 
-                await Task.Delay(500, token);
+                    continue;
+                }
+
+                await Task.Delay(5000, token);
 
                 foreach (var (k, v) in _tracker)
                 {
