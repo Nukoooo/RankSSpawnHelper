@@ -28,6 +28,7 @@ public class Plugin : IDalamudPlugin
         Service.ConfigWindow = new ConfigWindow();
         Service.FateRecorder = new FateRecorder();
         Service.Counter = new Counter();
+        Service.CounterOverlay = new CounterOverlay();
         Service.WeeEa = new WeeEa();
         Service.ShowInstance = new ShowInstance();
         Service.MonsterManager = new MonsterManager();
@@ -35,7 +36,7 @@ public class Plugin : IDalamudPlugin
 
         _windowSystem = new WindowSystem("RankSSpawnHelper");
         _windowSystem.AddWindow(Service.ConfigWindow);
-        _windowSystem.AddWindow(Service.Counter.Overlay);
+        _windowSystem.AddWindow(Service.CounterOverlay);
         _windowSystem.AddWindow(Service.WeeEa.overlay);
         _windowSystem.AddWindow(Service.FateRecorder._overlay);
 

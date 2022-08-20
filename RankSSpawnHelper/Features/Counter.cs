@@ -7,22 +7,16 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
-using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
-using Dalamud.Plugin;
 using Dalamud.Utility;
-using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
-using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Models;
 
 // ReSharper disable InconsistentNaming
 
 namespace RankSSpawnHelper.Features;
-
-
 
 public class Counter : IDisposable
 {
@@ -44,19 +38,17 @@ public class Counter : IDisposable
 
     private readonly IntPtr _instanceNumberAddress;
 
-    private readonly ExcelSheet<TerritoryType> _terr;
-
     // currentworld+territory+instance, std::pair<time, std::unordered_map<monsterName, count>>
+    private readonly Dictionary<string, Tracker> _localTracker = new();
+
+    private readonly ExcelSheet<TerritoryType> _terr;
     private readonly Dictionary<string, Tracker> _tracker = new();
 
     private Tuple<SeString, string> _lastCounterMessage;
 
-    public CounterOverlay Overlay;
-
     public Counter()
     {
         _terr = Service.DataManager.GetExcelSheet<TerritoryType>();
-        Overlay = new CounterOverlay();
 
         _instanceNumberAddress =
             Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");
@@ -104,7 +96,7 @@ public class Counter : IDisposable
         var reg = Regex.Match(message.ToString(), $"{condition}“({targetName})”");
         if (!reg.Success)
             return;
-        
+
         targetName = territory switch
         {
             // 云海的刚哥要各挖50个, 所以这里分开来
@@ -125,12 +117,17 @@ public class Counter : IDisposable
         if (!Service.Configuration._trackKillCount || !Service.Configuration._trackerShowCurrentInstance) return;
 
         Service.SocketManager.SendMessage(FormatJsonString("changeArea"));
-        Overlay.IsOpen = _tracker.TryGetValue(GetCurrentInstance(), out _);
+        Service.CounterOverlay.IsOpen = _tracker.TryGetValue(GetCurrentInstance(), out _);
     }
 
     public Dictionary<string, Tracker> GetTracker()
     {
         return _tracker;
+    }
+
+    public Dictionary<string, Tracker> GetLocalTracker()
+    {
+        return _localTracker;
     }
 
     public void SetValue(string instance, string key, int value, long time)
@@ -152,7 +149,7 @@ public class Counter : IDisposable
     public void ClearTracker()
     {
         _tracker.Clear();
-        Service.Counter.Overlay.IsOpen = false;
+        Service.CounterOverlay.IsOpen = false;
     }
 
     public string GetCurrentInstance()
@@ -170,10 +167,12 @@ public class Counter : IDisposable
         }
     }
 
-    public void ClearKey(string key)
+    public void ClearKey(string key, bool local = false)
     {
-        if (_tracker.ContainsKey(key))
+        if (!local && _tracker.ContainsKey(key))
             _tracker.Remove(key);
+        else if (local && _localTracker.ContainsKey(key))
+            _localTracker.Remove(key);
     }
 
     public string FormatJsonString(string typeStr, string instance = "", string condition = "", int value = 1, bool failed = false)
@@ -266,20 +265,22 @@ public class Counter : IDisposable
         // TODO: 简洁这部分的代码
         if (!_tracker.ContainsKey(key))
         {
-            _tracker.Add(key, new Tracker
+            var tracker = new Tracker
+            {
+                counter = new Dictionary<string, int>
                 {
-                    counter = new Dictionary<string, int>
-                    {
-                        { targetName, 1 }
-                    },
-                    lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                    startTime = DateTimeOffset.Now.ToUnixTimeSeconds()
-                }
-            );
+                    { targetName, 1 }
+                },
+                lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                startTime = DateTimeOffset.Now.ToUnixTimeSeconds()
+            };
+
+            _tracker.Add(key, tracker);
+            _localTracker.Add(key, tracker);
             goto Post;
         }
 
-        if (!_tracker.TryGetValue(key, out var value))
+        if (!_tracker.TryGetValue(key, out var value) || !_localTracker.TryGetValue(key, out var value2))
         {
             PluginLog.Error($"Cannot get value by key {key}");
             return;
@@ -290,97 +291,17 @@ public class Counter : IDisposable
         else
             value.counter[targetName]++;
 
-        value.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
+        if (!value2.counter.ContainsKey(targetName))
+            value.counter.Add(targetName, 1);
+        else
+            value2.counter[targetName]++;
+
+        value.lastUpdateTime = value2.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
         Post:
         PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
-        Overlay.IsOpen = Service.Configuration._trackKillCount;
+        Service.CounterOverlay.IsOpen = Service.Configuration._trackKillCount;
 
         Service.SocketManager.SendMessage(FormatJsonString("addData", key, targetName));
-    }
-
-    public class CounterOverlay : Window
-    {
-        private const ImGuiWindowFlags _windowFlags = ImGuiWindowFlags.None;
-
-        public CounterOverlay() : base("农怪计数##RankSSpawnHelper")
-        {
-            Flags = _windowFlags;
-        }
-
-        private static ImGuiWindowFlags BuildWindowFlags(ImGuiWindowFlags var)
-        {
-            if (Service.Configuration._trackerWindowNoBackground)
-                var |= ImGuiWindowFlags.NoBackground;
-            if (Service.Configuration._trackerWindowNoTitle)
-                var |= ImGuiWindowFlags.NoTitleBar;
-            if (Service.Configuration._trackerAutoResize)
-                var |= ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
-            return var;
-        }
-
-        public override void PreDraw()
-        {
-            Flags = BuildWindowFlags(_windowFlags);
-        }
-
-        public override void Draw()
-        {
-            var tracker = Service.Counter.GetTracker();
-
-            if (!Service.Configuration._trackerShowCurrentInstance)
-            {
-                if (Fonts.AreFontsBuilt())
-                {
-                    ImGui.PushFont(Fonts.Yahei24);
-                    ImGui.SetWindowFontScale(0.8f);
-                }
-
-                foreach (var (k, v) in tracker)
-                {
-                    var splitInLoop = k.Split('@');
-
-                    ImGui.Text($"{splitInLoop[0]} - {splitInLoop[1]}" + (splitInLoop[2] == "0" ? string.Empty : $" - {splitInLoop[2]}线"));
-                    var timeInLoop = DateTimeOffset.FromUnixTimeSeconds(v.startTime).LocalDateTime;
-                    ImGui.Text($"\t开始时间: {timeInLoop.Month}-{timeInLoop.Day}@{timeInLoop.ToShortTimeString()}");
-                    foreach (var (subK, subV) in v.counter) ImGui.Text($"\t{subK} - {subV}");
-                }
-
-
-                if (!Fonts.AreFontsBuilt()) return;
-
-                ImGui.PopFont();
-                ImGui.SetWindowFontScale(1.0f);
-
-                return;
-            }
-
-            var mainKey = Service.Counter.GetCurrentInstance();
-
-            if (!tracker.TryGetValue(mainKey, out var value))
-            {
-                IsOpen = false;
-                return;
-            }
-
-            var split = mainKey.Split('@');
-
-            if (Fonts.AreFontsBuilt())
-            {
-                ImGui.PushFont(Fonts.Yahei24);
-                ImGui.SetWindowFontScale(0.8f);
-            }
-
-            ImGui.Text($"{split[0]} - {split[1]}" + (split[2] == "0" ? string.Empty : $" - {split[2]}线"));
-            var time = DateTimeOffset.FromUnixTimeSeconds(value.startTime).LocalDateTime;
-            ImGui.Text($"\t开始时间: {time.Month}-{time.Day}@{time.ToShortTimeString()}");
-
-            foreach (var (subKey, subValue) in value.counter) ImGui.Text($"\t{subKey} - {subValue}");
-
-            if (!Fonts.AreFontsBuilt()) return;
-
-            ImGui.PopFont();
-            ImGui.SetWindowFontScale(1.0f);
-        }
     }
 
     private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2,

@@ -23,6 +23,7 @@ internal class Service
     internal static ConfigWindow ConfigWindow { get; set; } = null!;
     internal static FateRecorder FateRecorder { get; set; } = null!;
     internal static Counter Counter { get; set; } = null!;
+    internal static CounterOverlay CounterOverlay { get; set; } = null!;
     internal static WeeEa WeeEa { get; set; } = null!;
     internal static ShowInstance ShowInstance { get; set; } = null!;
     internal static MonsterManager MonsterManager { get; set; } = null!;

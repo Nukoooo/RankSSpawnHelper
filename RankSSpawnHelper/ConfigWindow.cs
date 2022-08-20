@@ -179,12 +179,12 @@ public class ConfigWindow : Window
                 }
 
                 var now = DateTimeOffset.Now;
-                var minTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMinTime);
+                var minTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMinTime).AddMinutes(-30);
                 var maxTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMaxTime);
                 if (minTime > now)
                 {
                     var delta = minTime - now;
-                    ImGui.Text($"距离进入可触发时间还有: {delta.TotalMinutes / 60:F0}小时{delta.TotalMinutes % 60:F0}分{delta.Seconds}秒");
+                    ImGui.Text($"距离进入可触发时间还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
                 }
                 else
                 {
@@ -192,11 +192,10 @@ public class ConfigWindow : Window
                     ImGui.Text("当前可触发的概率为:");
                     ImGui.SameLine();
                     ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen, $"{percentage:F2}%%");
-                    if (now < maxTime)
-                    {
-                        var delta = maxTime - now;
-                        ImGui.Text($"距离进入强制期还有: {delta.TotalMinutes / 60:F0}小时{delta.TotalMinutes % 60:F0}分{delta.Seconds}秒");
-                    }
+                    if (now >= maxTime) return;
+                    
+                    var delta = maxTime - now;
+                    ImGui.Text($"距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
                 }
             }
         }
@@ -230,7 +229,7 @@ public class ConfigWindow : Window
             if (ImGui.Checkbox("启用", ref trackKillCount))
             {
                 Service.Configuration._trackKillCount = trackKillCount;
-                Service.Counter.Overlay.IsOpen = trackKillCount;
+                Service.CounterOverlay.IsOpen = trackKillCount;
                 Service.Configuration.Save();
             }
 
@@ -263,7 +262,7 @@ public class ConfigWindow : Window
             if (ImGui.Checkbox("只显示当前区域", ref showCurrentInstance))
             {
                 Service.Configuration._trackerShowCurrentInstance = showCurrentInstance;
-                Service.Counter.Overlay.IsOpen =
+                Service.CounterOverlay.IsOpen =
                     Service.Counter.GetTracker().ContainsKey(Service.Counter.GetCurrentInstance());
                 Service.Configuration.Save();
             }

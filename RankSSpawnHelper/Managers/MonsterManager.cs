@@ -14,7 +14,7 @@ namespace RankSSpawnHelper.Managers;
 
 public class MonsterManager
 {
-    private const string url = "https://tracker.ff14hunttool.com/";
+    private const string Url = "https://tracker.ff14hunttool.com/";
     private readonly HttpClient _httpClient;
 
     private readonly List<SRankMonster> _sRankMonsters = new();
@@ -116,7 +116,7 @@ public class MonsterManager
 
             try
             {
-                var result = _httpClient.GetAsync(url + "resources/hunt.json");
+                var result = _httpClient.GetAsync(Url + "resources/hunt.json");
                 var content = await result.Result.Content.ReadAsStringAsync();
                 var json = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
 
@@ -157,7 +157,7 @@ public class MonsterManager
                 { "WorldName", server }
             };
 
-            var response = await _httpClient.PostAsync(url + "api/huntStatus", new FormUrlEncodedContent(body));
+            var response = await _httpClient.PostAsync(Url + "api/huntStatus", new FormUrlEncodedContent(body));
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 ErrorMessage = "HttpStatusCode:" + response.StatusCode;
@@ -169,7 +169,7 @@ public class MonsterManager
             {
                 var content = await response.Content.ReadAsStringAsync();
                 _lastHuntStatus = JsonConvert.DeserializeObject<HuntStatus>(content);
-                PluginLog.Debug(content);
+                // PluginLog.Debug(content);
                 if (_lastHuntStatus != null)
                 {
                     _lastHuntStatus.localizedName = monsterName;

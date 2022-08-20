@@ -124,7 +124,7 @@ public class SocketManager : IDisposable
     private void Ws_ServerConnected(object sender, EventArgs e)
     {
         var key = Service.Counter.GetCurrentInstance();
-        var tracker = Service.Counter.GetTracker();
+        var tracker = Service.Counter.GetLocalTracker();
 
         _oldRangeModeState = Service.Configuration._trackRangeMode;
         Service.Configuration._trackRangeMode = false;
