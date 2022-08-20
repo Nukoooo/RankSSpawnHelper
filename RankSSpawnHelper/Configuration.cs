@@ -18,6 +18,7 @@ public class Configuration : IPluginConfiguration
     public bool _trackerWindowNoTitle { get; set; } = false;
     public bool _trackerWindowNoBackground { get; set; } = false;
     public bool _trackerAutoResize { get; set; } = true;
+    public float _trackerClearThreshold { get; set; } = 45f;
     public bool _trackerNoNotification { get; set; } = false;
 
     // 小异亚计数

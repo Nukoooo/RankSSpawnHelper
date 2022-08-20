@@ -90,7 +90,7 @@ public class Counter : IDisposable
                 foreach (var (k, v) in _tracker)
                 {
                     var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
-                    if (delta.TotalMinutes <= 45.0)
+                    if (delta.TotalMinutes <= Service.Configuration._trackerClearThreshold)
                         continue;
 
                     _tracker.Remove(k);

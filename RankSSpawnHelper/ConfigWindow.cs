@@ -395,6 +395,15 @@ public class ConfigWindow : Window
                     Type = XivChatType.Debug
                 });
 
+            ImGui.NewLine();
+            var clearThreshold = Service.Configuration._trackerClearThreshold;
+            ImGui.Text("在多少分钟后没更新就自动清除计数");
+            if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 30f, 60f, "%.2f分"))
+            {
+                Service.Configuration._trackerClearThreshold = clearThreshold;
+                Service.Configuration.Save();
+            }
+
             ImGui.EndTabItem();
         }
 
