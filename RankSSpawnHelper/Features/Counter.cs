@@ -351,7 +351,7 @@ public class Counter : IDisposable
             value.counter[targetName]++;
 
         if (!value2.counter.ContainsKey(targetName))
-            value.counter.Add(targetName, 1);
+            value2.counter.Add(targetName, 1);
         else
             value2.counter[targetName]++;
 
