@@ -76,7 +76,7 @@ public class MonsterManager
                 localizedName = bNpcNames.GetRow(8653).Singular.RawString
             };
             _sRankMonsters.Add(aglaope); // 阿格拉俄珀
-            for (uint i = 8895; i < 8915; i += 5)
+            for (uint i = 8890; i < 8915; i += 5)
             {
                 var item = new SRankMonster
                 {
