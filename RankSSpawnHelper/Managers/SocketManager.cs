@@ -13,7 +13,6 @@ using Dalamud.Plugin;
 using Dalamud.Utility;
 using ImGuiNET;
 using Newtonsoft.Json;
-using RankSSpawnHelper.Features;
 using RankSSpawnHelper.Models;
 using WatsonWebsocket;
 
@@ -44,11 +43,14 @@ public class SocketManager : IDisposable
     private bool _oldRangeModeState;
     private WatsonWsClient _ws;
     private bool _changeHost;
+
 #if DEBUG
     private string _url = "ws://127.0.0.1:8000";
 #else
     private string _url = "ws://47.106.224.112:8000";
 #endif
+
+    private string _userName = string.Empty;
 
     public SocketManager(DalamudPluginInterface pluginInterface)
     {
@@ -92,8 +94,15 @@ public class SocketManager : IDisposable
         var token = _eventLoopTokenSource.Token;
 
         while (!token.IsCancellationRequested)
+        {
             try
             {
+                if (_userName == string.Empty)
+                {
+                    await Task.Delay(2000, token);
+                    continue;
+                }
+
                 if (_ws == null || _ws.Connected || _changeHost)
                 {
                     await Task.Delay(2000, token);
@@ -102,6 +111,7 @@ public class SocketManager : IDisposable
 
                 _ws.Dispose();
                 _ws = new WatsonWsClient(new Uri(_url));
+                _ws = _ws.ConfigureOptions(options => options.SetRequestHeader("RankSSpawnHelperUser", _userName));
                 _ws.ServerConnected += Ws_ServerConnected;
                 _ws.MessageReceived += Ws_MessageReceived;
                 await _ws.StartAsync();
@@ -119,6 +129,7 @@ public class SocketManager : IDisposable
             {
                 // ignored
             }
+        }
     }
 
     private void Ws_ServerConnected(object sender, EventArgs e)
@@ -130,6 +141,7 @@ public class SocketManager : IDisposable
         Service.Configuration._trackRangeMode = false;
 
         if (!Service.Configuration._trackerNoNotification)
+        {
             Service.ChatGui.PrintChat(new XivChatEntry
             {
                 Message = new SeString(new List<Payload>
@@ -139,10 +151,11 @@ public class SocketManager : IDisposable
                     _linkPayload,
                     new TextPayload("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new"),
                     RawPayload.LinkTerminator,
-                    new UIForegroundPayload(0)
+                    new UIForegroundPayload(0),
                 }),
-                Type = XivChatType.CustomEmote
+                Type = XivChatType.CustomEmote,
             });
+        }
 
         // 如果计数器是空的，或者localplayer无效那就没有发送的必要
         if (tracker.Count == 0 || !Service.ClientState.LocalPlayer)
@@ -155,7 +168,7 @@ public class SocketManager : IDisposable
             user = Service.ClientState.LocalPlayer?.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
             currentInstance = key,
             type = "newConnection",
-            trackers = list
+            trackers = list,
         };
 
         var j = JsonConvert.SerializeObject(msg, Formatting.None);
@@ -181,7 +194,11 @@ public class SocketManager : IDisposable
             {
                 case "counter":
                 {
-                    foreach (var (key, value) in result.counter) Service.Counter.SetValue(result.instance, key, value, result.time);
+                    foreach (var (key, value) in result.counter)
+                    {
+                        Service.Counter.SetValue(result.instance, key, value, result.time);
+                    }
+
                     break;
                 }
                 case "ggnore":
@@ -196,9 +213,13 @@ public class SocketManager : IDisposable
                         new TextPayload((result.failed ? "不好啦！" : "太好啦！") + result.instance + (result.failed ? "寄啦！\n" : "出货啦！\n")),
                         new TextPayload((result.failed ? "寄时:" : "出时:") + $" {localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n"),
                         new TextPayload($"计数总数: {result.total}\n计数详情:\n"),
-                        new UIForegroundPayload(71)
+                        new UIForegroundPayload(71),
                     };
-                    foreach (var (k, v) in result.counter) payloads.Add(new TextPayload($"    {k}: {v}\n"));
+                    foreach (var (k, v) in result.counter)
+                    {
+                        payloads.Add(new TextPayload($"    {k}: {v}\n"));
+                    }
+
                     payloads.Add(new UIForegroundPayload(0));
 
                     /*
@@ -250,7 +271,7 @@ public class SocketManager : IDisposable
                     Service.ChatGui.PrintChat(new XivChatEntry
                     {
                         Message = new SeString(payloads),
-                        Type = XivChatType.Debug
+                        Type = XivChatType.Debug,
                     });
 
                     ImGui.SetClipboardText(chatMessage);
@@ -285,7 +306,16 @@ public class SocketManager : IDisposable
             _url = url;
             _ws?.Dispose();
 
+            while (_userName == string.Empty)
+            {
+                if (Service.ClientState.LocalPlayer == null)
+                    await Task.Delay(1000);
+                else
+                    _userName = Service.ClientState.LocalPlayer?.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString;
+            }
+
             _ws = new WatsonWsClient(new Uri(url));
+            _ws = _ws.ConfigureOptions(options => options.SetRequestHeader("RankSSpawnHelperUser", _userName));
             _ws.ServerConnected += Ws_ServerConnected;
             _ws.MessageReceived += Ws_MessageReceived;
 
@@ -303,11 +333,9 @@ public class SocketManager : IDisposable
     {
         if (_ws == null) return;
 
-        if (_ws.SendAsync(msg).Result) PluginLog.Debug("Successfully sent the message to server. msg: " + msg);
+        if (_ws.SendAsync(msg).Result) 
+            PluginLog.Debug("Successfully sent the message to server. msg: " + msg);
     }
 
-    public bool Connected()
-    {
-        return _ws is { Connected: true };
-    }
+    public bool Connected() => _ws is { Connected: true };
 }
