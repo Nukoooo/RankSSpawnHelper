@@ -10,22 +10,15 @@ public class WeeEa
 {
     public Overlay overlay;
 
-    public WeeEa()
-    {
-        overlay = new Overlay();
-    }
+    public WeeEa() => overlay = new Overlay();
 
     public class Overlay : Window
     {
-        public Overlay() : base("异亚计数##RankSSpawnHelper")
-        {
+        public Overlay() : base("异亚计数##RankSSpawnHelper") =>
             Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBackground;
-        }
 
-        public override void PreOpenCheck()
-        {
-            IsOpen = Service.ClientState.LocalPlayer != null && Service.ClientState.IsLoggedIn && Service.ClientState.TerritoryType == 960 && Service.Configuration._weeEaCounter;
-        }
+        public override void PreOpenCheck() => IsOpen = Service.ClientState.LocalPlayer != null && Service.ClientState.IsLoggedIn && Service.ClientState.TerritoryType == 960 &&
+                                                        Service.Configuration._weeEaCounter;
 
         public override void Draw()
         {

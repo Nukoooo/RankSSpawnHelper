@@ -37,7 +37,7 @@ public class MonsterManager
                 var item = new SRankMonster
                 {
                     expansion = GameExpansion.ARealmReborn,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
                 };
                 _sRankMonsters.Add(item);
             }
@@ -51,7 +51,7 @@ public class MonsterManager
                 var item = new SRankMonster
                 {
                     expansion = GameExpansion.Heavensward,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
                 };
                 _sRankMonsters.Add(item);
             }
@@ -63,7 +63,7 @@ public class MonsterManager
                 var item = new SRankMonster
                 {
                     expansion = GameExpansion.Stormblood,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
                 };
                 _sRankMonsters.Add(item);
             }
@@ -73,7 +73,7 @@ public class MonsterManager
             var aglaope = new SRankMonster
             {
                 expansion = GameExpansion.Shadowbringers,
-                localizedName = bNpcNames.GetRow(8653).Singular.RawString
+                localizedName = bNpcNames.GetRow(8653).Singular.RawString,
             };
             _sRankMonsters.Add(aglaope); // 阿格拉俄珀
             for (uint i = 8890; i < 8915; i += 5)
@@ -81,7 +81,7 @@ public class MonsterManager
                 var item = new SRankMonster
                 {
                     expansion = GameExpansion.Shadowbringers,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
                 };
                 _sRankMonsters.Add(item);
             }
@@ -93,7 +93,7 @@ public class MonsterManager
                 var item = new SRankMonster
                 {
                     expansion = GameExpansion.Endwalker,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
                 };
 
                 _sRankMonsters.Add(item);
@@ -103,7 +103,9 @@ public class MonsterManager
         Task.Run(async () =>
         {
             while (Service.ClientState.LocalPlayer == null)
+            {
                 await Task.Delay(500);
+            }
 
             var region = Service.ClientState.ClientLanguage switch
             {
@@ -112,7 +114,7 @@ public class MonsterManager
                 ClientLanguage.German => "de",
                 ClientLanguage.French => "fr",
                 ClientLanguage.ChineseSimplified => "cn",
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(),
             };
 
             try
@@ -126,7 +128,10 @@ public class MonsterManager
                     if (!value.TryGetValue(region, out var name))
                         continue;
 
-                    foreach (var m in _sRankMonsters.Where(monster => monster.localizedName == name)) m.keyName = key;
+                    foreach (var m in _sRankMonsters.Where(monster => monster.localizedName == name))
+                    {
+                        m.keyName = key;
+                    }
                 }
             }
             catch (Exception e)
@@ -136,10 +141,7 @@ public class MonsterManager
         });
     }
 
-    public List<string> GetMonstersNameByExpansion(GameExpansion expansion)
-    {
-        return _sRankMonsters.Where(i => expansion == i.expansion).Select(i => i.localizedName).ToList();
-    }
+    public List<string> GetMonstersNameByExpansion(GameExpansion expansion) => _sRankMonsters.Where(i => expansion == i.expansion).Select(i => i.localizedName).ToList();
 
     public void FetchData(string server, string monsterName, int instance)
     {
@@ -155,11 +157,11 @@ public class MonsterManager
             var body = new Dictionary<string, string>
             {
                 { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
-                { "WorldName", server }
+                { "WorldName", server },
             };
 
             var response = await _httpClient.PostAsync(Url + "api/huntStatus", new FormUrlEncodedContent(body));
-            
+
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 ErrorMessage = "HttpStatusCode:" + response.StatusCode;
@@ -193,8 +195,5 @@ public class MonsterManager
         });
     }
 
-    public HuntStatus GetStatus()
-    {
-        return _lastHuntStatus;
-    }
+    public HuntStatus GetStatus() => _lastHuntStatus;
 }

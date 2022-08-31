@@ -71,6 +71,7 @@ public class FateRecorder : IDisposable
         var token = _eventLoopTokenSource.Token;
 
         while (!token.IsCancellationRequested)
+        {
             try
             {
                 await Task.Delay(200, token);
@@ -84,16 +85,14 @@ public class FateRecorder : IDisposable
             {
                 break;
             }
+        }
     }
 
     public class Overlay : Window
     {
         private const ImGuiWindowFlags _windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
 
-        public Overlay() : base("南萨Fate##RankSSpawnHelper")
-        {
-            Flags = _windowFlags;
-        }
+        public Overlay() : base("南萨Fate##RankSSpawnHelper") => Flags = _windowFlags;
 
         public override void Draw()
         {

@@ -7,4 +7,5 @@ public class Tracker
     public Dictionary<string, int> counter;
     public long lastUpdateTime;
     public long startTime;
+    public uint territoryId;
 }

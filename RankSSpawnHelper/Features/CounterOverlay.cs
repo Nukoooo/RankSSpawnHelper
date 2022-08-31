@@ -8,10 +8,7 @@ public class CounterOverlay : Window
 {
     private const ImGuiWindowFlags _windowFlags = ImGuiWindowFlags.None;
 
-    public CounterOverlay() : base("农怪计数##RankSSpawnHelper")
-    {
-        Flags = _windowFlags;
-    }
+    public CounterOverlay() : base("农怪计数##RankSSpawnHelper") => Flags = _windowFlags;
 
     private static ImGuiWindowFlags BuildWindowFlags(ImGuiWindowFlags var)
     {
@@ -24,10 +21,7 @@ public class CounterOverlay : Window
         return var;
     }
 
-    public override void PreDraw()
-    {
-        Flags = BuildWindowFlags(_windowFlags);
-    }
+    public override void PreDraw() => Flags = BuildWindowFlags(_windowFlags);
 
     public override void Draw()
     {
@@ -54,11 +48,10 @@ public class CounterOverlay : Window
                     var textToDraw = $"\t{subK} - {subV}";
                     if (localTracker.ContainsKey(k) && localTracker[k].counter.TryGetValue(subK, out var localValue))
                         textToDraw += $" ({localValue})";
-                    
+
                     ImGui.Text(textToDraw);
                 }
             }
-
 
             if (!Fonts.AreFontsBuilt()) return;
 
@@ -93,7 +86,7 @@ public class CounterOverlay : Window
             var textToDraw = $"\t{subKey} - {subValue}";
             if (localTracker.ContainsKey(mainKey) && localTracker[mainKey].counter.TryGetValue(subKey, out var localSubValue))
                 textToDraw += $" ({localSubValue})";
-            
+
             ImGui.Text(textToDraw);
         }
 

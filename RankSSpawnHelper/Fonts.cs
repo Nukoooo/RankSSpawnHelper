@@ -10,10 +10,7 @@ internal class Fonts
 
     public static ImFontPtr Yahei24 { get; private set; }
 
-    public static bool AreFontsBuilt()
-    {
-        return _fontBuilt;
-    }
+    public static bool AreFontsBuilt() => _fontBuilt;
 
     public static unsafe void OnBuildFonts()
     {

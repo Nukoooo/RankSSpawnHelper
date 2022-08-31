@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
 		<LangVersion>10</LangVersion>
-		<Version>1.1.2.14</Version>
+		<Version>1.1.2.15</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -18,7 +18,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<DalamudLibPath>D:\Dalamud\addon\Hooks\dev\</DalamudLibPath>
+		<DalamudLibPath>D:\XIVLauncherCN\Roaming\addon\Hooks\dev\</DalamudLibPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -26,8 +26,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DalamudPackager" Version="2.1.6" />
-		<PackageReference Include="WatsonWebsocket" Version="2.3.4">
+		<PackageReference Include="DalamudPackager" Version="2.1.7" />
+		<PackageReference Include="WatsonWebsocket" Version="3.0.1">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 	</ItemGroup>

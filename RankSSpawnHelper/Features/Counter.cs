@@ -35,7 +35,7 @@ public class Counter : IDisposable
         { 612, "狄亚卡,莱西" }, // 边区
         { 402, "美拉西迪亚薇薇尔飞龙,小海德拉,亚拉戈奇美拉" }, // 魔大陆
         { 400, "星极花|皇金矿" }, // 翻云雾海
-        { 147, "土元精" } // 北萨
+        { 147, "土元精" }, // 北萨
     };
 
     private readonly CancellationTokenSource _eventLoopTokenSource = new();
@@ -80,6 +80,7 @@ public class Counter : IDisposable
         var token = _eventLoopTokenSource.Token;
 
         while (!token.IsCancellationRequested)
+        {
             try
             {
                 if (_tracker.Count == 0 || _localTracker.Count == 0)
@@ -110,6 +111,7 @@ public class Counter : IDisposable
             {
                 break;
             }
+        }
     }
 
     private void OnChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -145,7 +147,7 @@ public class Counter : IDisposable
             400 => reg.Groups[1].ToString(),
             // 因为正则所以得这样子搞..
             621 => "扔垃圾",
-            _ => targetName
+            _ => targetName,
         };
 
         var key = GetCurrentInstance();
@@ -158,19 +160,13 @@ public class Counter : IDisposable
 
         if (!Service.Configuration._trackKillCount || !Service.Configuration._trackerShowCurrentInstance) return;
 
-        Service.SocketManager.SendMessage(FormatJsonString("changeArea"));
+        Service.SocketManager.SendMessage(FormatJsonString("ChangeArea"));
         Service.CounterOverlay.IsOpen = _tracker.TryGetValue(GetCurrentInstance(), out _);
     }
 
-    public Dictionary<string, Tracker> GetTracker()
-    {
-        return _tracker;
-    }
+    public Dictionary<string, Tracker> GetTracker() => _tracker;
 
-    public Dictionary<string, Tracker> GetLocalTracker()
-    {
-        return _localTracker;
-    }
+    public Dictionary<string, Tracker> GetLocalTracker() => _localTracker;
 
     public void SetValue(string instance, string key, int value, long time)
     {
@@ -211,10 +207,15 @@ public class Counter : IDisposable
 
     public void ClearKey(string key, bool local = false)
     {
-        if (!local && _tracker.ContainsKey(key))
-            _tracker.Remove(key);
-        else if (local && _localTracker.ContainsKey(key))
-            _localTracker.Remove(key);
+        switch (local)
+        {
+            case false when _tracker.ContainsKey(key):
+                _tracker.Remove(key);
+                break;
+            case true when _localTracker.ContainsKey(key):
+                _localTracker.Remove(key);
+                break;
+        }
     }
 
     public string FormatJsonString(string typeStr, string instance = "", string condition = "", int value = 1, bool failed = false)
@@ -222,31 +223,26 @@ public class Counter : IDisposable
         var currentInstance = GetCurrentInstance();
         var msg = new NetMessage
         {
-            type = typeStr,
-            user = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
-            failed = failed
+            Type = typeStr,
+            User = Service.ClientState.LocalPlayer.Name.TextValue + "@" + Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.RawString,
+            Failed = failed,
+            TerritoryId = Service.ClientState.TerritoryType,
         };
 
-        if (typeStr != "changeArea")
+        if (typeStr != "ChangeArea")
         {
-            msg.instance = instance;
-            msg.time = !GetTracker().TryGetValue(currentInstance, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime;
-            msg.data = new Dictionary<string, int> { { condition, value } };
+            msg.Instance = instance;
+            msg.Time = !GetTracker().TryGetValue(currentInstance, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime;
+            msg.Data = new Dictionary<string, int> { { condition, value } };
         }
 
         var json = JsonConvert.SerializeObject(msg);
         return json;
     }
 
-    public void SetLastCounterMessage(SeString seString, string msg)
-    {
-        _lastCounterMessage = new Tuple<SeString, string>(seString, msg);
-    }
+    public void SetLastCounterMessage(SeString seString, string msg) => _lastCounterMessage = new Tuple<SeString, string>(seString, msg);
 
-    public Tuple<SeString, string> GetLastCounterMessage()
-    {
-        return _lastCounterMessage;
-    }
+    public Tuple<SeString, string> GetLastCounterMessage() => _lastCounterMessage;
 
     private void hk_ActorControlSelf(uint entityId, int type, uint buffID, uint direct, uint damage, uint sourceId,
         uint arg4, uint arg5, ulong targetId, byte a10)
@@ -312,15 +308,15 @@ public class Counter : IDisposable
             {
                 counter = new Dictionary<string, int>
                 {
-                    { targetName, 1 }
+                    { targetName, 1 },
                 },
                 lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                startTime = DateTimeOffset.Now.ToUnixTimeSeconds()
+                startTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                territoryId = Service.ClientState.TerritoryType,
             };
 
             _localTracker.Add(key, tracker);
         }
-
 
         if (!_tracker.ContainsKey(key))
         {
@@ -328,10 +324,11 @@ public class Counter : IDisposable
             {
                 counter = new Dictionary<string, int>
                 {
-                    { targetName, 1 }
+                    { targetName, 1 },
                 },
                 lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                startTime = DateTimeOffset.Now.ToUnixTimeSeconds()
+                startTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                territoryId = Service.ClientState.TerritoryType,
             };
 
             _tracker.Add(key, tracker);
@@ -360,7 +357,7 @@ public class Counter : IDisposable
         PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
         Service.CounterOverlay.IsOpen = Service.Configuration._trackKillCount;
 
-        Service.SocketManager.SendMessage(FormatJsonString("addData", key, targetName));
+        Service.SocketManager.SendMessage(FormatJsonString("AddData", key, targetName));
     }
 
     private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2,

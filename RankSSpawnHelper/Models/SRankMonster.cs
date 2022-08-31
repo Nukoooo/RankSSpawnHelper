@@ -6,7 +6,7 @@ public enum GameExpansion
     Heavensward,
     Stormblood,
     Shadowbringers,
-    Endwalker
+    Endwalker,
 }
 
 public class SRankMonster

@@ -42,11 +42,13 @@ public class ConfigWindow : Window
         {
             var result = _colorInfos.Find(info => info.Color == color.UIForeground);
             if (result == null)
+            {
                 _colorInfos.Add(new ColorInfo
                 {
                     RowId = color.RowId,
-                    Color = color.UIForeground
+                    Color = color.UIForeground,
                 });
+            }
         }
 
         Flags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -54,7 +56,9 @@ public class ConfigWindow : Window
         Task.Run(async () =>
         {
             while (Service.ClientState.LocalPlayer == null)
+            {
                 await Task.Delay(500);
+            }
 
             _servers = Utils.GetServers();
         });
@@ -140,10 +144,7 @@ public class ConfigWindow : Window
         }
 
         ImGui.Combo("S怪", ref _selectedMonster, _monsterNames.ToArray(), _monsterNames.Count);
-        if (ImGui.InputInt("几线", ref _selectedInstance, 1))
-        {
-            _selectedInstance = Math.Clamp(_selectedInstance, 0, 3);
-        }
+        if (ImGui.InputInt("几线", ref _selectedInstance, 1)) _selectedInstance = Math.Clamp(_selectedInstance, 0, 3);
 
         ImGui.SameLine();
 
@@ -154,15 +155,11 @@ public class ConfigWindow : Window
         }
 
         if (Service.MonsterManager.ErrorMessage != string.Empty)
-        {
             ImGui.TextColored(ImGuiColors.DPSRed, Service.MonsterManager.ErrorMessage);
-        }
         else
         {
             if (Service.MonsterManager.IsFetchingData)
-            {
                 ImGui.Text("正在获取数据");
-            }
             else if (Service.MonsterManager.IsDataReady)
             {
                 var status = Service.MonsterManager.GetStatus();
@@ -199,7 +196,7 @@ public class ConfigWindow : Window
                     ImGui.SameLine();
                     ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen, $"{percentage:F2}%%");
                     if (now >= maxTime) return;
-                    
+
                     var delta = maxTime - now;
                     ImGui.Text($"距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
                 }
@@ -220,10 +217,7 @@ public class ConfigWindow : Window
         }
     }
 
-    public override void OnOpen()
-    {
-        _monsterNames ??= Service.MonsterManager.GetMonstersNameByExpansion((GameExpansion)_selectedExpansion);
-    }
+    public override void OnOpen() => _monsterNames ??= Service.MonsterManager.GetMonstersNameByExpansion((GameExpansion)_selectedExpansion);
 
     public override void Draw()
     {
@@ -253,9 +247,7 @@ public class ConfigWindow : Window
                     Service.Configuration.Save();
                 }
                 else
-                {
                     Service.Configuration._trackRangeMode = false;
-                }
             }
 
             ImGui.SameLine();
@@ -287,7 +279,7 @@ public class ConfigWindow : Window
                 Service.Configuration._trackerWindowNoBackground = noBackground;
                 Service.Configuration.Save();
             }
-            
+
             ImGui.SameLine();
             var autoResize = Service.Configuration._trackerAutoResize;
             if (ImGui.Checkbox("窗口自动调整大小", ref autoResize))
@@ -323,11 +315,13 @@ public class ConfigWindow : Window
         }
 
         if (_servers != null)
+        {
             if (ImGui.BeginTabItem("S怪状态查询"))
             {
                 DrawQueryTab();
                 ImGui.EndTabItem();
             }
+        }
 
         if (ImGui.BeginTabItem("其他"))
         {
@@ -374,6 +368,7 @@ public class ConfigWindow : Window
 
             ImGui.SameLine();
             if (ImGui.Button("预览"))
+            {
                 Service.ChatGui.PrintChat(new XivChatEntry
                 {
                     Message = new SeString(new List<Payload>
@@ -390,10 +385,11 @@ public class ConfigWindow : Window
                         new TextPayload("deez nuts! "),
                         new UIForegroundPayload(0),
                         new TextPayload("Ha! Got’em."),
-                        new UIForegroundPayload(0)
+                        new UIForegroundPayload(0),
                     }),
-                    Type = XivChatType.Debug
+                    Type = XivChatType.Debug,
                 });
+            }
 
             ImGui.NewLine();
             var clearThreshold = Service.Configuration._trackerClearThreshold;
@@ -419,7 +415,7 @@ public class ConfigWindow : Window
             ImGui.PushFont(UiBuilder.IconFont);
             if (ImGui.Button(FontAwesomeIcon.Coffee.ToIconString())) Util.OpenLink("https://afdian.net/@chajian");
             ImGui.PopFont();
-            
+
             ImGui.EndTabItem();
         }
 
@@ -438,7 +434,7 @@ public class ConfigWindow : Window
             ColorPickerType.Failed => "给触发失败消息",
             ColorPickerType.Highlighted => "给关键词",
             ColorPickerType.Spawned => "给触发成功消息",
-            _ => ""
+            _ => "",
         };
 
         if (!ImGui.Begin(type + "选个颜色呗", ref _showColorPicker, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize)) return;
@@ -476,7 +472,7 @@ public class ConfigWindow : Window
     {
         Failed,
         Spawned,
-        Highlighted
+        Highlighted,
     }
 
     internal class ColorInfo

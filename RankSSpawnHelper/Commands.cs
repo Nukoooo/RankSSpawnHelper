@@ -18,13 +18,13 @@ public class Commands : IDisposable
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "打开农怪助手设置菜单",
-            ShowInHelp = true
+            ShowInHelp = true,
         });
 
         Service.CommandManager.AddHandler(LastCounterMessage, new CommandInfo(OnCommand)
         {
             HelpMessage = "获取上次计数的详情",
-            ShowInHelp = true
+            ShowInHelp = true,
         });
 
 #if DEBUG
@@ -35,18 +35,22 @@ public class Commands : IDisposable
 #endif
 
         foreach (var t in _clearTracker)
+        {
             Service.CommandManager.AddHandler(t, new CommandInfo(Command_ClearTracker)
             {
                 ShowInHelp = true,
-                HelpMessage = $"清除本地计数. 清除当前计数: {t} cur/current/当前. 清除所有计数: {t} all/所有/全部"
+                HelpMessage = $"清除本地计数. 清除当前计数: {t} cur/current/当前. 清除所有计数: {t} all/所有/全部",
             });
+        }
 
         foreach (var t in _ggnore)
+        {
             Service.CommandManager.AddHandler(t, new CommandInfo(Command_GG)
             {
                 ShowInHelp = true,
-                HelpMessage = "联网农怪 - 给服务器发送寄了的消息"
+                HelpMessage = "联网农怪 - 给服务器发送寄了的消息",
             });
+        }
     }
 
     public void Dispose()
@@ -56,8 +60,15 @@ public class Commands : IDisposable
 #if DEBUG
         Service.CommandManager.RemoveHandler(DebugCommand);
 #endif
-        foreach (var cmd in _clearTracker) Service.CommandManager.RemoveHandler(cmd);
-        foreach (var cmd in _ggnore) Service.CommandManager.RemoveHandler(cmd);
+        foreach (var cmd in _clearTracker)
+        {
+            Service.CommandManager.RemoveHandler(cmd);
+        }
+
+        foreach (var cmd in _ggnore)
+        {
+            Service.CommandManager.RemoveHandler(cmd);
+        }
     }
 
     private static void Command_ClearTracker(string cmd, string args)
@@ -104,7 +115,10 @@ public class Commands : IDisposable
                           $"结束时间: {endTime.ToShortDateString()}/{endTime.ToShortTimeString()}\n" +
                           "计数详情: ";
 
-            foreach (var (k, v) in tracker.counter) message += $"    {k}: {v}\n";
+            foreach (var (k, v) in tracker.counter)
+            {
+                message += $"    {k}: {v}\n";
+            }
 
             Service.ChatGui.PrintError(message + "PS:消息已复制到剪贴板");
             ImGui.SetClipboardText(message);

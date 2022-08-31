@@ -41,7 +41,7 @@ public class ShowInstance : IDisposable
                 "1" => "\xe0b1线",
                 "2" => "\xe0b2线",
                 "3" => "\xe0b3线",
-                _ => ""
+                _ => "",
             };
         }
         catch (Exception)

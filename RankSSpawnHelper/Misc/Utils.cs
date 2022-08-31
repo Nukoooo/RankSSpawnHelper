@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Dalamud.Logging;
 using Lumina.Excel.GeneratedSheets;
-using Newtonsoft.Json;
 
 namespace RankSSpawnHelper.Misc;
 
@@ -20,7 +16,7 @@ internal static class Utils
         "萌芽池",
         "宇宙和音",
         "沃仙曦染",
-        "晨曦王座"
+        "晨曦王座",
     };
 
     private static readonly List<string> MoGuliServers = new()
@@ -32,7 +28,7 @@ internal static class Utils
         "旅人栈桥",
         "拂晓之间",
         "龙巢神殿",
-        "梦羽宝境"
+        "梦羽宝境",
     };
 
     private static readonly List<string> MaoXiaoPangServers = new()
@@ -43,7 +39,7 @@ internal static class Utils
         "摩杜纳",
         "海猫茶屋",
         "柔风海湾",
-        "琥珀原"
+        "琥珀原",
     };
 
     private static readonly List<string> DouDouChaiServers = new()
@@ -52,12 +48,11 @@ internal static class Utils
         "银泪湖",
         "太阳海岸",
         "伊修加德",
-        "红茶川"
+        "红茶川",
     };
-    
+
     public static void Initialize()
     {
-
     }
 
     public static List<string> GetServers()

@@ -33,8 +33,5 @@ public class Configuration : IPluginConfiguration
 
     int IPluginConfiguration.Version { get; set; }
 
-    public void Save()
-    {
-        Service.Interface.SavePluginConfig(this);
-    }
+    public void Save() => Service.Interface.SavePluginConfig(this);
 }

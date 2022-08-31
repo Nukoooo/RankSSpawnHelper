@@ -4,26 +4,22 @@ namespace RankSSpawnHelper.Models;
 
 internal class NetMessage
 {
-    public long time { get; set; }
-    public string type { get; set; }
-    public string instance { get; set; }
-    public string user { get; set; }
-    public Dictionary<string, int> data { get; set; }
-    public bool failed { get; set; }
-}
-
-
-internal class NetMessage_NewConnection
-{
-    public string currentInstance;
-    public List<Tracker> trackers;
-    public string type;
-    public string user;
+    // Only used in NewConnection
+    public string CurrentInstance;
+    public List<Tracker> Trackers;
+    public long Time { get; set; }
+    public string Type { get; set; }
+    public string Instance { get; set; }
+    public string User { get; set; }
+    public Dictionary<string, int> Data { get; set; }
+    public bool Failed { get; set; }
+    public uint TerritoryId { get; set; }
 
     internal class Tracker
     {
-        public Dictionary<string, int> data;
-        public string instance;
-        public long time;
+        public Dictionary<string, int> Data;
+        public string Instance;
+        public uint TerritoryId;
+        public long Time;
     }
 }

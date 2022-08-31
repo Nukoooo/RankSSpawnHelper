@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Linq;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
-using Dalamud.Utility;
-using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Features;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Misc;
@@ -22,7 +18,7 @@ public class Plugin : IDalamudPlugin
         pluginInterface.Create<Service>();
 
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        Service.SocketManager = new SocketManager(pluginInterface);
+        Service.SocketManager = new SocketManager();
 
         Service.Commands = new Commands();
         Service.ConfigWindow = new ConfigWindow();
@@ -61,8 +57,5 @@ public class Plugin : IDalamudPlugin
         Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;
     }
 
-    private static void OpenConfigUi()
-    {
-        Service.ConfigWindow.IsOpen = true;
-    }
+    private static void OpenConfigUi() => Service.ConfigWindow.IsOpen = true;
 }
