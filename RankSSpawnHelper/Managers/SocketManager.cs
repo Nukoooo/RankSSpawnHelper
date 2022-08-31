@@ -194,6 +194,17 @@ public class SocketManager : IDisposable
             return;
         }
 
+        if (msg.StartsWith("广播消息:"))
+        {
+            Service.ChatGui.PrintChat(new XivChatEntry()
+            {
+                Message = msg[5..],
+                Name = "S怪触发小助手",
+                Type = XivChatType.Urgent,
+            });
+            return;
+        }
+
         try
         {
             var result = JsonConvert.DeserializeObject<ReceivedMessage>(msg);
