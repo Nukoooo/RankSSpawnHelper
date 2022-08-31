@@ -2,11 +2,9 @@
 
 namespace RankSSpawnHelper.Models;
 
+// @formatter: off
 internal class NetMessage
 {
-    // Only used in NewConnection
-    public string CurrentInstance;
-    public List<Tracker> Trackers;
     public long Time { get; set; }
     public string Type { get; set; }
     public string Instance { get; set; }
@@ -15,6 +13,9 @@ internal class NetMessage
     public bool Failed { get; set; }
     public uint TerritoryId { get; set; }
 
+    // Only used in NewConnection
+    public string CurrentInstance;
+    public List<Tracker> Trackers;
     internal class Tracker
     {
         public Dictionary<string, int> Data;

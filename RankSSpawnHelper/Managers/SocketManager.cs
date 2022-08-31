@@ -26,6 +26,7 @@ public class SocketManager : IDisposable
     private bool _oldRangeModeState;
     private WatsonWsClient _ws;
     private bool _changeHost;
+    private const string ServerVersion = "v2";
 
 #if DEBUG
     private string _url = "ws://127.0.0.1:8000";
@@ -367,7 +368,7 @@ public class SocketManager : IDisposable
     {
         obj.KeepAliveInterval = new TimeSpan(30);
         obj.SetRequestHeader("RankSSpawnHelperUser", EncodeNonAsciiCharacters(_userName));
-        obj.SetRequestHeader("ServerVersion", "v2");
+        obj.SetRequestHeader("ServerVersion", ServerVersion);
     }
 
     public void SendMessage(string msg)
