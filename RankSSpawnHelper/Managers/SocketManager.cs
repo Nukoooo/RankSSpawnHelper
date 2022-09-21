@@ -310,7 +310,7 @@ namespace RankSSpawnHelper.Managers
 
         public bool Connected()
         {
-            return _client != null && _client.IsRunning;
+            return _client != null && _client.IsStarted;
         }
     }
 }
