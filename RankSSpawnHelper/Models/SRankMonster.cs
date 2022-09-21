@@ -14,4 +14,5 @@ public class SRankMonster
     public GameExpansion expansion;
     public string keyName;
     public string localizedName;
+    public uint id;
 }

@@ -7,6 +7,7 @@ internal class ReceivedMessage
     public string Type { get; set; }
     public string Instance { get; set; }
     public long Time { get; set; }
+    public uint TerritoryId { get; set; }
     public Dictionary<string, int> Counter { get; set; }
     public Dictionary<string, int> UserCounter { get; set; }
 

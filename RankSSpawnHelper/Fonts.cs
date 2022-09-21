@@ -21,9 +21,8 @@ internal class Fonts
             fontConfig.FontDataOwnedByAtlas = false;
             fontConfig.PixelSnapH = true;
 
+            // TODO: 用DalamudAsset里的字体
             Yahei24 = ImGui.GetIO().Fonts.AddFontFromFileTTF("C:\\Windows\\Fonts\\msyhbd.ttc", 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
-            // 如果我再创建一个的话就会crash????不知道为什么
-            // Yahei16 = ImGui.GetIO().Fonts.AddFontFromFileTTF("C:\\Windows\\Fonts\\msyhbd.ttc", 16, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
 
             _fontBuilt = true;
 

@@ -18,12 +18,12 @@ public class Plugin : IDalamudPlugin
         pluginInterface.Create<Service>();
 
         Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Service.Counter = new Counter();
         Service.SocketManager = new SocketManager();
 
         Service.Commands = new Commands();
         Service.ConfigWindow = new ConfigWindow();
         Service.FateRecorder = new FateRecorder();
-        Service.Counter = new Counter();
         Service.CounterOverlay = new CounterOverlay();
         Service.WeeEa = new WeeEa();
         Service.ShowInstance = new ShowInstance();

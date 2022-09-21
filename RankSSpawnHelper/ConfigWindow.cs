@@ -66,7 +66,7 @@ public class ConfigWindow : Window
 
     private static void DrawTrackerTable()
     {
-        var tracker = Service.Counter.GetTracker();
+        var tracker = Service.Counter.GetNetworkedTracker();
 
         if (tracker.Count == 0)
             return;
@@ -82,7 +82,7 @@ public class ConfigWindow : Window
             ImGui.TableSetupColumn("##删除计数清除", ImGuiTableColumnFlags.WidthFixed, 20 * ImGuiHelpers.GlobalScale);
             ImGui.TableHeadersRow();
 
-            foreach (var (mainKey, mainValue) in Service.Counter.GetTracker())
+            foreach (var (mainKey, mainValue) in Service.Counter.GetNetworkedTracker())
             {
                 ImGui.PushID($"##农怪表格{mainKey}");
 
@@ -261,7 +261,7 @@ public class ConfigWindow : Window
             {
                 Service.Configuration._trackerShowCurrentInstance = showCurrentInstance;
                 Service.CounterOverlay.IsOpen =
-                    Service.Counter.GetTracker().ContainsKey(Service.Counter.GetCurrentInstance());
+                    Service.Counter.GetNetworkedTracker().ContainsKey(Service.Counter.GetCurrentInstance());
                 Service.Configuration.Save();
             }
 
@@ -406,15 +406,17 @@ public class ConfigWindow : Window
         if (ImGui.BeginTabItem("关于"))
         {
             ImGui.Text("感谢使用本插件，如果:");
-            ImGui.Text("- 遇到BUG了,或者有建议");
-            ImGui.SameLine();
-            if (ImGui.Button("提交")) Util.OpenLink("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new");
 
-            ImGui.Text("- 想帮我买杯咖啡");
+            if (ImGui.Button("点我提交")) Util.OpenLink("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new");
             ImGui.SameLine();
+            ImGui.Text("- 遇到BUG了,或者有建议");
+
             ImGui.PushFont(UiBuilder.IconFont);
             if (ImGui.Button(FontAwesomeIcon.Coffee.ToIconString())) Util.OpenLink("https://afdian.net/@chajian");
             ImGui.PopFont();
+
+            ImGui.SameLine();
+            ImGui.Text("- 想帮我买杯咖啡");
 
             ImGui.EndTabItem();
         }

@@ -104,7 +104,7 @@ public class Commands : IDisposable
         if (!Service.SocketManager.Connected())
         {
             var currentInstance = Service.Counter.GetCurrentInstance();
-            if (!Service.Counter.GetTracker().TryGetValue(currentInstance, out var tracker))
+            if (!Service.Counter.GetNetworkedTracker().TryGetValue(currentInstance, out var tracker))
                 return;
 
             var startTime = DateTimeOffset.FromUnixTimeSeconds(tracker.startTime).LocalDateTime;
@@ -156,7 +156,6 @@ public class Commands : IDisposable
 
                 Service.ChatGui.Print(messageTuple.Item1);
                 ImGui.SetClipboardText(messageTuple.Item2);
-
                 break;
             }
         }
