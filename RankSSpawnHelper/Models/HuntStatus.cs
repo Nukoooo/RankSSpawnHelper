@@ -1,16 +1,19 @@
-﻿namespace RankSSpawnHelper.Models;
+﻿// ReSharper disable InconsistentNaming
 
-public class HuntStatus
+namespace RankSSpawnHelper.Models
 {
-    public string huntName;
-    public string worldName;
-    public long lastDeathTime;
-    public bool missing;
-    public string lastAttempt;
-    public int attemptCount;
-    public string baseName;
-    public long expectMinTime;
-    public long expectMaxTime;
-    public string localizedName;
-    public int instance;
+    public class HuntStatus
+    {
+        public int attemptCount;
+        public string baseName;
+        public long expectMaxTime;
+        public long expectMinTime;
+        public string huntName;
+        public int instance;
+        public string lastAttempt;
+        public long lastDeathTime;
+        public string localizedName;
+        public bool missing;
+        public string worldName;
+    }
 }

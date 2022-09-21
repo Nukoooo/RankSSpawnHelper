@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 
-namespace RankSSpawnHelper.Models;
+// ReSharper disable InconsistentNaming
 
-public class Tracker
+namespace RankSSpawnHelper.Models
 {
-    public Dictionary<string, int> counter;
-    public long lastUpdateTime;
-    public long startTime;
-    public uint territoryId;
+    internal class Tracker
+    {
+        public Dictionary<string, int> counter;
+        public long lastUpdateTime;
+        public long startTime;
+        public uint territoryId;
+    }
 }

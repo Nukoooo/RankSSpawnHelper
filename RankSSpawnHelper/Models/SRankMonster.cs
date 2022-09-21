@@ -1,18 +1,21 @@
-﻿namespace RankSSpawnHelper.Models;
+﻿// ReSharper disable InconsistentNaming
 
-public enum GameExpansion
+namespace RankSSpawnHelper.Models
 {
-    ARealmReborn,
-    Heavensward,
-    Stormblood,
-    Shadowbringers,
-    Endwalker,
-}
+    public enum GameExpansion
+    {
+        ARealmReborn,
+        Heavensward,
+        Stormblood,
+        Shadowbringers,
+        Endwalker
+    }
 
-public class SRankMonster
-{
-    public GameExpansion expansion;
-    public string keyName;
-    public string localizedName;
-    public uint id;
+    public class SRankMonster
+    {
+        public GameExpansion expansion;
+        public uint id;
+        public string keyName;
+        public string localizedName;
+    }
 }

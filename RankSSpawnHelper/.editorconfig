@@ -15,8 +15,37 @@ dotnet_style_qualification_for_property = false:none
 # IDE0060: Remove unused parameter
 dotnet_code_quality_unused_parameters = non_public:suggestion
 
-# CA1416: Validate platform compatibility
-dotnet_diagnostic.ca1416.severity = none
+# ReSharper properties
+resharper_align_linq_query = true
+resharper_align_multiline_argument = true
+resharper_align_multiline_binary_patterns = true
+resharper_align_multiline_calls_chain = true
+resharper_align_multiline_expression = true
+resharper_align_multiline_extends_list = true
+resharper_align_multiline_parameter = true
+resharper_align_multiline_property_pattern = true
+resharper_align_multiline_switch_expression = true
+resharper_align_multiple_declaration = true
+resharper_align_multline_type_parameter_constrains = true
+resharper_align_multline_type_parameter_list = true
+resharper_align_tuple_components = true
+resharper_csharp_align_first_arg_by_paren = true
+resharper_csharp_empty_block_style = together_same_line
+resharper_csharp_use_indent_from_vs = false
+resharper_indent_anonymous_method_block = true
+resharper_indent_nested_fixed_stmt = true
+resharper_indent_nested_foreach_stmt = true
+resharper_indent_nested_for_stmt = true
+resharper_indent_nested_lock_stmt = true
+resharper_indent_nested_usings_stmt = true
+resharper_indent_nested_while_stmt = true
+resharper_indent_preprocessor_if = usual_indent
+resharper_int_align_assignments = true
+resharper_int_align_property_patterns = true
+resharper_int_align_switch_expressions = true
+resharper_int_align_switch_sections = true
+resharper_int_align_variables = true
+resharper_outdent_statement_labels = true
 
 [*.{cs,vb}]
 #### Naming styles ####
@@ -93,8 +122,7 @@ csharp_style_expression_bodied_indexers = true:silent
 csharp_style_expression_bodied_accessors = true:silent
 csharp_style_expression_bodied_lambdas = true:silent
 csharp_style_expression_bodied_local_functions = false:silent
-csharp_space_around_binary_operators = before_and_after
 
 # ReSharper properties
 resharper_braces_for_ifelse = required_for_multiline
-resharper_place_simple_embedded_statement_on_same_line = false
+resharper_indent_preprocessor_if = no_indent

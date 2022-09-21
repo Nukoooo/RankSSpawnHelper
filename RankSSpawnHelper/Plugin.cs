@@ -1,61 +1,12 @@
-﻿using System;
-using Dalamud.Interface.Windowing;
-using Dalamud.IoC;
-using Dalamud.Plugin;
-using RankSSpawnHelper.Features;
-using RankSSpawnHelper.Managers;
-using RankSSpawnHelper.Misc;
+﻿using RankSSpawnHelper.Ui;
 
-namespace RankSSpawnHelper;
-
-public class Plugin : IDalamudPlugin
+namespace RankSSpawnHelper
 {
-    private readonly WindowSystem _windowSystem;
-
-    public Plugin(
-        [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface)
+    internal class Plugin
     {
-        pluginInterface.Create<Service>();
-
-        Service.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        Service.Counter = new Counter();
-        Service.SocketManager = new SocketManager();
-
-        Service.Commands = new Commands();
-        Service.ConfigWindow = new ConfigWindow();
-        Service.FateRecorder = new FateRecorder();
-        Service.CounterOverlay = new CounterOverlay();
-        Service.WeeEa = new WeeEa();
-        Service.ShowInstance = new ShowInstance();
-        Service.MonsterManager = new MonsterManager();
-        Utils.Initialize();
-
-        _windowSystem = new WindowSystem("RankSSpawnHelper");
-        _windowSystem.AddWindow(Service.ConfigWindow);
-        _windowSystem.AddWindow(Service.CounterOverlay);
-        _windowSystem.AddWindow(Service.WeeEa.overlay);
-        _windowSystem.AddWindow(Service.FateRecorder._overlay);
-
-        Service.Interface.UiBuilder.BuildFonts += Fonts.OnBuildFonts;
-        Service.Interface.UiBuilder.RebuildFonts();
-        Service.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
-        Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
+        internal static Configuration Configuration { get; set; } = null!;
+        internal static Features.Features Features { get; set; } = null!;
+        internal static Managers.Managers Managers { get; set; } = null!;
+        internal static Windows Windows { get; set; } = null!;
     }
-
-    public string Name => "S怪触发小助手";
-
-    public void Dispose()
-    {
-        Service.Commands.Dispose();
-        GC.SuppressFinalize(this);
-        Service.FateRecorder.Dispose();
-        Service.Counter.Dispose();
-        Service.ShowInstance.Dispose();
-
-        Service.Interface.UiBuilder.BuildFonts -= Fonts.OnBuildFonts;
-        Service.Interface.UiBuilder.OpenConfigUi -= OpenConfigUi;
-        Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;
-    }
-
-    private static void OpenConfigUi() => Service.ConfigWindow.IsOpen = true;
 }

@@ -1,30 +1,28 @@
 ﻿using System;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Interface.Windowing;
 using ImGuiNET;
 
-namespace RankSSpawnHelper.Features;
-
-public class WeeEa
+namespace RankSSpawnHelper.UI.Window
 {
-    public Overlay overlay;
-
-    public WeeEa() => overlay = new Overlay();
-
-    public class Overlay : Window
+    internal class WeeEaWindow : global::Dalamud.Interface.Windowing.Window
     {
-        public Overlay() : base("异亚计数##RankSSpawnHelper") =>
+        public WeeEaWindow() : base("异亚计数##RankSSpawnHelper")
+        {
             Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBackground;
+        }
 
-        public override void PreOpenCheck() => IsOpen = Service.ClientState.LocalPlayer != null && Service.ClientState.IsLoggedIn && Service.ClientState.TerritoryType == 960 &&
-                                                        Service.Configuration._weeEaCounter;
+        public override void PreOpenCheck()
+        {
+            IsOpen = DalamudApi.ClientState.LocalPlayer != null && DalamudApi.ClientState.IsLoggedIn && DalamudApi.ClientState.TerritoryType == 960 &&
+                     Plugin.Configuration.WeeEaCounter;
+        }
 
         public override void Draw()
         {
-            var count = 0;
+            var count  = 0;
             var count2 = 0;
-            foreach (var actor in Service.ObjectTable)
+            foreach (var actor in DalamudApi.ObjectTable)
             {
                 if (actor == null || actor.Address == IntPtr.Zero)
                     continue;
@@ -35,7 +33,7 @@ public class WeeEa
                 if (npc.Address == IntPtr.Zero || npc.ObjectKind != ObjectKind.Companion)
                     continue;
 
-                var delta = npc.Position - Service.ClientState.LocalPlayer.Position;
+                var delta = npc.Position - DalamudApi.ClientState.LocalPlayer.Position;
 
                 // xzy 
                 var length2D = Math.Sqrt(delta.X * delta.X + delta.Z * delta.Z);
@@ -49,12 +47,12 @@ public class WeeEa
                     count2++;
             }
 
-            if (Fonts.AreFontsBuilt())
-                ImGui.PushFont(Fonts.Yahei24);
+            if (Plugin.Managers.Font.IsFontBuilt())
+                ImGui.PushFont(Plugin.Managers.Font.Yahei24);
 
             ImGui.Text($"附近的小异亚数量:{count}\n非小异亚的数量: {count2}");
 
-            if (Fonts.AreFontsBuilt())
+            if (Plugin.Managers.Font.IsFontBuilt())
                 ImGui.PopFont();
         }
     }

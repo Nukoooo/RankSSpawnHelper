@@ -1,37 +1,40 @@
 ﻿using Dalamud.Configuration;
 
-namespace RankSSpawnHelper;
-
-public class Configuration : IPluginConfiguration
+namespace RankSSpawnHelper
 {
-    // 记录南萨的FATE
-    public bool _recordFATEsInSouthThanalan { get; set; } = false;
+    public class Configuration : IPluginConfiguration
+    {
+        int IPluginConfiguration.Version { get; set; }
 
-    // 农怪计数
-    public bool _trackKillCount { get; set; } = false;
+        public void Save()
+        {
+            DalamudApi.Interface.SavePluginConfig(this);
+        }
 
-    // true = 范围计数, false = 单人计数
-    public bool _trackRangeMode { get; set; } = false;
+#region Saved configuration values
+        // 农怪计数
+        public bool TrackKillCount { get; set; } = false;
 
-    // true = 只显示当前区域, false = 显示所有计数
-    public bool _trackerShowCurrentInstance { get; set; } = false;
-    public bool _trackerWindowNoTitle { get; set; } = false;
-    public bool _trackerWindowNoBackground { get; set; } = false;
-    public bool _trackerAutoResize { get; set; } = true;
-    public float _trackerClearThreshold { get; set; } = 45f;
-    public bool _trackerNoNotification { get; set; } = false;
+        // true = 范围计数, false = 单人计数
+        public bool TrackRangeMode { get; set; } = false;
 
-    // 小异亚计数
-    public bool _weeEaCounter { get; set; } = false;
+        // true = 只显示当前区域, false = 显示所有计数
+        public bool TrackerShowCurrentInstance { get; set; } = false;
+        public bool TrackerWindowNoTitle { get; set; } = false;
+        public bool TrackerWindowNoBackground { get; set; } = false;
+        public bool TrackerAutoResize { get; set; } = true;
+        public float TrackerClearThreshold { get; set; } = 45f;
+        public bool TrackerNoNotification { get; set; } = false;
 
-    // 服务器信息显示几线
-    public bool _showInstance { get; set; } = false;
+        // 小异亚计数
+        public bool WeeEaCounter { get; set; } = false;
 
-    public uint _failedMessageColor { get; set; } = 518;
-    public uint _spawnedMessageColor { get; set; } = 59;
-    public uint _highlightColor { get; set; } = 71;
+        // 服务器信息显示几线
+        public bool ShowInstance { get; set; } = false;
 
-    int IPluginConfiguration.Version { get; set; }
-
-    public void Save() => Service.Interface.SavePluginConfig(this);
+        public uint FailedMessageColor { get; set; } = 518;
+        public uint SpawnedMessageColor { get; set; } = 59;
+        public uint HighlightColor { get; set; } = 71;
+#endregion
+    }
 }
