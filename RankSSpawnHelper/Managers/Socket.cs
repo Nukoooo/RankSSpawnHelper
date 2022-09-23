@@ -133,24 +133,21 @@ namespace RankSSpawnHelper.Managers
             _oldRangeModeState                  = Plugin.Configuration.TrackRangeMode;
             Plugin.Configuration.TrackRangeMode = false;
 
-            if (!Plugin.Configuration.TrackerNoNotification)
+            if (args.Type == ReconnectionType.Initial && !Plugin.Configuration.TrackerNoNotification)
             {
-                if (args.Type == ReconnectionType.Initial)
-                {
-                    DalamudApi.ChatGui.PrintChat(new XivChatEntry
-                                                 {
-                                                     Message = new SeString(new List<Payload>
-                                                                            {
-                                                                                new TextPayload("成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以到Github上开Issue:"),
-                                                                                new UIForegroundPayload(527),
-                                                                                _linkPayload,
-                                                                                new TextPayload("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new"),
-                                                                                RawPayload.LinkTerminator,
-                                                                                new UIForegroundPayload(0)
-                                                                            }),
-                                                     Type = XivChatType.CustomEmote
-                                                 });
-                }
+                DalamudApi.ChatGui.PrintChat(new XivChatEntry
+                                             {
+                                                 Message = new SeString(new List<Payload>
+                                                                        {
+                                                                            new TextPayload("成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以到Github上开Issue:"),
+                                                                            new UIForegroundPayload(527),
+                                                                            _linkPayload,
+                                                                            new TextPayload("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new"),
+                                                                            RawPayload.LinkTerminator,
+                                                                            new UIForegroundPayload(0)
+                                                                        }),
+                                                 Type = XivChatType.CustomEmote
+                                             });
             }
 
             var localTracker = Plugin.Features.Counter.GetLocalTrackers();
@@ -176,8 +173,8 @@ namespace RankSSpawnHelper.Managers
             if (args.MessageType != WebSocketMessageType.Binary)
                 return;
 
-            // ping pong
-            if (args.Binary.Length == 4)
+            // ping pong and other thingy
+            if (args.Binary.Length <= 4)
                 return;
 
             var msg = Encoding.UTF8.GetString(args.Binary);
@@ -187,6 +184,9 @@ namespace RankSSpawnHelper.Managers
                 DalamudApi.ChatGui.PrintError(msg);
                 return;
             }
+
+            if (!msg.StartsWith("{"))
+                return;
 
             try
             {
