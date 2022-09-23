@@ -22,7 +22,7 @@ namespace RankSSpawnHelper.Managers
         private readonly DalamudLinkPayload _linkPayload;
 
         private bool _oldRangeModeState;
-        private const string ServerVersion = "v2";
+        private const string ServerVersion = "v3";
 
         private IWebsocketClient _client;
 
