@@ -303,7 +303,8 @@ namespace RankSSpawnHelper.Ui.Window
                         ImGui.Text("当前可触发的概率为:");
                         ImGui.SameLine();
                         ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen, $"{percentage:F2}%%");
-                        if (now >= maxTime) return;
+                        if (now >= maxTime) 
+                            return;
 
                         var delta = maxTime - now;
                         ImGui.Text($"距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
@@ -470,7 +471,7 @@ namespace RankSSpawnHelper.Ui.Window
                      {
                          while (DalamudApi.ClientState.LocalPlayer == null)
                          {
-                             await Task.Delay(500);
+                             await Task.Delay(100);
                          }
 
                          _servers = Plugin.Managers.Data.GetServers();

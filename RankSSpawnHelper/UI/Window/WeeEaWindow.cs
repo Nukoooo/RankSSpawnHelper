@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using ImGuiNET;
@@ -22,18 +23,15 @@ namespace RankSSpawnHelper.UI.Window
         {
             var count  = 0;
             var count2 = 0;
-            foreach (var actor in DalamudApi.ObjectTable)
+
+            var enumerator = DalamudApi.ObjectTable.Where(i =>
+                                                            i != null && i.Address != IntPtr.Zero &&
+                                                            i is Npc &&
+                                                            i.ObjectKind == ObjectKind.Companion);
+
+            foreach (var obj in enumerator)
             {
-                if (actor == null || actor.Address == IntPtr.Zero)
-                    continue;
-
-                if (actor is not Npc npc)
-                    continue;
-
-                if (npc.Address == IntPtr.Zero || npc.ObjectKind != ObjectKind.Companion)
-                    continue;
-
-                var delta = npc.Position - DalamudApi.ClientState.LocalPlayer.Position;
+                var delta = obj.Position - DalamudApi.ClientState.LocalPlayer.Position;
 
                 // xzy 
                 var length2D = Math.Sqrt(delta.X * delta.X + delta.Z * delta.Z);
@@ -41,7 +39,7 @@ namespace RankSSpawnHelper.UI.Window
                 if (length2D > 17.0)
                     continue;
 
-                if (npc.Name.ToString() == "小异亚")
+                if (obj.Name.ToString() == "小异亚")
                     count++;
                 else
                     count2++;

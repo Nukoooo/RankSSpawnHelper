@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using RankSSpawnHelper.Models;
@@ -28,12 +29,26 @@ namespace RankSSpawnHelper.Features
 
         public SpawnNotification()
         {
+            DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
             DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
         }
 
         public void Dispose()
         {
+            DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
             DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
+        }
+
+        private void ChatGui_OnChatMessage(XivChatType type, uint senderid, ref SeString sender, ref SeString message, ref bool ishandled)
+        {
+            if (type != XivChatType.SystemMessage)
+                return;
+
+            if (message.TextValue != "感觉到了强大的恶名精英的气息……")
+                return;
+
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            _huntStatus.Remove(currentInstance);
         }
 
         private void Condition_OnConditionChange(ConditionFlag flag, bool value)
@@ -53,6 +68,9 @@ namespace RankSSpawnHelper.Features
                          var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
                          var split           = currentInstance.Split('@');
                          var monsterName     = Plugin.Managers.Data.Monster.GetMonsterNameById(_monsterIdMap[e]);
+
+                         if (_huntStatus.ContainsKey(currentInstance))
+                             return;
 
                          if (!_huntStatus.TryGetValue(currentInstance, out var result))
                          {

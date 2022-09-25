@@ -22,14 +22,15 @@ namespace RankSSpawnHelper
             // Get or create a configuration object
             Plugin.Configuration = (Configuration)pi.GetPluginConfig() ?? pi.Create<Configuration>();
 
-            Plugin.Features = new Features.Features();
-            Plugin.Managers = new Managers.Managers();
+            Plugin.Features      = new Features.Features();
+            Plugin.Managers      = new Managers.Managers();
 
             // Initialize the UI
             _windowSystem  = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
             Plugin.Windows = new Windows(ref _windowSystem);
 
-            DalamudApi.Interface.UiBuilder.Draw += _windowSystem.Draw;
+            DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
+            DalamudApi.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
 
             // Load all of our commands
             _commandManager = new PluginCommandManager<EntryPoint>(this);
@@ -39,10 +40,15 @@ namespace RankSSpawnHelper
 
 #region Commands initialization
         [Command("/shelper")]
-        [HelpMessage("打开设置菜单")]
-        public void OpenConfigUi(string command, string args)
+        [HelpMessage("打开或关闭设置菜单")]
+        public void ToggleConfigUi(string command, string args)
         {
             Plugin.Windows.PluginWindow.Toggle();
+        }
+
+        private void OpenConfigUi()
+        {
+            Plugin.Windows.PluginWindow.IsOpen = true;
         }
 
         [Command("/clr")]

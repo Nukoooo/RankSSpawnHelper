@@ -4,24 +4,24 @@ namespace RankSSpawnHelper
 {
     public class Configuration : IPluginConfiguration
     {
-        int IPluginConfiguration.Version { get; set; }
+        public int Version { get; set; } 
 
         public void Save()
         {
             DalamudApi.Interface.SavePluginConfig(this);
         }
-
-#region Saved configuration values
+        
+        #region Saved configuration values
         // 农怪计数
-        public bool TrackKillCount { get; set; } = false;
+        public bool TrackKillCount { get; set; } = true;
 
         // true = 范围计数, false = 单人计数
         public bool TrackRangeMode { get; set; } = false;
 
         // true = 只显示当前区域, false = 显示所有计数
         public bool TrackerShowCurrentInstance { get; set; } = false;
-        public bool TrackerWindowNoTitle { get; set; } = false;
-        public bool TrackerWindowNoBackground { get; set; } = false;
+        public bool TrackerWindowNoTitle { get; set; } = true;
+        public bool TrackerWindowNoBackground { get; set; } = true;
         public bool TrackerAutoResize { get; set; } = true;
         public float TrackerClearThreshold { get; set; } = 45f;
         public bool TrackerNoNotification { get; set; } = false;

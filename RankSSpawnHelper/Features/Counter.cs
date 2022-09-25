@@ -109,7 +109,6 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            result.startTime          = time;
             result.counter[condition] = value;
             PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
         }
@@ -303,7 +302,7 @@ namespace RankSSpawnHelper.Features
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                    Time = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
                                                    Data = new Dictionary<string, int>
-                                                          { { targetName, 999 } }
+                                                          { { targetName, 1 } }
                                                });
         }
 

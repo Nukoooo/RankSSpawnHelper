@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Dalamud.Logging;
 using ImGuiNET;
 
 namespace RankSSpawnHelper.Managers
@@ -26,10 +27,18 @@ namespace RankSSpawnHelper.Managers
             var windowsFolder  = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System));
             var strFontsFolder = Path.Combine(windowsFolder.FullName, "Fonts");
 
+            var fontName = strFontsFolder + "\\msyhbd.ttc";
+
+            if (!File.Exists(fontName))
+            {
+                PluginLog.Error($"找不到微软雅黑字体. 尝试搜寻的路径: {fontName}");
+                return;
+            }
+
             ImFontConfigPtr fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
             fontConfig.FontDataOwnedByAtlas = false;
             fontConfig.PixelSnapH           = true;
-            Yahei24                         = ImGui.GetIO().Fonts.AddFontFromFileTTF(strFontsFolder + "\\msyhbd.ttc", 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
+            Yahei24                         = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontName, 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
 
             _fontBuilt = true;
             fontConfig.Destroy();

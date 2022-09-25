@@ -4,7 +4,7 @@ using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.UI.Window
 {
-    public class CounterWindow : global::Dalamud.Interface.Windowing.Window
+    public class CounterWindow : Dalamud.Interface.Windowing.Window
     {
         private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.None;
         private DateTime _nextClickTime = DateTime.Now;
@@ -25,6 +25,16 @@ namespace RankSSpawnHelper.UI.Window
             return var;
         }
 
+        public override void PreOpenCheck()
+        {
+            var localTracker = Plugin.Features.Counter.GetLocalTrackers();
+
+            if (localTracker.Count != 0)
+                return;
+
+            IsOpen = false;
+        }
+
         public override void PreDraw()
         {
             Flags = BuildWindowFlags(WindowFlags);
@@ -34,6 +44,10 @@ namespace RankSSpawnHelper.UI.Window
         {
             var networkTracker = Plugin.Features.Counter.GetNetworkedTrackers();
             var localTracker   = Plugin.Features.Counter.GetLocalTrackers();
+
+            var connected = Plugin.Managers.Socket.Connected();
+
+            var actualTracker = connected ? networkTracker : localTracker;
 
             // C# is so stupid
             string   server;
@@ -49,7 +63,7 @@ namespace RankSSpawnHelper.UI.Window
                     ImGui.SetWindowFontScale(0.8f);
                 }
 
-                foreach (var (k, v) in localTracker)
+                foreach (var (k, v) in actualTracker)
                 {
                     split     = k.Split('@');
                     server    = split[0];
@@ -63,12 +77,11 @@ namespace RankSSpawnHelper.UI.Window
 
                     foreach (var (subK, subV) in v.counter)
                     {
-                        var textToDraw = $"\t{subK} - ";
-                        if (networkTracker.ContainsKey(k) && networkTracker[k].counter.TryGetValue(subK, out var networkValue))
-                            textToDraw += $"{networkValue} ";
+                        var textToDraw = $"\t{subK} - {subV}";
 
-                        textToDraw += $"({subV})";
-
+                        if (connected && localTracker.ContainsKey(k) && localTracker[k].counter.TryGetValue(subK, out var localValue))
+                            textToDraw += $" ({localValue})";
+                        
                         ImGui.Text(textToDraw);
                     }
                 }
@@ -83,7 +96,7 @@ namespace RankSSpawnHelper.UI.Window
 
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
 
-            if (!localTracker.TryGetValue(currentInstance, out var value))
+            if (!actualTracker.TryGetValue(currentInstance, out var value))
             {
                 IsOpen = false;
                 return;
@@ -130,16 +143,16 @@ namespace RankSSpawnHelper.UI.Window
 
             foreach (var (subKey, subValue) in value.counter)
             {
-                var textToDraw = $"\t{subKey} - ";
-                if (networkTracker.ContainsKey(currentInstance) && networkTracker[currentInstance].counter.TryGetValue(subKey, out var networkvalue))
-                    textToDraw += $"{networkvalue} ";
+                var textToDraw = $"\t{subKey} - {subValue}";
 
-                textToDraw += $"({subValue})";
+                if (connected && localTracker.ContainsKey(currentInstance) && localTracker[currentInstance].counter.TryGetValue(subKey, out var localValue))
+                    textToDraw += $" ({localValue})";
 
                 ImGui.Text(textToDraw);
             }
 
-            if (!Plugin.Managers.Font.IsFontBuilt()) return;
+            if (!Plugin.Managers.Font.IsFontBuilt())
+                return;
 
             ImGui.PopFont();
             ImGui.SetWindowFontScale(1.0f);

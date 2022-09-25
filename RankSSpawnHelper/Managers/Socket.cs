@@ -66,8 +66,8 @@ namespace RankSSpawnHelper.Managers
                                                                          return client;
                                                                      });
 
-                         _client.ReconnectTimeout      = TimeSpan.FromSeconds(10);
-                         _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(10);
+                         _client.ReconnectTimeout      = TimeSpan.FromSeconds(24);
+                         _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(24);
                          _client.ReconnectionHappened.Subscribe(OnReconntion);
                          _client.MessageReceived.Subscribe(OnMessageReceived);
 
@@ -87,7 +87,7 @@ namespace RankSSpawnHelper.Managers
 
         public void Connect(string url)
         {
-            if (_client == null)
+            if (_client == null || url == string.Empty)
                 return;
 
             Task.Run(async () =>
@@ -102,7 +102,7 @@ namespace RankSSpawnHelper.Managers
                          }
                          catch (Exception e)
                          {
-                             PluginLog.Debug(e, "Exception in SocketManager::Connect");
+                             PluginLog.Debug(e, "Exception in Managers::Socket::Connect()");
                          }
                      });
         }
@@ -114,7 +114,8 @@ namespace RankSSpawnHelper.Managers
 
         public async void Disconnect()
         {
-            if (!Connected()) return;
+            if (!Connected())
+                return;
 
             await _client.Stop(WebSocketCloseStatus.NormalClosure, "Disconnection");
         }
@@ -198,6 +199,7 @@ namespace RankSSpawnHelper.Managers
                     {
                         foreach (var (key, value) in result.Counter)
                         {
+                            PluginLog.Warning($"{key} / {value}");
                             Plugin.Features.Counter.UpdateNetworkedTracker(result.Instance, key, value, result.Time, result.TerritoryId);
                         }
 

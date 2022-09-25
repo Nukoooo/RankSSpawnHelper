@@ -5,10 +5,8 @@ namespace RankSSpawnHelper.Models
     public class HuntStatus
     {
         public int attemptCount;
-        public string baseName;
         public long expectMaxTime;
         public long expectMinTime;
-        public string huntName;
         public int instance;
         public string lastAttempt;
         public long lastDeathTime;
