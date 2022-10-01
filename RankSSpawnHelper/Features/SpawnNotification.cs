@@ -57,7 +57,7 @@ namespace RankSSpawnHelper.Features
 
         private void Condition_OnConditionChange(ConditionFlag flag, bool value)
         {
-            if (flag != ConditionFlag.BetweenAreas || !value)
+            if (flag != ConditionFlag.BetweenAreas51 || value)
                 return;
 
             Task.Run(async () =>
