@@ -58,7 +58,7 @@ namespace RankSSpawnHelper.Managers
                                                                      {
                                                                          var client = new ClientWebSocket
                                                                                       {
-                                                                                          Options = { KeepAliveInterval = TimeSpan.FromSeconds(5) }
+                                                                                          Options = { KeepAliveInterval = TimeSpan.FromSeconds(8) }
                                                                                       };
                                                                          PluginLog.Warning($"Setting header. {_userName}");
                                                                          client.Options.SetRequestHeader("RankSSpawnHelperUser", EncodeNonAsciiCharacters(_userName));
@@ -66,8 +66,8 @@ namespace RankSSpawnHelper.Managers
                                                                          return client;
                                                                      });
 
-                         _client.ReconnectTimeout      = TimeSpan.FromSeconds(24);
-                         _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(24);
+                         _client.ReconnectTimeout      = TimeSpan.FromSeconds(16);
+                         _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(16);
                          _client.ReconnectionHappened.Subscribe(OnReconntion);
                          _client.MessageReceived.Subscribe(OnMessageReceived);
 
@@ -127,6 +127,7 @@ namespace RankSSpawnHelper.Managers
 
             var str = JsonConvert.SerializeObject(message);
             _client.Send(str);
+            PluginLog.Debug(str);
         }
 
         private void OnReconntion(ReconnectionInfo args)
@@ -174,15 +175,15 @@ namespace RankSSpawnHelper.Managers
             if (args.MessageType != WebSocketMessageType.Binary)
                 return;
 
-            // ping pong and other thingy
-            if (args.Binary.Length <= 4)
+            // ping pong
+            if (args.Binary.Length == 0)
                 return;
 
             var msg = Encoding.UTF8.GetString(args.Binary);
 
             if (msg.StartsWith("Error:"))
             {
-                DalamudApi.ChatGui.PrintError(msg);
+                DalamudApi.ChatGui.PrintError($"[S怪触发] {msg}");
                 return;
             }
 
@@ -199,7 +200,6 @@ namespace RankSSpawnHelper.Managers
                     {
                         foreach (var (key, value) in result.Counter)
                         {
-                            PluginLog.Warning($"{key} / {value}");
                             Plugin.Features.Counter.UpdateNetworkedTracker(result.Instance, key, value, result.Time, result.TerritoryId);
                         }
 
@@ -286,6 +286,19 @@ namespace RankSSpawnHelper.Managers
                         ImGui.SetClipboardText(chatMessage);
 
                         return;
+                        }
+                    case "Broadcast":
+                    {
+                        DalamudApi.ChatGui.Print(new SeString(new List<Payload>()
+                                                              {
+                                                                  new UIForegroundPayload(1),
+                                                                  new TextPayload("[S怪触发]"),
+                                                                  new UIForegroundPayload(35),
+                                                                  new TextPayload($"广播消息: {result.Message}"),
+                                                                  new UIForegroundPayload(0),
+                                                                  new UIForegroundPayload(0)
+                                                              }));
+                        break;
                     }
                 }
             }

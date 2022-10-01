@@ -11,6 +11,9 @@ namespace RankSSpawnHelper.Models
         public Dictionary<string, int> Counter { get; set; }
         public Dictionary<string, int> UserCounter { get; set; }
 
+        // Broadcast message
+        public string Message { get; set; }
+
         // ggnore section
         public int Total { get; set; }
         public bool Failed { get; set; }

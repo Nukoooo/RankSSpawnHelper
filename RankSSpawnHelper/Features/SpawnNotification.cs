@@ -27,6 +27,8 @@ namespace RankSSpawnHelper.Features
                                                                       { 147, 2961 }
                                                                   };
 
+        private bool _shouldNotNotify;
+
         public SpawnNotification()
         {
             DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
@@ -47,13 +49,15 @@ namespace RankSSpawnHelper.Features
             if (message.TextValue != "感觉到了强大的恶名精英的气息……")
                 return;
 
+            _shouldNotNotify = true;
+
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
             _huntStatus.Remove(currentInstance);
         }
 
         private void Condition_OnConditionChange(ConditionFlag flag, bool value)
         {
-            if (flag != ConditionFlag.BetweenAreas51 || value)
+            if (flag != ConditionFlag.BetweenAreas || !value)
                 return;
 
             Task.Run(async () =>
@@ -69,8 +73,11 @@ namespace RankSSpawnHelper.Features
                          var split           = currentInstance.Split('@');
                          var monsterName     = Plugin.Managers.Data.Monster.GetMonsterNameById(_monsterIdMap[e]);
 
-                         if (_huntStatus.ContainsKey(currentInstance))
+                         if (_shouldNotNotify)
+                         {
+                             _shouldNotNotify = false;
                              return;
+                         }
 
                          if (!_huntStatus.TryGetValue(currentInstance, out var result))
                          {
@@ -79,7 +86,7 @@ namespace RankSSpawnHelper.Features
 
                          if (result == null)
                          {
-                             return;
+                             result = await Plugin.Managers.Data.Monster.FetchHuntStatus(split[0], monsterName, int.Parse(split[2]));
                          }
 
                          _huntStatus.TryAdd(currentInstance, result);
