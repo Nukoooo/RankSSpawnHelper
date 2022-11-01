@@ -35,6 +35,11 @@ namespace RankSSpawnHelper
         public uint FailedMessageColor { get; set; } = 518;
         public uint SpawnedMessageColor { get; set; } = 59;
         public uint HighlightColor { get; set; } = 71;
+
+        public bool EnableAttemptMessagesFromOtherDcs = false;
+        public bool ReceiveAttempMessageFromOtherDc = false;
+
+        public bool UpdateNote01 = false;
 #endregion
     }
 }

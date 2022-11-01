@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text;
@@ -30,12 +32,15 @@ namespace RankSSpawnHelper.Features
 
         private readonly Dictionary<string, Tracker> _localTracker = new();
         private readonly Dictionary<string, Tracker> _networkedTracker = new();
+        private readonly CancellationTokenSource _eventLoopTokenSource = new();
 
         public Counter()
         {
             SignatureHelper.Initialise(this);
 
             ActorControlSelf.Enable();
+            Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
+
             DalamudApi.ChatGui.ChatMessage       += ChatGui_ChatMessage;
             DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
         }
@@ -47,6 +52,7 @@ namespace RankSSpawnHelper.Features
         public void Dispose()
         {
             ActorControlSelf.Dispose();
+            _eventLoopTokenSource.Dispose();
             DalamudApi.ChatGui.ChatMessage       -= ChatGui_ChatMessage;
             DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
             GC.SuppressFinalize(this);
@@ -94,7 +100,7 @@ namespace RankSSpawnHelper.Features
                                                     territoryId = territoryId
                                                 });
                 PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
-
+                Plugin.Windows.CounterWindow.IsOpen = true;
                 return;
             }
 
@@ -109,7 +115,8 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            result.counter[condition] = value;
+            result.counter[condition]           = value;
+            Plugin.Windows.CounterWindow.IsOpen = true;
             PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
         }
 
@@ -135,7 +142,7 @@ namespace RankSSpawnHelper.Features
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType
                                                });
 
-            if (!Plugin.Configuration.TrackerShowCurrentInstance && !_localTracker.ContainsKey(currentInstance))
+            if (Plugin.Configuration.TrackerShowCurrentInstance && !_localTracker.ContainsKey(currentInstance))
             {
                 Plugin.Windows.CounterWindow.IsOpen = false;
             }
@@ -155,11 +162,12 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
-
+            string currentInstance;
             if (message.TextValue == "感觉到了强大的恶名精英的气息……")
             {
                 // _huntStatus.Remove(currentInstance);
+
+                currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
 
                 // 如果没tracker就不发
                 if (!_networkedTracker.ContainsKey(currentInstance))
@@ -197,12 +205,16 @@ namespace RankSSpawnHelper.Features
                              _   => targetName
                          };
 
+            currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
             AddToTracker(currentInstance, targetName);
         }
 
         private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
         {
             ActorControlSelf.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
+            if (!Plugin.Configuration.TrackKillCount)
+                return;
+
             // 死亡事件
             if (type != 6)
             {
@@ -292,7 +304,7 @@ namespace RankSSpawnHelper.Features
         Post:
             PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
 
-            Plugin.Windows.CounterWindow.IsOpen = Plugin.Configuration.TrackKillCount;
+            Plugin.Windows.CounterWindow.IsOpen = true;
 
             Plugin.Managers.Socket.SendMessage(new NetMessage
                                                {
@@ -304,6 +316,49 @@ namespace RankSSpawnHelper.Features
                                                    Data = new Dictionary<string, int>
                                                           { { targetName, 1 } }
                                                });
+        }
+
+        private async void RemoveInactiveTracker()
+        {
+            var token = _eventLoopTokenSource.Token;
+
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    if (_networkedTracker.Count == 0 || _localTracker.Count == 0)
+                    {
+                        await Task.Delay(5000, token);
+
+                        continue;
+                    }
+
+                    await Task.Delay(5000, token);
+
+                    foreach (var (k, v) in _networkedTracker)
+                    {
+                        var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
+                        if (delta.TotalMinutes <= Plugin.Configuration.TrackerClearThreshold)
+                        {
+                            continue;
+                        }
+
+                        _networkedTracker.Remove(k);
+                        if (_localTracker.ContainsKey(k))
+                        {
+                            _localTracker.Remove(k);
+                        }
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+            }
         }
 
         private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte a10);

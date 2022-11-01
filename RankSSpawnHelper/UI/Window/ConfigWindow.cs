@@ -8,19 +8,22 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
+using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.Ui.Window
 {
-    public class ConfigWindow : global::Dalamud.Interface.Windowing.Window
+    public class ConfigWindow : Dalamud.Interface.Windowing.Window
     {
         private const ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
 
         private readonly List<ColorInfo> _colorInfos = new();
         private readonly List<string> _expansions = new() { "2.0", "3.0", "4.0", "5.0", "6.0" };
         private ColorPickerType _colorPickerType = ColorPickerType.Failed;
+
+        private TextureWrap _image;
         private List<string> _monsterNames;
         private int _selectedExpansion;
         private int _selectedInstance;
@@ -71,6 +74,15 @@ namespace RankSSpawnHelper.Ui.Window
 
                 if (ImGui.BeginTabItem("关于"))
                 {
+                    ImGui.Text("在使用本插件的联网功能时,将会收集以下信息:\n" +
+                               "    - 游戏ID以及所在的服务器, 如 Deez Nuts@Siren\n" +
+                               "    - 当前所在区域, 如: 海猫茶屋@叹息海@0\n" +
+                               "    - 计数的数量&名字, 如: 矮人棉: 50, 彷徨之物: 12\n" +
+                               "    - 开始计数的时间, 如: 1667166428\n");
+
+                    if (_image != null)
+                        ImGui.Image(_image.ImGuiHandle, new Vector2(_image.Width, _image.Height));
+
                     ImGui.EndTabItem();
                 }
             }
@@ -153,19 +165,27 @@ namespace RankSSpawnHelper.Ui.Window
                 Plugin.Configuration.Save();
             }
 
+#if DEBUG
             ImGui.SetNextItemWidth(200);
             ImGui.InputTextWithHint("服务器链接", "比如ws://127.0.0.1:8000", ref _serverUrl, 256);
 
             if (ImGui.Button("连接")) Plugin.Managers.Socket.Connect(_serverUrl);
             ImGui.SameLine();
-            if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Connect("ws://47.106.224.112:8000");
+            if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Connect("ws://124.220.161.157:8000");
             ImGui.SameLine();
             if (ImGui.Button("断开连接")) Plugin.Managers.Socket.Disconnect();
 
             ImGui.SameLine();
+#endif
             ImGui.Text("连接状态:");
             ImGui.SameLine();
             ImGui.TextColored(Plugin.Managers.Socket.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Connected() ? "Connected" : "Disconnected");
+
+#if RELEASE
+            ImGui.SameLine();
+            if (ImGui.Button("重新连接"))
+                Plugin.Managers.Socket.Reconnect();
+#endif
 
             DrawTrackerTable();
         }
@@ -303,7 +323,7 @@ namespace RankSSpawnHelper.Ui.Window
                         ImGui.Text("当前可触发的概率为:");
                         ImGui.SameLine();
                         ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen, $"{percentage:F2}%%");
-                        if (now >= maxTime) 
+                        if (now >= maxTime)
                             return;
 
                         var delta = maxTime - now;
@@ -328,6 +348,24 @@ namespace RankSSpawnHelper.Ui.Window
             {
                 Plugin.Configuration.ShowInstance = showInstance;
                 Plugin.Configuration.Save();
+            }
+
+            var enableAttemptMessagesFromOtherDcs = Plugin.Configuration.EnableAttemptMessagesFromOtherDcs;
+            if (ImGui.Checkbox("接受触发成功/失败消息", ref enableAttemptMessagesFromOtherDcs))
+            {
+                Plugin.Configuration.EnableAttemptMessagesFromOtherDcs = enableAttemptMessagesFromOtherDcs;
+                Plugin.Configuration.Save();
+            }
+
+            if (enableAttemptMessagesFromOtherDcs)
+            {
+                ImGui.SameLine();
+                var receiveMessageFromOtherDc = Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
+                if (ImGui.Checkbox("接收其他服务器的触发消息", ref receiveMessageFromOtherDc))
+                {
+                    Plugin.Configuration.ReceiveAttempMessageFromOtherDc = receiveMessageFromOtherDc;
+                    Plugin.Configuration.Save();
+                }
             }
 
             ImGui.NewLine();
@@ -360,25 +398,25 @@ namespace RankSSpawnHelper.Ui.Window
             if (ImGui.Button("预览"))
             {
                 DalamudApi.ChatGui.PrintChat(new XivChatEntry
-                                          {
-                                              Message = new SeString(new List<Payload>
-                                                                     {
-                                                                         new UIForegroundPayload((ushort)Plugin.Configuration.FailedMessageColor),
-                                                                         new TextPayload("Something came in the mail today... "),
-                                                                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                                                         new TextPayload("deez nuts! "),
-                                                                         new UIForegroundPayload(0),
-                                                                         new TextPayload("Ha! Got’em.\n"),
-                                                                         new UIForegroundPayload((ushort)Plugin.Configuration.SpawnedMessageColor),
-                                                                         new TextPayload("Something came in the mail today... "),
-                                                                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                                                         new TextPayload("deez nuts! "),
-                                                                         new UIForegroundPayload(0),
-                                                                         new TextPayload("Ha! Got’em."),
-                                                                         new UIForegroundPayload(0)
-                                                                     }),
-                                              Type = XivChatType.Debug
-                                          });
+                                             {
+                                                 Message = new SeString(new List<Payload>
+                                                                        {
+                                                                            new UIForegroundPayload((ushort)Plugin.Configuration.FailedMessageColor),
+                                                                            new TextPayload("Something came in the mail today... "),
+                                                                            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                                                            new TextPayload("deez nuts! "),
+                                                                            new UIForegroundPayload(0),
+                                                                            new TextPayload("Ha! Got’em.\n"),
+                                                                            new UIForegroundPayload((ushort)Plugin.Configuration.SpawnedMessageColor),
+                                                                            new TextPayload("Something came in the mail today... "),
+                                                                            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                                                            new TextPayload("deez nuts! "),
+                                                                            new UIForegroundPayload(0),
+                                                                            new TextPayload("Ha! Got’em."),
+                                                                            new UIForegroundPayload(0)
+                                                                        }),
+                                                 Type = XivChatType.Debug
+                                             });
             }
 
 
@@ -466,6 +504,8 @@ namespace RankSSpawnHelper.Ui.Window
                                     });
                 }
             }
+
+            Task.Run(async () => { _image = await DalamudApi.Interface.UiBuilder.LoadImageAsync(Resource.a); });
 
             Task.Run(async () =>
                      {

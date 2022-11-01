@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
@@ -31,7 +32,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
             }
             catch (Exception e)
             {
-                PluginLog.Error(e, "Exception from Managers::Data::GetCurrentInstance()");
+                PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). {new StackFrame(1).GetMethod()?.Name}");
                 return string.Empty;
             }
         }

@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
 		<LangVersion>10.0</LangVersion>
-		<Version>1.2.0.6</Version>
+		<Version>1.2.1.0</Version>
 	</PropertyGroup>
 	
 	<PropertyGroup>
@@ -23,6 +23,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Costura.Fody" Version="5.7.0">
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 		<PackageReference Include="DalamudPackager" Version="2.1.6" />
 		<PackageReference Include="Websocket.Client" Version="4.4.43" />
 	</ItemGroup>
@@ -33,7 +36,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!--You may need to adjust these paths yourself. These point to a Dalamud assembly in AppData.-->
 		<Reference Include="Dalamud">
 			<HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
 			<Private>false</Private>
@@ -62,6 +64,21 @@
 			<HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resource.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resource.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 </Project>

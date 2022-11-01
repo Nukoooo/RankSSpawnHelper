@@ -24,12 +24,13 @@ namespace RankSSpawnHelper.Managers
         private bool _oldRangeModeState;
         private const string ServerVersion = "v3";
 
+        private List<string> _servers;
         private IWebsocketClient _client;
 
 #if DEBUG
         private const string Url = "ws://127.0.0.1:8000";
 #else
-        private const string Url = "ws://47.106.224.112:8000";
+        private const string Url = "ws://124.220.161.157:8000";
 #endif
 
         private string _userName = string.Empty;
@@ -60,9 +61,10 @@ namespace RankSSpawnHelper.Managers
                                                                                       {
                                                                                           Options = { KeepAliveInterval = TimeSpan.FromSeconds(8) }
                                                                                       };
-                                                                         PluginLog.Warning($"Setting header. {_userName}");
-                                                                         client.Options.SetRequestHeader("RankSSpawnHelperUser", EncodeNonAsciiCharacters(_userName));
-                                                                         client.Options.SetRequestHeader("ServerVersion", ServerVersion);
+                                                                         PluginLog.Debug($"Setting header. {_userName}");
+                                                                         client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
+                                                                         client.Options.SetRequestHeader("server-version", ServerVersion);
+                                                                         client.Options.SetRequestHeader("user-type", "Dalamud");
                                                                          return client;
                                                                      });
 
@@ -70,6 +72,8 @@ namespace RankSSpawnHelper.Managers
                          _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(16);
                          _client.ReconnectionHappened.Subscribe(OnReconntion);
                          _client.MessageReceived.Subscribe(OnMessageReceived);
+
+                         _servers = Plugin.Managers.Data.GetServers();
 
                          await _client.Start();
                      });
@@ -85,6 +89,7 @@ namespace RankSSpawnHelper.Managers
             GC.SuppressFinalize(this);
         }
 
+#if DEBUG
         public void Connect(string url)
         {
             if (_client == null || url == string.Empty)
@@ -106,12 +111,13 @@ namespace RankSSpawnHelper.Managers
                          }
                      });
         }
-
+#endif
         public bool Connected()
         {
             return _client != null && _client.IsRunning;
         }
 
+#if DEBUG
         public async void Disconnect()
         {
             if (!Connected())
@@ -119,6 +125,12 @@ namespace RankSSpawnHelper.Managers
 
             await _client.Stop(WebSocketCloseStatus.NormalClosure, "Disconnection");
         }
+#else
+        public async void Reconnect()
+        {
+            await _client.Reconnect();
+        }
+#endif
 
         public void SendMessage(NetMessage message)
         {
@@ -127,7 +139,7 @@ namespace RankSSpawnHelper.Managers
 
             var str = JsonConvert.SerializeObject(message);
             _client.Send(str);
-            PluginLog.Debug(str);
+            PluginLog.Debug($"Managers::Socket::SendMessage: {str}");
         }
 
         private void OnReconntion(ReconnectionInfo args)
@@ -141,10 +153,10 @@ namespace RankSSpawnHelper.Managers
                                              {
                                                  Message = new SeString(new List<Payload>
                                                                         {
-                                                                            new TextPayload("成功连接到服务器！目前联网仍处于测试阶段，如果有问题或者意见可以到Github上开Issue:"),
+                                                                            new TextPayload("成功连接到服务器！如果有问题或者意见可以到Github上开Issue:"),
                                                                             new UIForegroundPayload(527),
                                                                             _linkPayload,
-                                                                            new TextPayload("https://github.com/NukoOoOoOoO/RankSSpawnHelper/issues/new"),
+                                                                            new TextPayload("https://github.com/NukoOoOoOoO/DalamudPlugins/issues/new"),
                                                                             RawPayload.LinkTerminator,
                                                                             new UIForegroundPayload(0)
                                                                         }),
@@ -170,7 +182,7 @@ namespace RankSSpawnHelper.Managers
                         });
         }
 
-        private static void OnMessageReceived(ResponseMessage args)
+        private void OnMessageReceived(ResponseMessage args)
         {
             if (args.MessageType != WebSocketMessageType.Binary)
                 return;
@@ -180,6 +192,8 @@ namespace RankSSpawnHelper.Managers
                 return;
 
             var msg = Encoding.UTF8.GetString(args.Binary);
+
+            PluginLog.Debug($"Managers::Socket::OnMessageReceived. {msg}");
 
             if (msg.StartsWith("Error:"))
             {
@@ -268,7 +282,7 @@ namespace RankSSpawnHelper.Managers
                             }
                         }
 
-                        payloads.Add(new TextPayload("\nPS: 本消息已复制到粘贴板，如果需要再次提示清输入/glcm\nPSS:以上数据仅供参考"));
+                        payloads.Add(new TextPayload("\nPS: 本消息已复制到粘贴板\nPSS:以上数据仅供参考"));
 
                         var chatMessage = payloads.Where(payload => payload.Type == PayloadType.RawText)
                                                   .Aggregate<Payload, string>(null, (current, payload) => current + ((TextPayload)payload).Text);
@@ -286,10 +300,18 @@ namespace RankSSpawnHelper.Managers
                         ImGui.SetClipboardText(chatMessage);
 
                         return;
-                        }
+                    }
                     case "Broadcast":
                     {
-                        DalamudApi.ChatGui.Print(new SeString(new List<Payload>()
+                        var message         = result.Message;
+                        var isAttempMessage = message.Where(i => i == '@').ToList().Count == 2 && (message.EndsWith("出货了") || message.EndsWith("寄了"));
+                        var serverName      = message[..message.IndexOf('@')];
+                        var shouldPrint = Plugin.Configuration.EnableAttemptMessagesFromOtherDcs &&
+                                          ((_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc);
+                        if (isAttempMessage && !shouldPrint)
+                            return;
+
+                        DalamudApi.ChatGui.Print(new SeString(new List<Payload>
                                                               {
                                                                   new UIForegroundPayload(1),
                                                                   new TextPayload("[S怪触发]"),
@@ -298,7 +320,27 @@ namespace RankSSpawnHelper.Managers
                                                                   new UIForegroundPayload(0),
                                                                   new UIForegroundPayload(0)
                                                               }));
-                        break;
+
+
+                        return;
+                    }
+                    case "ChangeArea":
+                    {
+                        var time = DateTimeOffset.FromUnixTimeSeconds(result.Time);
+                        DalamudApi.ChatGui.Print(new SeString(new List<Payload>
+                                                              {
+                                                                  new UIForegroundPayload(1),
+                                                                  new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                                                  new TextPayload($"{result.Instance}"),
+                                                                  new UIForegroundPayload(0),
+                                                                  new TextPayload("上一次尝试触发的时间: "),
+                                                                  new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                                                  new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
+                                                                  new UIForegroundPayload(0),
+                                                                  new UIForegroundPayload(0)
+                                                              }
+                                                             ));
+                        return;
                     }
                 }
             }

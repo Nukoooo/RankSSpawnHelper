@@ -1,4 +1,5 @@
 ﻿using System;
+using Dalamud.Logging;
 using ImGuiNET;
 using RankSSpawnHelper.Models;
 
@@ -27,12 +28,20 @@ namespace RankSSpawnHelper.UI.Window
 
         public override void PreOpenCheck()
         {
-            var localTracker = Plugin.Features.Counter.GetLocalTrackers();
-
-            if (localTracker.Count != 0)
+            if (!Plugin.Configuration.TrackKillCount)
+            {
+                IsOpen = false;
                 return;
+            }
+            
+            var networkTracker = Plugin.Features.Counter.GetNetworkedTrackers();
+            var localTracker   = Plugin.Features.Counter.GetLocalTrackers();
+            var actualTracker  = Plugin.Managers.Socket.Connected() ? networkTracker : localTracker;
 
-            IsOpen = false;
+            if (actualTracker.Count == 0)
+            {
+                IsOpen = false;
+            }
         }
 
         public override void PreDraw()
@@ -48,6 +57,8 @@ namespace RankSSpawnHelper.UI.Window
             var connected = Plugin.Managers.Socket.Connected();
 
             var actualTracker = connected ? networkTracker : localTracker;
+            if (actualTracker == null)
+                return;
 
             // C# is so stupid
             string   server;
@@ -69,7 +80,6 @@ namespace RankSSpawnHelper.UI.Window
                     server    = split[0];
                     territory = split[1];
                     instance  = split[2] == "0" ? string.Empty : $" - {split[2]}线";
-
                     ImGui.Text($"{server} - {territory}{instance}");
 
                     var timeInLoop = DateTimeOffset.FromUnixTimeSeconds(v.startTime).LocalDateTime;
@@ -81,7 +91,7 @@ namespace RankSSpawnHelper.UI.Window
 
                         if (connected && localTracker.ContainsKey(k) && localTracker[k].counter.TryGetValue(subK, out var localValue))
                             textToDraw += $" ({localValue})";
-                        
+
                         ImGui.Text(textToDraw);
                     }
                 }

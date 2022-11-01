@@ -10,13 +10,21 @@ namespace RankSSpawnHelper.Features
 
         public ShowInstance()
         {
-            _dtrBarEntry                =  DalamudApi.DtrBar.Get("S怪触发小助手-当前几线");
+            try
+            {
+                _dtrBarEntry = DalamudApi.DtrBar.Get("S怪触发小助手-当前几线");
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
             DalamudApi.Framework.Update += Framework_OnUpdate;
         }
 
         public void Dispose()
         {
-            _dtrBarEntry.Dispose();
+            _dtrBarEntry?.Dispose();
             GC.SuppressFinalize(this);
         }
 

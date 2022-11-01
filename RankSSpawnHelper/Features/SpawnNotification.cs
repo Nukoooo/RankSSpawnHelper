@@ -84,10 +84,7 @@ namespace RankSSpawnHelper.Features
                              result = await Plugin.Managers.Data.Monster.FetchHuntStatus(split[0], monsterName, int.Parse(split[2]));
                          }
 
-                         if (result == null)
-                         {
-                             result = await Plugin.Managers.Data.Monster.FetchHuntStatus(split[0], monsterName, int.Parse(split[2]));
-                         }
+                         result ??= await Plugin.Managers.Data.Monster.FetchHuntStatus(split[0], monsterName, int.Parse(split[2]));
 
                          _huntStatus.TryAdd(currentInstance, result);
 
