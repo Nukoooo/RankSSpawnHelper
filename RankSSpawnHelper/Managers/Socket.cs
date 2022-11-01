@@ -304,12 +304,16 @@ namespace RankSSpawnHelper.Managers
                     case "Broadcast":
                     {
                         var message         = result.Message;
-                        var isAttempMessage = message.Where(i => i == '@').ToList().Count == 2 && (message.EndsWith("出货了") || message.EndsWith("寄了"));
+                        var isAttempMessage = message.Where(i => i == '@').ToList().Count == 2 && (message.Contains("出货了") || message.Contains("寄了")) && message.EndsWith('%');
                         var serverName      = message[..message.IndexOf('@')];
-                        var shouldPrint = Plugin.Configuration.EnableAttemptMessagesFromOtherDcs &&
-                                          ((_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc);
-                        if (isAttempMessage && !shouldPrint)
-                            return;
+                        var shouldPrint     = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
+                        if (isAttempMessage)
+                        {
+                            if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
+                                return;
+                            if (!shouldPrint)
+                                return;
+                        }
 
                         DalamudApi.ChatGui.Print(new SeString(new List<Payload>
                                                               {
