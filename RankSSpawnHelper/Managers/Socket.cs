@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -282,7 +283,7 @@ namespace RankSSpawnHelper.Managers
                             }
                         }
 
-                        payloads.Add(new TextPayload("\nPS: 本消息已复制到粘贴板\nPSS:以上数据仅供参考"));
+                        payloads.Add(new TextPayload("\n\nPS: 本消息已复制到粘贴板\nPSS:以上数据仅供参考"));
 
                         var chatMessage = payloads.Where(payload => payload.Type == PayloadType.RawText)
                                                   .Aggregate<Payload, string>(null, (current, payload) => current + ((TextPayload)payload).Text);
@@ -304,13 +305,16 @@ namespace RankSSpawnHelper.Managers
                     case "Broadcast":
                     {
                         var message         = result.Message;
-                        var isAttempMessage = message.Where(i => i == '@').ToList().Count == 2 && (message.Contains("出货了") || message.Contains("寄了")) && message.EndsWith('%');
-                        var serverName      = message[..message.IndexOf('@')];
-                        var shouldPrint     = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
+                        var isAttempMessage = Regex.IsMatch(message, @".*@.*@\d+ (寄了|出货了). 触发概率: \d+\.\d+%");
+                        // var isAttempMessage = message.Where(i => i == '@').ToList().Count == 2 && (message.Contains("出货了") || message.Contains("寄了")) && message.EndsWith('%');
                         if (isAttempMessage)
                         {
                             if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
                                 return;
+
+                            var serverName  = message[..message.IndexOf('@')];
+                            var shouldPrint = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
+
                             if (!shouldPrint)
                                 return;
                         }

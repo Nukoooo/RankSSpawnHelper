@@ -117,6 +117,7 @@ namespace RankSSpawnHelper.Features
 
             result.counter[condition]           = value;
             Plugin.Windows.CounterWindow.IsOpen = true;
+            result.lastUpdateTime               = DateTimeOffset.Now.ToUnixTimeSeconds();
             PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
         }
 
@@ -344,10 +345,7 @@ namespace RankSSpawnHelper.Features
                         }
 
                         _networkedTracker.Remove(k);
-                        if (_localTracker.ContainsKey(k))
-                        {
-                            _localTracker.Remove(k);
-                        }
+                        _localTracker.Remove(k);
                     }
                 }
                 catch (TaskCanceledException)
