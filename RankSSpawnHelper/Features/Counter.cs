@@ -128,17 +128,17 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
-
             if (!Plugin.Configuration.TrackKillCount)
             {
                 return;
             }
 
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+
             Plugin.Managers.Socket.SendMessage(new NetMessage
                                                {
                                                    Type        = "ChangeArea",
-                                                   Instance    = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                                   Instance    = currentInstance,
                                                    User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType
                                                });
@@ -158,7 +158,7 @@ namespace RankSSpawnHelper.Features
             }
 
             var territory = DalamudApi.ClientState.TerritoryType;
-            if (!_conditionName.TryGetValue(territory, out var targetName))
+            if (!_conditionName.TryGetValue(territory, out var targetName) && territory != 960)
             {
                 return;
             }
@@ -169,6 +169,18 @@ namespace RankSSpawnHelper.Features
                 // _huntStatus.Remove(currentInstance);
 
                 currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+
+                if (territory == 960)
+                {
+                    Plugin.Managers.Socket.SendMessage(new NetMessage
+                                                       {
+                                                           Type        = "WeeEa",
+                                                           Instance    = currentInstance,
+                                                           TerritoryId = territory,
+                                                           Failed      = false
+                                                       });
+                    return;
+                }
 
                 // 如果没tracker就不发
                 if (!_networkedTracker.ContainsKey(currentInstance))
@@ -327,7 +339,7 @@ namespace RankSSpawnHelper.Features
             {
                 try
                 {
-                    if (_networkedTracker.Count == 0 || _localTracker.Count == 0)
+                    if (_localTracker.Count == 0)
                     {
                         await Task.Delay(5000, token);
 
@@ -336,7 +348,7 @@ namespace RankSSpawnHelper.Features
 
                     await Task.Delay(5000, token);
 
-                    foreach (var (k, v) in _networkedTracker)
+                    foreach (var (k, v) in _localTracker)
                     {
                         var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
                         if (delta.TotalMinutes <= Plugin.Configuration.TrackerClearThreshold)

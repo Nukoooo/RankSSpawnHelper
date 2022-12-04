@@ -28,7 +28,7 @@ namespace RankSSpawnHelper
 
         [PluginService] internal static DataManager DataManager { get; private set; } = null!;
 
-        [PluginService] internal static FateTable FateTable { get; private set; } = null!;
+        // [PluginService] internal static FateTable FateTable { get; private set; } = null!;
 
         [PluginService] internal static ObjectTable ObjectTable { get; private set; } = null!;
 
@@ -36,7 +36,7 @@ namespace RankSSpawnHelper
 
         [PluginService] internal static Condition Condition { get; private set; } = null!;
 
-        [PluginService] internal static PartyList PartyList { get; private set; } = null!;
+        // [PluginService] internal static PartyList PartyList { get; private set; } = null!;
 
         [PluginService] internal static DtrBar DtrBar { get; private set; } = null!;
     }

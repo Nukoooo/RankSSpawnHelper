@@ -104,10 +104,11 @@ namespace RankSSpawnHelper.Ui.Window
                 Plugin.Configuration.Save();
             }
 
-            ImGui.SameLine();
+            /*ImGui.SameLine();
             ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip("开始时间是按照本地时间，如果需要填农怪表格什么的需要自行转换到相对应的时区\n");
+                */
 
             var trackMode = Plugin.Configuration.TrackRangeMode;
             if (ImGui.Checkbox("范围计数", ref trackMode))
@@ -361,7 +362,7 @@ namespace RankSSpawnHelper.Ui.Window
             {
                 ImGui.SameLine();
                 var receiveMessageFromOtherDc = Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
-                if (ImGui.Checkbox("接收其他服务器的触发消息", ref receiveMessageFromOtherDc))
+                if (ImGui.Checkbox("接收其他大区的触发消息", ref receiveMessageFromOtherDc))
                 {
                     Plugin.Configuration.ReceiveAttempMessageFromOtherDc = receiveMessageFromOtherDc;
                     Plugin.Configuration.Save();
@@ -423,7 +424,11 @@ namespace RankSSpawnHelper.Ui.Window
             ImGui.NewLine();
             var clearThreshold = Plugin.Configuration.TrackerClearThreshold;
             ImGui.Text("在多少分钟后没更新就自动清除计数");
+#if DEBUG
+            if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 1f, 60f, "%.2f分"))
+#else
             if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 30f, 60f, "%.2f分"))
+#endif
             {
                 Plugin.Configuration.TrackerClearThreshold = clearThreshold;
                 Plugin.Configuration.Save();

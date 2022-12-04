@@ -23,7 +23,7 @@ namespace RankSSpawnHelper.Managers
         private readonly DalamudLinkPayload _linkPayload;
 
         private bool _oldRangeModeState;
-        private const string ServerVersion = "v3";
+        private const string ServerVersion = "v4";
 
         private List<string> _servers;
         private IWebsocketClient _client;
@@ -100,11 +100,26 @@ namespace RankSSpawnHelper.Managers
                      {
                          try
                          {
-                             _client.Url = new Uri(url);
-                             if (_client.IsStarted)
-                                 await _client.Reconnect();
-                             else
-                                 await _client.Start();
+                             _client.Dispose();
+
+                             _client = new WebsocketClient(new Uri(url), () =>
+                                                                         {
+                                                                             var client = new ClientWebSocket
+                                                                                          {
+                                                                                              Options = { KeepAliveInterval = TimeSpan.FromSeconds(8) }
+                                                                                          };
+                                                                             PluginLog.Debug($"Setting header. {_userName}");
+                                                                             client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
+                                                                             client.Options.SetRequestHeader("server-version", ServerVersion);
+                                                                             client.Options.SetRequestHeader("user-type", "Dalamud");
+                                                                             return client;
+                                                                         });
+
+                             _client.ReconnectTimeout      = TimeSpan.FromSeconds(16);
+                             _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(16);
+                             _client.ReconnectionHappened.Subscribe(OnReconntion);
+                             _client.MessageReceived.Subscribe(OnMessageReceived);
+                             await _client.Start();
                          }
                          catch (Exception e)
                          {
@@ -195,13 +210,7 @@ namespace RankSSpawnHelper.Managers
             var msg = Encoding.UTF8.GetString(args.Binary);
 
             PluginLog.Debug($"Managers::Socket::OnMessageReceived. {msg}");
-
-            if (msg.StartsWith("Error:"))
-            {
-                DalamudApi.ChatGui.PrintError($"[S怪触发] {msg}");
-                return;
-            }
-
+            
             if (!msg.StartsWith("{"))
                 return;
 
@@ -211,7 +220,32 @@ namespace RankSSpawnHelper.Managers
 
                 switch (result.Type)
                 {
-                    case "counter":
+                    case "Error":
+                    {
+                        var message = result.Message;
+
+                        Plugin.Print(new List<Payload>
+                                     {
+                                         new UIForegroundPayload(518),
+                                         new TextPayload($"Error: {message}"),
+                                         new UIForegroundPayload(0),
+                                     });
+
+                        break;
+                    }
+                    case "Attempt":
+                    {
+                        var message     = result.Message;
+                        var serverName  = message[..message.IndexOf('@')];
+                        var shouldPrint = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
+
+                        if (!shouldPrint)
+                            return;
+                        
+                        Plugin.Print(message);
+                        break;
+                    }
+                    case "Counter":
                     {
                         foreach (var (key, value) in result.Counter)
                         {
@@ -245,11 +279,15 @@ namespace RankSSpawnHelper.Managers
                         payloads.Add(new TextPayload("人数详情:\n"));
                         payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
 
-                        foreach (var (k, v) in result.UserCounter)
+                        foreach (var userCounter in result.UserCounter)
                         {
-                            payloads.Add(new TextPayload($"    {k}: {v}\n"));
+                            payloads.Add(new TextPayload($"    {userCounter.UserName}: {userCounter.TotalCount}\n"));
+                            foreach (var (k, v) in userCounter.Counter)
+                            {
+                                payloads.Add(new TextPayload($"        {k}: {v}\n"));
+                            }
                         }
-
+                        
                         payloads.Add(new UIForegroundPayload(0));
 
                         if (result.Failed)
@@ -304,50 +342,22 @@ namespace RankSSpawnHelper.Managers
                     }
                     case "Broadcast":
                     {
-                        var message         = result.Message;
-                        var isAttempMessage = Regex.IsMatch(message, @".*@.*@\d+ (寄了|出货了). 触发概率: \d+\.\d+%");
-                        // var isAttempMessage = message.Where(i => i == '@').ToList().Count == 2 && (message.Contains("出货了") || message.Contains("寄了")) && message.EndsWith('%');
-                        if (isAttempMessage)
-                        {
-                            if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
-                                return;
-
-                            var serverName  = message[..message.IndexOf('@')];
-                            var shouldPrint = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
-
-                            if (!shouldPrint)
-                                return;
-                        }
-
-                        DalamudApi.ChatGui.Print(new SeString(new List<Payload>
-                                                              {
-                                                                  new UIForegroundPayload(1),
-                                                                  new TextPayload("[S怪触发]"),
-                                                                  new UIForegroundPayload(35),
-                                                                  new TextPayload($"广播消息: {result.Message}"),
-                                                                  new UIForegroundPayload(0),
-                                                                  new UIForegroundPayload(0)
-                                                              }));
-
-
+                        Plugin.Print($"广播消息: {result.Message}");
                         return;
                     }
                     case "ChangeArea":
                     {
-                        var time = DateTimeOffset.FromUnixTimeSeconds(result.Time);
-                        DalamudApi.ChatGui.Print(new SeString(new List<Payload>
-                                                              {
-                                                                  new UIForegroundPayload(1),
-                                                                  new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                                                  new TextPayload($"{result.Instance}"),
-                                                                  new UIForegroundPayload(0),
-                                                                  new TextPayload("上一次尝试触发的时间: "),
-                                                                  new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                                                  new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
-                                                                  new UIForegroundPayload(0),
-                                                                  new UIForegroundPayload(0)
-                                                              }
-                                                             ));
+                        var time = DateTimeOffset.FromUnixTimeSeconds(result.Time).ToLocalTime();
+                        Plugin.Print(new List<Payload>
+                                     {
+                                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                         new TextPayload($"{result.Instance} "),
+                                         new UIForegroundPayload(0),
+                                         new TextPayload("上一次尝试触发的时间: "),
+                                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                         new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
+                                         new UIForegroundPayload(0),
+                                     });
                         return;
                     }
                 }

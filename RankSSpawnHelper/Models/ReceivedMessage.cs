@@ -2,6 +2,13 @@
 
 namespace RankSSpawnHelper.Models
 {
+    public class UserCounter
+    {
+        public Dictionary<string, int> Counter;
+        public int TotalCount;
+        public string UserName;
+    }
+
     internal class ReceivedMessage
     {
         public string Type { get; set; }
@@ -9,7 +16,7 @@ namespace RankSSpawnHelper.Models
         public long Time { get; set; }
         public uint TerritoryId { get; set; }
         public Dictionary<string, int> Counter { get; set; }
-        public Dictionary<string, int> UserCounter { get; set; }
+        public List<UserCounter> UserCounter { get; set; }
 
         // Broadcast message
         public string Message { get; set; }

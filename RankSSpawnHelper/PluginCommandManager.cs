@@ -10,14 +10,14 @@ namespace RankSSpawnHelper
 {
     public class PluginCommandManager<THost> : IDisposable
     {
-        private readonly THost host;
-        private readonly (string, CommandInfo)[] pluginCommands;
+        private readonly THost _host;
+        private readonly (string, CommandInfo)[] _pluginCommands;
 
         public PluginCommandManager(THost host)
         {
-            this.host = host;
+            this._host = host;
 
-            pluginCommands = host.GetType()
+            _pluginCommands = host.GetType()
                                  .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                                  .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
                                  .SelectMany(GetCommandInfoTuple)
@@ -34,7 +34,7 @@ namespace RankSSpawnHelper
 
         private void AddCommandHandlers()
         {
-            foreach (var (command, commandInfo) in pluginCommands)
+            foreach (var (command, commandInfo) in _pluginCommands)
             {
                 DalamudApi.CommandManager.AddHandler(command, commandInfo);
             }
@@ -42,7 +42,7 @@ namespace RankSSpawnHelper
 
         private void RemoveCommandHandlers()
         {
-            foreach (var (command, _) in pluginCommands)
+            foreach (var (command, _) in _pluginCommands)
             {
                 DalamudApi.CommandManager.RemoveHandler(command);
             }
@@ -50,7 +50,7 @@ namespace RankSSpawnHelper
 
         private IEnumerable<(string, CommandInfo)> GetCommandInfoTuple(MethodInfo method)
         {
-            var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), host, method);
+            var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), _host, method);
 
             var command         = handlerDelegate.Method.GetCustomAttribute<CommandAttribute>();
             var aliases         = handlerDelegate.Method.GetCustomAttribute<AliasesAttribute>();
@@ -67,10 +67,7 @@ namespace RankSSpawnHelper
             var commandInfoTuples = new List<(string, CommandInfo)> { (command!.Command, commandInfo) };
             if (aliases != null)
             {
-                foreach (var alias in aliases.Aliases)
-                {
-                    commandInfoTuples.Add((alias, commandInfo));
-                }
+                commandInfoTuples.AddRange(aliases.Aliases.Select(alias => (alias, commandInfo)));
             }
 
             return commandInfoTuples;

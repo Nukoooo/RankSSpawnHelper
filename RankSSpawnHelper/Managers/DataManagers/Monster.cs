@@ -22,7 +22,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
     internal class Monster
     {
-        private const string Url = "https://tracker.ff14hunttool.com/";
+        private const string Url = "https://tracker-api.beartoolkit.com/";
         private readonly HttpClient _httpClient;
         private readonly List<SRankMonster> _sRankMonsters = new();
         private string _errorMessage = string.Empty;
@@ -135,7 +135,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
                          try
                          {
-                             var result  = _httpClient.GetAsync(Url + "resources/hunt.json");
+                             var result  = _httpClient.GetAsync("https://tracker.beartoolkit.com/resources/hunt.json");
                              var content = await result.Result.Content.ReadAsStringAsync();
                              var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
 
@@ -198,11 +198,11 @@ namespace RankSSpawnHelper.Managers.DataManagers
                                         { "WorldName", server }
                                     };
 
-                         var response = await _httpClient.PostAsync(Url + "api/huntStatus", new FormUrlEncodedContent(body));
+                         var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
 
                          if (response.StatusCode != HttpStatusCode.OK)
                          {
-                             _errorMessage = "HttpStatusCode:" + response.StatusCode;
+                             _errorMessage = "HttpStatusCode: " + response.StatusCode;
                              _fetchStatus  = FetchStatus.Error;
                              return;
                          }
@@ -241,7 +241,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
                            { "WorldName", server }
                        };
 
-            var response = await _httpClient.PostAsync(Url + "api/huntStatus", new FormUrlEncodedContent(body));
+            var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
 
             if (response.StatusCode != HttpStatusCode.OK)
             {

@@ -1,5 +1,7 @@
 ﻿using System;
-using Dalamud.Logging;
+using System.Collections.Generic;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ImGuiNET;
 using RankSSpawnHelper.Models;
 
@@ -33,7 +35,7 @@ namespace RankSSpawnHelper.UI.Window
                 IsOpen = false;
                 return;
             }
-            
+
             var networkTracker = Plugin.Features.Counter.GetNetworkedTrackers();
             var localTracker   = Plugin.Features.Counter.GetLocalTrackers();
             var actualTracker  = Plugin.Managers.Socket.Connected() ? networkTracker : localTracker;
@@ -70,7 +72,7 @@ namespace RankSSpawnHelper.UI.Window
             {
                 if (Plugin.Managers.Font.IsFontBuilt())
                 {
-                    ImGui.PushFont(Plugin.Managers.Font.Yahei24);
+                    ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
                     ImGui.SetWindowFontScale(0.8f);
                 }
 
@@ -116,7 +118,7 @@ namespace RankSSpawnHelper.UI.Window
 
             if (Plugin.Managers.Font.IsFontBuilt())
             {
-                ImGui.PushFont(Plugin.Managers.Font.Yahei24);
+                ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
                 ImGui.SetWindowFontScale(0.8f);
             }
 
@@ -141,7 +143,12 @@ namespace RankSSpawnHelper.UI.Window
                 }
                 else
                 {
-                    DalamudApi.ChatGui.PrintError($"你还得等 {(_nextClickTime - DateTime.Now).TotalSeconds:F}秒 才能再点这个按钮");
+                    Plugin.Print(new List<Payload>
+                                 {
+                                     new UIForegroundPayload(518),
+                                     new TextPayload($"你还得等 {(_nextClickTime - DateTime.Now).TotalSeconds:F}秒 才能再点这个按钮"),
+                                     new UIForegroundPayload(0)
+                                 });
                 }
             }
 

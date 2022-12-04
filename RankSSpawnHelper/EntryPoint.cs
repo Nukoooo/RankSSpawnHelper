@@ -19,10 +19,10 @@ namespace RankSSpawnHelper
 {
     public class EntryPoint : IDalamudPlugin
     {
-        private readonly PluginCommandManager<EntryPoint> _commandManager;
-        private readonly WindowSystem _windowSystem;
         private readonly Assembly _assembly;
+        private readonly PluginCommandManager<EntryPoint> _commandManager;
         private readonly AssemblyLoadContext _context;
+        private readonly WindowSystem _windowSystem;
 
         public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
         {
@@ -39,7 +39,7 @@ namespace RankSSpawnHelper
 
             Plugin.Features = new Features.Features();
             Plugin.Managers = new Managers.Managers();
-            
+
             // Initialize the UI
             _windowSystem  = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
             Plugin.Windows = new Windows(ref _windowSystem);
@@ -51,17 +51,17 @@ namespace RankSSpawnHelper
             _commandManager = new PluginCommandManager<EntryPoint>(this);
 
 #if RELEASE
-            if (Plugin.Configuration.UpdateNote02) 
+            if (Plugin.Configuration.UpdateNote03) 
                 return;
-            Plugin.Configuration.UpdateNote02 = true;
+            Plugin.Configuration.UpdateNote03 = true;
 #endif
 
             DalamudApi.ChatGui.Print(new SeString(new List<Payload>
                                                   {
                                                       new UIForegroundPayload(1),
-                                                      new TextPayload("[S怪触发] 更新日志:\n"),
+                                                      new TextPayload($"[S怪触发] 版本 {_assembly.GetName().Version} 更新日志:\n"),
                                                       new UIForegroundPayload(35),
-                                                      new TextPayload("[-] 修复了触发消息在特定情况下仍能接收到别的区服的BUG"),
+                                                      new TextPayload("[+] 更新CD网的链接")
                                                   }));
         }
 
@@ -77,7 +77,7 @@ namespace RankSSpawnHelper
                 using var deflateStream = new DeflateStream(_assembly.GetManifestResourceStream(text), CompressionMode.Decompress, false);
                 using var memoryStream  = new MemoryStream();
 
-                int       num;
+                int num;
                 while ((num = deflateStream.Read(span)) != 0)
                 {
                     Stream stream = memoryStream;
@@ -126,7 +126,7 @@ namespace RankSSpawnHelper
                 case "all":
                 {
                     Plugin.Features.Counter.RemoveInstance();
-                    DalamudApi.ChatGui.Print("已清除所有计数");
+                    Plugin.Print("已清除所有计数");
                     break;
                 }
                 case "当前":
@@ -135,12 +135,17 @@ namespace RankSSpawnHelper
                 {
                     var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
                     Plugin.Features.Counter.RemoveInstance(currentInstance);
-                    DalamudApi.ChatGui.Print("已清除当前区域的计数");
+                    Plugin.Print("已清除当前区域的计数");
                     break;
                 }
                 default:
                 {
-                    DalamudApi.ChatGui.PrintError($"使用方法: {cmd} [cur/all]. 比如清除当前计数: {cmd} cur");
+                    Plugin.Print(new List<Payload>
+                                 {
+                                     new UIForegroundPayload(518),
+                                     new TextPayload($"使用方法: {cmd} [cur/all]. 比如清除当前计数: {cmd} cur"),
+                                     new UIForegroundPayload(0)
+                                 });
                     return;
                 }
             }
@@ -181,7 +186,13 @@ namespace RankSSpawnHelper
                     message += $"    {k}: {v}\n";
                 }
 
-                DalamudApi.ChatGui.PrintError(message + "PS:消息已复制到剪贴板");
+                Plugin.Print(new List<Payload>
+                             {
+                                 new UIForegroundPayload(518),
+                                 new TextPayload(message + "PS:消息已复制到剪贴板"),
+                                 new UIForegroundPayload(0)
+                             });
+
                 ImGui.SetClipboardText(message);
                 return;
             }
