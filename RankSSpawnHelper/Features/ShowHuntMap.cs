@@ -5,7 +5,6 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Logging;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
@@ -14,23 +13,23 @@ namespace RankSSpawnHelper.Features
     internal class ShowHuntMap : IDisposable
     {
         private readonly Dictionary<uint, uint> _monsterTerritory = new()
-                                                                      {
-                                                                          { 956, 10617 },
-                                                                          { 815, 8900 },
-                                                                          { 958, 10619 },
-                                                                          { 816, 8653 },
-                                                                          { 960, 10622 },
-                                                                          { 614, 5985 },
-                                                                          { 397, 4373 }
-                                                                      };
+                                                                    {
+                                                                        { 956, 10617 },
+                                                                        { 815, 8900 },
+                                                                        { 958, 10619 },
+                                                                        { 816, 8653 },
+                                                                        { 960, 10622 },
+                                                                        { 614, 5985 },
+                                                                        { 397, 4373 }
+                                                                    };
 
         private readonly ExcelSheet<TerritoryType> _territoryType;
         private bool _shouldRequest = true;
 
         public ShowHuntMap()
         {
-            _territoryType                       =  DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
-            
+            _territoryType = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
+
             DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
             DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
         }
@@ -38,11 +37,12 @@ namespace RankSSpawnHelper.Features
         public void Dispose()
         {
             DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
+            DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
         }
 
         private void ChatGui_OnChatMessage(XivChatType type, uint senderid, ref SeString sender, ref SeString message, ref bool ishandled)
         {
-            if (type is not XivChatType.SystemMessage || message.TextValue != "感觉到了强大的恶名精英的气息……") 
+            if (type is not XivChatType.SystemMessage || message.TextValue != "感觉到了强大的恶名精英的气息……")
                 return;
             _shouldRequest = false;
         }
