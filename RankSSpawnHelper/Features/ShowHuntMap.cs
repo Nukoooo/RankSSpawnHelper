@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Logging;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
@@ -12,15 +13,15 @@ namespace RankSSpawnHelper.Features
 {
     internal class ShowHuntMap : IDisposable
     {
-        private readonly Dictionary<uint, string> _monsterTerritory = new()
+        private readonly Dictionary<uint, uint> _monsterTerritory = new()
                                                                       {
-                                                                          { 956, "布弗鲁" },
-                                                                          { 815, "多智兽" },
-                                                                          { 958, "阿姆斯特朗" },
-                                                                          { 816, "阿格拉俄珀" },
-                                                                          { 960, "狭缝" },
-                                                                          { 614, "伽马" },
-                                                                          { 397, "凯撒贝希摩斯" }
+                                                                          { 956, 10617 },
+                                                                          { 815, 8900 },
+                                                                          { 958, 10619 },
+                                                                          { 816, 8653 },
+                                                                          { 960, 10622 },
+                                                                          { 614, 5985 },
+                                                                          { 397, 4373 }
                                                                       };
 
         private readonly ExcelSheet<TerritoryType> _territoryType;
@@ -29,6 +30,7 @@ namespace RankSSpawnHelper.Features
         public ShowHuntMap()
         {
             _territoryType                       =  DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
+            
             DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
             DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
         }
@@ -47,7 +49,7 @@ namespace RankSSpawnHelper.Features
 
         private void Condition_OnConditionChange(ConditionFlag flag, bool value)
         {
-            if (flag != ConditionFlag.BetweenAreas51 || !value)
+            if (flag != ConditionFlag.BetweenAreas51 || value)
                 return;
 
             if (!Plugin.Configuration.AutoShowHuntMap)
@@ -60,17 +62,17 @@ namespace RankSSpawnHelper.Features
             }
 
             var currentTerritory = DalamudApi.ClientState.TerritoryType;
-            if (!_monsterTerritory.TryGetValue(currentTerritory, out var name))
+            if (!_monsterTerritory.TryGetValue(currentTerritory, out var monsterId))
                 return;
 
             Task.Run(async () =>
                      {
-                         var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+                         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
                          var split           = currentInstance.Split('@');
                          if (!int.TryParse(split[2], out var instance))
                              return;
 
-                         var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], name, instance);
+                         var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
                          if (huntMaps.spawnPoints.Count == 0)
                              return;
 

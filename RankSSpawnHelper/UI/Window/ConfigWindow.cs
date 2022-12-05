@@ -132,7 +132,7 @@ namespace RankSSpawnHelper.Ui.Window
             if (ImGui.Checkbox("只显示当前区域", ref showCurrentInstance))
             {
                 Plugin.Configuration.TrackerShowCurrentInstance = showCurrentInstance;
-                Plugin.Windows.CounterWindow.IsOpen             = Plugin.Features.Counter.GetLocalTrackers().ContainsKey(Plugin.Managers.Data.Player.GetCurrentInstance());
+                Plugin.Windows.CounterWindow.IsOpen             = Plugin.Features.Counter.GetLocalTrackers().ContainsKey(Plugin.Managers.Data.Player.GetCurrentTerritory());
                 Plugin.Configuration.Save();
             }
 

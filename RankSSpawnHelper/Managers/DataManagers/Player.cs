@@ -18,10 +18,12 @@ namespace RankSSpawnHelper.Managers.DataManagers
         public Player()
         {
             _instanceNumberAddress = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");
+            if (_instanceNumberAddress == IntPtr.Zero)
+                PluginLog.Warning("InstanceNumberAddress is null");
             _terr                  = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
         }
 
-        public string GetCurrentInstance()
+        public string GetCurrentTerritory()
         {
             try
             {
@@ -36,6 +38,18 @@ namespace RankSSpawnHelper.Managers.DataManagers
                 return string.Empty;
             }
         }
+
+        /*public int GetCurrentInstance()
+        {
+            try
+            {
+                return Marshal.ReadByte(_instanceNumberAddress, 0x20);
+            }
+            catch
+            {
+                return -1;
+            }
+        }*/
 
         public string GetLocalPlayerName()
         {

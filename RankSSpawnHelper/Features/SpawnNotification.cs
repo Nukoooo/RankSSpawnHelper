@@ -51,7 +51,7 @@ namespace RankSSpawnHelper.Features
 
             _shouldNotNotify = true;
 
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
             _huntStatus.Remove(currentInstance);
         }
 
@@ -69,7 +69,7 @@ namespace RankSSpawnHelper.Features
                              return;
                          }
 
-                         var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+                         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
                          var split           = currentInstance.Split('@');
                          var monsterName     = Plugin.Managers.Data.Monster.GetMonsterNameById(_monsterIdMap[e]);
 

@@ -162,6 +162,11 @@ namespace RankSSpawnHelper.Managers.DataManagers
             return _sRankMonsters.Where(i => expansion == i.expansion).Select(i => i.localizedName).ToList();
         }
 
+        public uint GetMonsterByName(string name)
+        {
+            return _sRankMonsters.Where(i => i.localizedName == name).Select(i => i.id).First();
+        }
+
         public string GetMonsterNameById(uint id)
         {
             return _sRankMonsters.Where(i => i.id == id).Select(i => i.localizedName).First();

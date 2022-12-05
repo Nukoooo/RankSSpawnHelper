@@ -133,7 +133,7 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
             Plugin.Managers.Socket.SendMessage(new NetMessage
                                                {
@@ -168,7 +168,7 @@ namespace RankSSpawnHelper.Features
             {
                 // _huntStatus.Remove(currentInstance);
 
-                currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+                currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
                 if (territory == 960)
                 {
@@ -218,7 +218,7 @@ namespace RankSSpawnHelper.Features
                              _   => targetName
                          };
 
-            currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
             AddToTracker(currentInstance, targetName);
         }
 
@@ -269,7 +269,7 @@ namespace RankSSpawnHelper.Features
             if (!name.Contains(targetName.ToString()))
                 return;
 
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
             var sourceOwner = source.OwnerId;
             if (!Plugin.Configuration.TrackRangeMode &&

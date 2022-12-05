@@ -63,7 +63,7 @@ namespace RankSSpawnHelper.UI.Window
                 {
                     if (count >= 10)
                     {
-                        var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+                        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
                         if (!_dateTimes.ContainsKey(currentInstance))
                         {

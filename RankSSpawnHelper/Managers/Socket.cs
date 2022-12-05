@@ -186,7 +186,7 @@ namespace RankSSpawnHelper.Managers
                 return;
 
             var list = localTracker.Select(t => new NetMessage.Tracker { Data = t.Value.counter, Time = t.Value.startTime, Instance = t.Key, TerritoryId = t.Value.territoryId }).ToList();
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
             SendMessage(new NetMessage
                         {

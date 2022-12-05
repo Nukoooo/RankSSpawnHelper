@@ -146,7 +146,7 @@ namespace RankSSpawnHelper
                 case "cur":
                 case "current":
                 {
-                    var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+                    var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
                     Plugin.Features.Counter.RemoveInstance(currentInstance);
                     Plugin.Print("已清除当前区域的计数");
                     break;
@@ -182,7 +182,7 @@ namespace RankSSpawnHelper
         {
             if (!Plugin.Managers.Socket.Connected())
             {
-                var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+                var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
                 if (!Plugin.Features.Counter.GetLocalTrackers().TryGetValue(currentInstance, out var tracker))
                     return;
 
@@ -213,7 +213,7 @@ namespace RankSSpawnHelper
             Plugin.Managers.Socket.SendMessage(new NetMessage
                                                {
                                                    Type        = "ggnore",
-                                                   Instance    = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                                   Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
                                                    User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                    Failed      = true

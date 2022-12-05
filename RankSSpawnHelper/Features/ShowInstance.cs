@@ -42,7 +42,7 @@ namespace RankSSpawnHelper.Features
                 }
 
                 _dtrBarEntry.Shown = true;
-                var key   = Plugin.Managers.Data.Player.GetCurrentInstance();
+                var key   = Plugin.Managers.Data.Player.GetCurrentTerritory();
                 var split = key.Split('@');
 
                 _dtrBarEntry.Text = split[2] switch

@@ -106,7 +106,7 @@ namespace RankSSpawnHelper.UI.Window
                 return;
             }
 
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentInstance();
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
             if (!actualTracker.TryGetValue(currentInstance, out var value))
             {
@@ -133,7 +133,7 @@ namespace RankSSpawnHelper.UI.Window
                     Plugin.Managers.Socket.SendMessage(new NetMessage
                                                        {
                                                            Type        = "ggnore",
-                                                           Instance    = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                                           Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
                                                            User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                            TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                            Failed      = true
