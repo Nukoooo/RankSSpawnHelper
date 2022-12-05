@@ -369,6 +369,13 @@ namespace RankSSpawnHelper.Ui.Window
                 }
             }
 
+            var autoShowHuntMap = Plugin.Configuration.AutoShowHuntMap;
+            if (ImGui.Checkbox("自动获取点位列表", ref autoShowHuntMap))
+            {
+                Plugin.Configuration.AutoShowHuntMap = autoShowHuntMap;
+                Plugin.Configuration.Save();
+            }
+
             ImGui.NewLine();
 
             ImGui.Text("触发失败消息颜色");

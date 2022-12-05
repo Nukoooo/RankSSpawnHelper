@@ -51,18 +51,31 @@ namespace RankSSpawnHelper
             _commandManager = new PluginCommandManager<EntryPoint>(this);
 
 #if RELEASE
-            if (Plugin.Configuration.UpdateNote03) 
+            if (Plugin.Configuration.UpdateNote04) 
                 return;
-            Plugin.Configuration.UpdateNote03 = true;
+            Plugin.Configuration.UpdateNote04 = true;
 #endif
 
-            DalamudApi.ChatGui.Print(new SeString(new List<Payload>
-                                                  {
-                                                      new UIForegroundPayload(1),
-                                                      new TextPayload($"[S怪触发] 版本 {_assembly.GetName().Version} 更新日志:\n"),
-                                                      new UIForegroundPayload(35),
-                                                      new TextPayload("[+] 更新CD网的链接")
-                                                  }));
+            Plugin.Print(new List<Payload>()
+                         {
+                             new TextPayload($"版本 1.2.1.3 到 {_assembly.GetName().Version} 的更新日志:\n"),
+                             new UIForegroundPayload(35),
+                             new TextPayload("  [+] 更新CD网的链接\n"),
+                             new TextPayload("  [+] 增加了点位查询的功能. 在菜单设置里开启选项后到对应的地图里会在聊天框里显示点位\n"),
+                             new UIForegroundPayload(1),
+                             new TextPayload("      目前支持的地图有: 天外天垓、加雷马、伊尔美格、迷津、延夏、库尔札斯西部高地\n"),
+                             new UIForegroundPayload(0),
+                             new TextPayload("  [-] 修复了狭缝触发成功时不显示消息的BUG\n"),
+                             new TextPayload("  [-] 把接受其他\"服务器\"的触发消息改成\"大区\"(原来写的是服务器)\n"),
+                             new UIForegroundPayload(1),
+                             new TextPayload("服务端相关的更新(当前版本v4) : \n"),
+                             new UIForegroundPayload(0),
+                             new TextPayload("  [+] 更新CD网的链接\n"),
+                             new TextPayload("  [+] 每个用户的计数器会记录打了多少只怪(同时也在触发成功/失败的消息里显示)\n"),
+                             new TextPayload("  [-] 修复了在重连的时候计数会翻倍的BUG\n"),
+                             new TextPayload("  [-] 现在巨大鳐的计数在服务器上超过24小时不更新会自动删除"),
+                             new UIForegroundPayload(0)
+                         });
         }
 
         public string Name => "SpawnHelper";

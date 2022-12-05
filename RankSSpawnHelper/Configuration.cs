@@ -32,6 +32,8 @@ namespace RankSSpawnHelper
         // 服务器信息显示几线
         public bool ShowInstance { get; set; } = false;
 
+        public bool AutoShowHuntMap { get; set; } = false;
+
         public uint FailedMessageColor { get; set; } = 518;
         public uint SpawnedMessageColor { get; set; } = 59;
         public uint HighlightColor { get; set; } = 71;
@@ -39,7 +41,7 @@ namespace RankSSpawnHelper
         public bool EnableAttemptMessagesFromOtherDcs = false;
         public bool ReceiveAttempMessageFromOtherDc = false;
 
-        public bool UpdateNote03 = false;
+        public bool UpdateNote04 = false;
 #endregion
     }
 }

@@ -271,5 +271,40 @@ namespace RankSSpawnHelper.Managers.DataManagers
                 return null;
             }
         }
+
+        public async Task<HuntMap> FetchHuntMap(string server, string monster, int instance)
+        {
+            if (_fetchStatus == FetchStatus.Fetching)
+                return null;
+
+            var body = new Dictionary<string, string>
+                       {
+                           { "HuntName", _sRankMonsters.Find(i => i.localizedName == monster).keyName + (instance == 0 ? string.Empty : $" {instance}") },
+                           { "WorldName", server }
+                       };
+
+            var response = await _httpClient.PostAsync(Url + "public/huntmap", new FormUrlEncodedContent(body));
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return null;
+            }
+
+            try
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var huntMap  = JsonConvert.DeserializeObject<HuntMap>(content);
+                
+                _fetchStatus = FetchStatus.Success;
+                return huntMap;
+            }
+            catch (Exception e)
+            {
+                PluginLog.Error(e.Message);
+
+                _fetchStatus = FetchStatus.None;
+                return null;
+            }
+        }
     }
 }
