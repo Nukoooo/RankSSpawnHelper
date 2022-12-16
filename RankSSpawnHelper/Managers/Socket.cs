@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Security;
 using System.Net.WebSockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -47,43 +48,32 @@ namespace RankSSpawnHelper.Managers
                                                                        Util.OpenLink(link);
                                                                    });
 
-            Task.Run(async () =>
-                     {
-                         while (_userName == string.Empty)
-                         {
-                             _userName = Plugin.Managers.Data.Player.GetLocalPlayerName();
+            DalamudApi.ClientState.Login  += ClientState_OnLogin;
+            DalamudApi.ClientState.Logout += ClientState_OnLogout;
 
-                             await Task.Delay(500);
-                         }
+            if (DalamudApi.ClientState.LocalPlayer)
+                Connect(Url);
+        }
 
-                         _client = new WebsocketClient(new Uri(Url), () =>
-                                                                     {
-                                                                         var client = new ClientWebSocket
-                                                                                      {
-                                                                                          Options = { KeepAliveInterval = TimeSpan.FromSeconds(8) }
-                                                                                      };
-                                                                         PluginLog.Debug($"Setting header. {_userName}");
-                                                                         client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
-                                                                         client.Options.SetRequestHeader("server-version", ServerVersion);
-                                                                         client.Options.SetRequestHeader("user-type", "Dalamud");
-                                                                         return client;
-                                                                     });
+        private void ClientState_OnLogin(object sender, EventArgs e)
+        {
+            Connect(Url);
+        }
 
-                         _client.ReconnectTimeout      = TimeSpan.FromSeconds(16);
-                         _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(16);
-                         _client.ReconnectionHappened.Subscribe(OnReconntion);
-                         _client.MessageReceived.Subscribe(OnMessageReceived);
-
-                         _servers = Plugin.Managers.Data.GetServers();
-
-                         await _client.Start();
-                     });
+        private void ClientState_OnLogout(object sender, EventArgs e)
+        {
+            _client.Dispose();
+            _userName = string.Empty;
+            PluginLog.Debug("ClientState_OnLogout");
         }
 
         public void Dispose()
         {
             Plugin.Configuration.TrackRangeMode = _oldRangeModeState;
             DalamudApi.Interface.RemoveChatLinkHandler(ChatLinkCommandId);
+
+            DalamudApi.ClientState.Login  -= ClientState_OnLogin;
+            DalamudApi.ClientState.Logout -= ClientState_OnLogout;
 
             _client.Dispose();
 
@@ -92,15 +82,24 @@ namespace RankSSpawnHelper.Managers
 
 #if DEBUG
         public void Connect(string url)
+#else
+        private void Connect(string url)
+#endif
         {
-            if (_client == null || url == string.Empty)
-                return;
-
             Task.Run(async () =>
                      {
                          try
                          {
-                             _client.Dispose();
+                             _client?.Dispose();
+                             _userName = string.Empty;
+
+                             while (_userName == string.Empty)
+                             {
+                                 _userName = Plugin.Managers.Data.Player.GetLocalPlayerName();
+                                 await Task.Delay(500);
+                             }
+
+                             _servers = Plugin.Managers.Data.GetServers();
 
                              _client = new WebsocketClient(new Uri(url), () =>
                                                                          {
@@ -113,10 +112,11 @@ namespace RankSSpawnHelper.Managers
                                                                              client.Options.SetRequestHeader("server-version", ServerVersion);
                                                                              client.Options.SetRequestHeader("user-type", "Dalamud");
                                                                              return client;
-                                                                         });
-
-                             _client.ReconnectTimeout      = TimeSpan.FromSeconds(16);
-                             _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(16);
+                                                                         })
+                                       {
+                                           ReconnectTimeout      = TimeSpan.FromSeconds(16),
+                                           ErrorReconnectTimeout = TimeSpan.FromSeconds(16)
+                                       };
                              _client.ReconnectionHappened.Subscribe(OnReconntion);
                              _client.MessageReceived.Subscribe(OnMessageReceived);
                              await _client.Start();
@@ -127,7 +127,7 @@ namespace RankSSpawnHelper.Managers
                          }
                      });
         }
-#endif
+        
         public bool Connected()
         {
             return _client != null && _client.IsRunning;
@@ -191,7 +191,6 @@ namespace RankSSpawnHelper.Managers
             SendMessage(new NetMessage
                         {
                             Type            = "NewConnection",
-                            User            = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                             CurrentInstance = currentInstance,
                             Trackers        = list,
                             TerritoryId     = DalamudApi.ClientState.TerritoryType
@@ -209,10 +208,13 @@ namespace RankSSpawnHelper.Managers
 
             var msg = Encoding.UTF8.GetString(args.Binary);
 
-            PluginLog.Debug($"Managers::Socket::OnMessageReceived. {msg}");
-            
             if (!msg.StartsWith("{"))
+            {
+                PluginLog.Error("Managers::Socket::OnMessageReceived. Not a valid json format message");
                 return;
+            }
+
+            PluginLog.Debug($"Managers::Socket::OnMessageReceived. {msg}");
 
             try
             {
@@ -223,12 +225,11 @@ namespace RankSSpawnHelper.Managers
                     case "Error":
                     {
                         var message = result.Message;
-
                         Plugin.Print(new List<Payload>
                                      {
                                          new UIForegroundPayload(518),
                                          new TextPayload($"Error: {message}"),
-                                         new UIForegroundPayload(0),
+                                         new UIForegroundPayload(0)
                                      });
 
                         break;
@@ -241,7 +242,7 @@ namespace RankSSpawnHelper.Managers
 
                         if (!shouldPrint)
                             return;
-                        
+
                         Plugin.Print(message);
                         break;
                     }
@@ -287,7 +288,7 @@ namespace RankSSpawnHelper.Managers
                                 payloads.Add(new TextPayload($"        {k}: {v}\n"));
                             }
                         }
-                        
+
                         payloads.Add(new UIForegroundPayload(0));
 
                         if (result.Failed)
@@ -300,7 +301,7 @@ namespace RankSSpawnHelper.Managers
 
                         if (result.HasResult)
                         {
-                            var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() > result.ExpectMinTime;
+                            var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() >= result.ExpectMinTime;
                             if (isSpawnable)
                             {
                                 payloads.Add(new TextPayload("\n当前可触发概率: "));
@@ -356,7 +357,7 @@ namespace RankSSpawnHelper.Managers
                                          new TextPayload("上一次尝试触发的时间: "),
                                          new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
                                          new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
-                                         new UIForegroundPayload(0),
+                                         new UIForegroundPayload(0)
                                      });
                         return;
                     }

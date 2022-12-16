@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
+using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.Features
@@ -30,13 +32,20 @@ namespace RankSSpawnHelper.Features
                                                                          { 147, "土元精" } // 北萨
                                                                      };
 
+        private readonly CancellationTokenSource _eventLoopTokenSource = new();
+
         private readonly Dictionary<string, Tracker> _localTracker = new();
         private readonly Dictionary<string, Tracker> _networkedTracker = new();
-        private readonly CancellationTokenSource _eventLoopTokenSource = new();
+        private readonly List<string> _ssList = new();
 
         public Counter()
         {
             SignatureHelper.Initialise(this);
+
+            var bNpcName = DalamudApi.DataManager.GetExcelSheet<BNpcName>();
+
+            _ssList.Add(bNpcName.GetRow(8910).Singular.RawString);
+            _ssList.Add(bNpcName.GetRow(10615).Singular.RawString);
 
             ActorControlSelf.Enable();
             Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
@@ -139,7 +148,6 @@ namespace RankSSpawnHelper.Features
                                                {
                                                    Type        = "ChangeArea",
                                                    Instance    = currentInstance,
-                                                   User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType
                                                });
 
@@ -168,6 +176,10 @@ namespace RankSSpawnHelper.Features
             {
                 // _huntStatus.Remove(currentInstance);
 
+                // Find Rank SS
+                if (DalamudApi.ObjectTable.Any(i => _ssList.Contains(i.Name.TextValue)))
+                    return;
+
                 currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
                 if (territory == 960)
@@ -192,12 +204,12 @@ namespace RankSSpawnHelper.Features
                                                    {
                                                        Type        = "ggnore",
                                                        Instance    = currentInstance,
-                                                       User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                        TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                        Time = !GetLocalTrackers().TryGetValue(currentInstance, out var currentTracker)
                                                                   ? DateTimeOffset.Now.ToUnixTimeSeconds()
                                                                   : currentTracker.startTime
                                                    });
+
                 return;
             }
 
@@ -323,7 +335,6 @@ namespace RankSSpawnHelper.Features
                                                {
                                                    Type = "AddData",
                                                    Instance = key,
-                                                   User = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                    Time = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
                                                    Data = new Dictionary<string, int>
@@ -355,6 +366,8 @@ namespace RankSSpawnHelper.Features
                         {
                             continue;
                         }
+
+                        PluginLog.Debug($"Removing track {v}. delta: {delta}");
 
                         _networkedTracker.Remove(k);
                         _localTracker.Remove(k);

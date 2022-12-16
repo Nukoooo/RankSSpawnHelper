@@ -51,29 +51,25 @@ namespace RankSSpawnHelper
             _commandManager = new PluginCommandManager<EntryPoint>(this);
 
 #if RELEASE
-            if (Plugin.Configuration.UpdateNote04) 
+            if (Plugin.Configuration.UpdateNote05) 
                 return;
-            Plugin.Configuration.UpdateNote04 = true;
+            Plugin.Configuration.UpdateNote05 = true;
 #endif
 
-            Plugin.Print(new List<Payload>()
+            Plugin.Print(new List<Payload>
                          {
-                             new TextPayload($"版本 1.2.1.3 到 {_assembly.GetName().Version} 的更新日志:\n"),
+                             new TextPayload($"版本 {_assembly.GetName().Version} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [+] 更新CD网的链接\n"),
-                             new TextPayload("  [+] 增加了点位查询的功能. 在菜单设置里开启选项后到对应的地图里会在聊天框里显示点位\n"),
-                             new UIForegroundPayload(1),
-                             new TextPayload("      目前支持的地图有: 天外天垓、加雷马、伊尔美格、迷津、延夏、库尔札斯西部高地\n"),
+                             new TextPayload("  [+] 在换图后,当前触发概率不在CD内会播放提示音<se.6> (防止有笨比触不在CD里的怪)\n"),
+                             new TextPayload("  [-] 修复了在登出更换角色后,用户名不更新的BUG\n"),
+                             new TextPayload("  [-] 修复了在特定情况下,出SS后会提示xx出货了的触发消息\n"),
+                             new TextPayload("  [-] 修复了在点位过多的时候会导致游戏炸掉的BUG(傻逼SE)(之后会加一个给排点用的功能)\n"),
                              new UIForegroundPayload(0),
-                             new TextPayload("  [-] 修复了狭缝触发成功时不显示消息的BUG\n"),
-                             new TextPayload("  [-] 把接受其他\"服务器\"的触发消息改成\"大区\"(原来写的是服务器)\n"),
-                             new UIForegroundPayload(1),
-                             new TextPayload("服务端相关的更新(当前版本v4) : \n"),
-                             new UIForegroundPayload(0),
-                             new TextPayload("  [+] 更新CD网的链接\n"),
-                             new TextPayload("  [+] 每个用户的计数器会记录打了多少只怪(同时也在触发成功/失败的消息里显示)\n"),
-                             new TextPayload("  [-] 修复了在重连的时候计数会翻倍的BUG\n"),
-                             new TextPayload("  [-] 现在巨大鳐的计数在服务器上超过24小时不更新会自动删除"),
+                             new TextPayload("服务器的更新日志:\n"),
+                             new UIForegroundPayload(35),
+                             new TextPayload("  [+] 特定情况下会有奇怪的东西出现在消息里\n"),
+                             new TextPayload("  [-] 修复了在有本地计数的情况下连接到服务器时,部分计数不会被添加的BUG\n"),
+                             new TextPayload("  [-] 延迟一秒处理寄了的消息"),
                              new UIForegroundPayload(0)
                          });
         }
@@ -214,7 +210,6 @@ namespace RankSSpawnHelper
                                                {
                                                    Type        = "ggnore",
                                                    Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
-                                                   User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                                                    TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                    Failed      = true
                                                });

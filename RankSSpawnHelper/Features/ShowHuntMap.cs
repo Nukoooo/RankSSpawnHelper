@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Logging;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
@@ -73,13 +74,23 @@ namespace RankSSpawnHelper.Features
                              return;
 
                          var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
-                         if (huntMaps.spawnPoints.Count == 0)
+                         if (huntMaps == null || huntMaps.spawnPoints.Count == 0)
+                         {
+                             PluginLog.Debug("huntMap list is 0 / null");
                              return;
+                         }
 
                          var payloads = new List<Payload>
                                         {
                                             new TextPayload($"{currentInstance} 的当前可触发点位:")
                                         };
+
+                         if (huntMaps.spawnPoints.Count > 7)
+                         {
+                             payloads.Add(new TextPayload($"\n因为点位超过7个所以不显示. 当前数量: {huntMaps.spawnPoints.Count}."));
+                             Plugin.Print(payloads);
+                             return;
+                         }
 
                          var mapId = _territoryType.GetRow(currentTerritory)!.Map.Row;
 

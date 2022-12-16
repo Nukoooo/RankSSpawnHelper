@@ -41,7 +41,7 @@ namespace RankSSpawnHelper
         public bool EnableAttemptMessagesFromOtherDcs = false;
         public bool ReceiveAttempMessageFromOtherDc = false;
 
-        public bool UpdateNote04 = false;
+        public bool UpdateNote05 = false;
 #endregion
     }
 }

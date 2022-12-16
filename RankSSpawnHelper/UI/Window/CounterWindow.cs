@@ -130,14 +130,41 @@ namespace RankSSpawnHelper.UI.Window
             {
                 if (DateTime.Now > _nextClickTime)
                 {
-                    Plugin.Managers.Socket.SendMessage(new NetMessage
-                                                       {
-                                                           Type        = "ggnore",
-                                                           Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
-                                                           User        = Plugin.Managers.Data.Player.GetLocalPlayerName(),
-                                                           TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                                           Failed      = true
-                                                       });
+                    if (Plugin.Managers.Socket.Connected())
+                    {
+                        Plugin.Managers.Socket.SendMessage(new NetMessage
+                                                           {
+                                                               Type        = "ggnore",
+                                                               Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
+                                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
+                                                               Failed      = true
+                                                           });
+                    }
+                    else
+                    {
+                        var startTime = DateTimeOffset.FromUnixTimeSeconds(value.startTime).LocalDateTime;
+                        var endTime   = DateTimeOffset.Now.LocalDateTime;
+
+                        var message = $"{currentInstance}的计数寄了！\n" +
+                                      $"开始时间: {startTime.ToShortDateString()}/{startTime.ToShortTimeString()}\n" +
+                                      $"结束时间: {endTime.ToShortDateString()}/{endTime.ToShortTimeString()}\n" +
+                                      "计数详情: \n";
+
+                        foreach (var (k, v) in value.counter)
+                        {
+                            message += $"    {k}: {v}\n";
+                        }
+
+                        Plugin.Print(new List<Payload>
+                                     {
+                                         new UIForegroundPayload(518),
+                                         new TextPayload(message + "PS:消息已复制到剪贴板"),
+                                         new UIForegroundPayload(0)
+                                     });
+
+                        ImGui.SetClipboardText(message);
+                        Plugin.Features.Counter.RemoveInstance(currentInstance);
+                    }
 
                     _nextClickTime = DateTime.Now.AddMinutes(1);
                 }

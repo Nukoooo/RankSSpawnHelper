@@ -42,15 +42,14 @@ namespace RankSSpawnHelper.Features
                 }
 
                 _dtrBarEntry.Shown = true;
-                var key   = Plugin.Managers.Data.Player.GetCurrentTerritory();
-                var split = key.Split('@');
+                var instance = Plugin.Managers.Data.Player.GetCurrentInstance();
 
-                _dtrBarEntry.Text = split[2] switch
+                _dtrBarEntry.Text = instance switch
                                     {
-                                        "1" => "\xe0b1线",
-                                        "2" => "\xe0b2线",
-                                        "3" => "\xe0b3线",
-                                        _   => ""
+                                        1 => "\xe0b1线",
+                                        2 => "\xe0b2线",
+                                        3 => "\xe0b3线",
+                                        _ => ""
                                     };
             }
             catch (Exception)

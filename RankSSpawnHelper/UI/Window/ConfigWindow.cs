@@ -178,6 +178,7 @@ namespace RankSSpawnHelper.Ui.Window
 
             ImGui.SameLine();
 #endif
+
             ImGui.Text("连接状态:");
             ImGui.SameLine();
             ImGui.TextColored(Plugin.Managers.Socket.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Connected() ? "Connected" : "Disconnected");

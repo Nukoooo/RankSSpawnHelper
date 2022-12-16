@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.Features
@@ -112,11 +113,15 @@ namespace RankSSpawnHelper.Features
 
                              payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
                              payloads.Add(new UIForegroundPayload(0));
+
+                             UIModule.PlayChatSoundEffect(6);
+                             UIModule.PlayChatSoundEffect(6);
+                             UIModule.PlayChatSoundEffect(6);
                          }
 
                          payloads.Add(new UIForegroundPayload(0));
 
-                         DalamudApi.ChatGui.Print(new SeString(payloads));
+                         Plugin.Print(payloads);
                      });
         }
     }

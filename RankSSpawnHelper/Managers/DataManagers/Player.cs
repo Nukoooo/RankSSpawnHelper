@@ -34,12 +34,12 @@ namespace RankSSpawnHelper.Managers.DataManagers
             }
             catch (Exception e)
             {
-                PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). {new StackFrame(1).GetMethod()?.Name}");
+                PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). Last CallStack:{new StackFrame(1).GetMethod()?.Name}");
                 return string.Empty;
             }
         }
 
-        /*public int GetCurrentInstance()
+        public int GetCurrentInstance()
         {
             try
             {
@@ -49,7 +49,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
             {
                 return -1;
             }
-        }*/
+        }
 
         public string GetLocalPlayerName()
         {
@@ -59,10 +59,10 @@ namespace RankSSpawnHelper.Managers.DataManagers
             return $"{DalamudApi.ClientState.LocalPlayer.Name}@{DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.Name}";
         }
 
-        public Tuple<SeString, string> GetLastAttempMessage()
+        /*public Tuple<SeString, string> GetLastAttempMessage()
         {
             return _lastAttempMessage;
-        }
+        }*/
 
         public void SetLastAttempMessage(Tuple<SeString, string> msg)
         {

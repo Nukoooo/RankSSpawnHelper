@@ -292,6 +292,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
+
                 return null;
             }
 
