@@ -33,7 +33,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
             _textures.Clear();
         }
 
-        public void AddMapTexture(Map map)
+        public void AddMapTexture(uint territory, Map map)
         {
             if (_textures.ContainsKey(map.RowId))
                 return;
@@ -51,10 +51,8 @@ namespace RankSSpawnHelper.Managers.DataManagers
                                                         {
                                                             texture = texture,
                                                             size = new Vector2(texture.Width, texture.Height),
-                                                            center = new Vector2(texture.Width, texture.Height) / 2f,
-                                                            offsetX = map.OffsetX,
-                                                            offsetY = map.OffsetY,
-                                                            sizeFactor = map.SizeFactor,
+                                                            mapId = map.RowId,
+                                                            territory = territory
                                                         };
                              }
                              else

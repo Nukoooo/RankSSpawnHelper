@@ -28,6 +28,8 @@ namespace RankSSpawnHelper
 
         [PluginService] internal static DataManager DataManager { get; private set; } = null!;
 
+        [PluginService] internal static GameGui GameGui { get; set; } = null!;
+
         // [PluginService] internal static FateTable FateTable { get; private set; } = null!;
 
         [PluginService] internal static ObjectTable ObjectTable { get; private set; } = null!;

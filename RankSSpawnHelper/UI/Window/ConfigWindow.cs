@@ -7,6 +7,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
+using Dalamud.Logging;
 using ImGuiNET;
 using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
@@ -293,12 +294,18 @@ namespace RankSSpawnHelper.Ui.Window
                 else if (Plugin.Managers.Data.Monster.GetFetchStatus() == FetchStatus.Success)
                 {
                     var huntStatus = Plugin.Managers.Data.Monster.GetHuntStatus();
-                    if (huntStatus == null)
+                    if (huntStatus == null || huntStatus.Count == 0)
+                    {
+                        ImGui.TextColored(ImGuiColors.DPSRed, "成功获取数据但无效??");
                         return;
+                    }
+
+                    var canShowHuntMap = Plugin.Features.ShowHuntMap.CanShowHuntMapWithMonsterName(huntStatus[0].localizedName);
 
                     foreach (var status in huntStatus)
                     {
-                        ImGui.Text($"{status.localizedName}@{status.worldName}@{status.instance} 的状态:");
+                        var currentInstance = $"{status.worldName}@{status.localizedName}{(status.instance == 0 ? "" : $" {status.instance}线")}";
+                        ImGui.Text($"{currentInstance} 的状态:");
 
                         ImGui.Text("\t是否丢失:");
                         ImGui.SameLine();
@@ -323,6 +330,28 @@ namespace RankSSpawnHelper.Ui.Window
                             {
                                 var delta = maxTime - now;
                                 ImGui.Text($"\t距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
+                            }
+                        }
+
+                        if (canShowHuntMap)
+                        {
+                            ImGui.SameLine();
+
+                            if (ImGui.Button($"查看触发点##{status.worldName}"))
+                            {
+                                Task.Run(async () =>
+                                         {
+                                             var huntMap = await Plugin.Managers.Data.Monster.FetchHuntMap(status.worldName, status.localizedName, status.instance);
+                                             if (huntMap == null || huntMap.spawnPoints.Count == 0)
+                                             {
+                                                 PluginLog.Debug("huntMap == null || huntMap.spawnPoints.Count == 0 from QueryTab");
+                                                 return;
+                                             }
+
+                                             var texture = Plugin.Features.ShowHuntMap.GeTextureWithMonsterName(status.localizedName);
+                                             Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMap.spawnPoints, currentInstance);
+                                             Plugin.Windows.HuntMapWindow.IsOpen = true;
+                                         });
                             }
                         }
                     }
@@ -389,6 +418,17 @@ namespace RankSSpawnHelper.Ui.Window
             {
                 Plugin.Configuration.AutoShowHuntMap = autoShowHuntMap;
                 Plugin.Configuration.Save();
+            }
+
+            if (Plugin.Configuration.AutoShowHuntMap && Plugin.Configuration.SpawnNotificationType > 0)
+            {
+                ImGui.SameLine();
+                var onlyFetchInDuration = Plugin.Configuration.OnlyFetchInDuration;
+                if (ImGui.Checkbox("只在触发期内获取", ref onlyFetchInDuration))
+                {
+                    Plugin.Configuration.OnlyFetchInDuration = onlyFetchInDuration;
+                    Plugin.Configuration.Save();
+                }
             }
 
             ImGui.NewLine();

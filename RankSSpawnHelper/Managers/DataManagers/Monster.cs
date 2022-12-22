@@ -204,7 +204,6 @@ namespace RankSSpawnHelper.Managers.DataManagers
                          }
 
                          _lastHuntStatus.Clear();
-                         PluginLog.Debug("_lastHuntStatus.Clear();");
 
                          foreach (var body in servers.Select(server => new Dictionary<string, string>
                                                                        {
@@ -214,7 +213,6 @@ namespace RankSSpawnHelper.Managers.DataManagers
                          {
                              var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
 
-                             PluginLog.Debug($"server: {body["WorldName"]}");
                              if (response.StatusCode != HttpStatusCode.OK)
                              {
                                  _errorMessage = "HttpStatusCode: " + response.StatusCode;

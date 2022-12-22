@@ -36,6 +36,7 @@ namespace RankSSpawnHelper
         public bool CoolDownNotificationSound { get; set; } = true;
 
         public bool AutoShowHuntMap { get; set; } = false;
+        public bool OnlyFetchInDuration { get; set; } = false;
 
         public uint FailedMessageColor { get; set; } = 518;
         public uint SpawnedMessageColor { get; set; } = 59;
@@ -44,7 +45,7 @@ namespace RankSSpawnHelper
         public bool EnableAttemptMessagesFromOtherDcs = false;
         public bool ReceiveAttempMessageFromOtherDc = false;
 
-        public bool UpdateNote06 = false;
+        public bool UpdateNote07 = false;
 #endregion
     }
 }

@@ -71,7 +71,9 @@ namespace RankSSpawnHelper.Features
             Task.Run(async () =>
                      {
                          if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.Off)
+                         {
                              return;
+                         }
 
                          var e = DalamudApi.ClientState.TerritoryType;
 
@@ -110,8 +112,7 @@ namespace RankSSpawnHelper.Features
                          {
                              payloads.Add(new TextPayload("\n当前可触发概率: "));
                              payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
-                             payloads.Add(new
-                                              TextPayload($"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
+                             payloads.Add(new TextPayload($"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
                              payloads.Add(new UIForegroundPayload(0));
                          }
                          else
@@ -138,6 +139,8 @@ namespace RankSSpawnHelper.Features
                          payloads.Add(new UIForegroundPayload(0));
 
                          Plugin.Print(payloads);
+                         if (isSpawnable && Plugin.Configuration.OnlyFetchInDuration)
+                             await Plugin.Features.ShowHuntMap.FetchAndPrint();
                      });
         }
 

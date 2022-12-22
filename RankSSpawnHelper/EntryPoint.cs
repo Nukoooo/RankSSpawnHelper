@@ -55,52 +55,27 @@ namespace RankSSpawnHelper
             _commandManager = new PluginCommandManager<EntryPoint>(this);
 
 #if RELEASE
-            if (Plugin.Configuration.UpdateNote06) 
+            if (Plugin.Configuration.UpdateNote07) 
                 return;
-            Plugin.Configuration.UpdateNote06 = true;
+            Plugin.Configuration.UpdateNote07 = true;
 #endif
 
             Plugin.Print(new List<Payload>
                          {
-                             new TextPayload($"版本 {_assembly.GetName().Version} 的更新日志:\n"),
+                             new TextPayload($"版本 1.2.1.7 的更新日志:\n"),
                              new UIForegroundPayload(35),
                              new TextPayload("  [+] 更新到API7\n"),
                              new TextPayload("  [+] 增加了可以开关 当前触发概率不在CD内的提示音 的选项\n"),
                              new TextPayload("  [+] 增加了可以开关 触发概率消息 的选项\n"),
                              new TextPayload("  [+] 现在 迷津, 天外天垓, 加雷马 等地图也会有触发消息了\n"),
                              new TextPayload("  [+] 现在 太阳神草原, 拉诺西亚高地和外地 也可以获取点位图了\n"),
-                             new TextPayload("  [-] 现在S怪状态查询不需要选服务器了(虽然不知道有没有人用这个功能)"),
-                             new UIForegroundPayload(0)
+                             new TextPayload("  [-] 现在S怪状态查询不需要选服务器了(虽然不知道有没有人用这个功能)\n"),
+                             new UIForegroundPayload(0),
+                             new TextPayload($"版本 {_assembly.GetName().Version} 的更新日志:\n"),
+                             new UIForegroundPayload(35),
+                             new TextPayload("  [+] 给部分S怪增加了查询点位的界面(目前只能在S怪状态查询里查看)\n"),
+                             new TextPayload("  [+] 给自动获取点位增加了一个 只在触发期内获取 的选项(需要开启触发概率提示)\n"),
                          });
-
-            /*unsafe
-            {
-                foreach (var fate in FateManager.Instance()->Fates.Span)
-                {
-                    if (fate.Value is null)
-                        continue;
-
-                    var dfate = *fate.Value;
-
-                    PluginLog.Debug($"{dfate.Location.X} | {dfate.Location.Y} | {dfate.Location.Z}");
-                }
-                
-            }
-
-            Task.Run(async () =>
-                     {
-                         await Task.Delay(4000);
-                         var texture = Plugin.Features.ShowHuntMap.GeTexture(815);
-                         if (texture != null)
-                         {
-                             Plugin.Windows.HuntMapWindow.SetCurrentMapTexture(texture);
-                             Plugin.Windows.HuntMapWindow.IsOpen = true;
-                         }
-                         else
-                         {
-                             Plugin.Print("Texture is null");
-                         }
-                     });*/
         }
 
         public string Name => "SpawnHelper";

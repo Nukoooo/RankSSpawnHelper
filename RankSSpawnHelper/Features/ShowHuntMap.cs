@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
@@ -39,7 +40,7 @@ namespace RankSSpawnHelper.Features
             DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
             DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
 
-            /*Task.Run(async () =>
+            Task.Run(async () =>
                      {
                          await Task.Delay(1000);
                          foreach (var (k, _) in _monsterTerritory)
@@ -56,10 +57,9 @@ namespace RankSSpawnHelper.Features
                                  continue;
                              }
 
-                             Plugin.Managers.Data.MapTexture.AddMapTexture(mapRow.Value);
+                             Plugin.Managers.Data.MapTexture.AddMapTexture(k, mapRow.Value);
                          }
-                     });*/
-
+                     });
         }
 
         public void Dispose()
@@ -68,14 +68,23 @@ namespace RankSSpawnHelper.Features
             DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
         }
 
-        public bool CanShowHuntMap(uint territroy)
+        public bool CanShowHuntMapWithMonsterName(string name)
         {
-            return _monsterTerritory.ContainsKey(territroy);
+            var id = Plugin.Managers.Data.Monster.GetMonsterIdByName(name);
+            return id != 0 && _monsterTerritory.ContainsValue(id);
         }
 
         public MapTextureInfo? GeTexture(uint territory)
         {
             var map = _territoryType.GetRow(territory).Map;
+            return Plugin.Managers.Data.MapTexture.GetTexture(map.Row);
+        }
+
+        public MapTextureInfo? GeTextureWithMonsterName(string name)
+        {
+            var id        = Plugin.Managers.Data.Monster.GetMonsterIdByName(name);
+            var territory = _monsterTerritory.Where(i => i.Value == id).Select(i => i.Key).First();
+            var map       = _territoryType.GetRow(territory).Map;
             return Plugin.Managers.Data.MapTexture.GetTexture(map.Row);
         }
 
@@ -86,12 +95,66 @@ namespace RankSSpawnHelper.Features
             _shouldRequest = false;
         }
 
+        public async Task FetchAndPrint()
+        {
+            var currentTerritory = DalamudApi.ClientState.TerritoryType;
+            if (!_monsterTerritory.TryGetValue(currentTerritory, out var monsterId))
+                return;
+
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+            var split = currentInstance.Split('@');
+            if (!int.TryParse(split[2], out var instance))
+                return;
+
+            var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
+            if (huntMaps == null || huntMaps.spawnPoints.Count == 0)
+            {
+                return;
+            }
+
+            var payloads = new List<Payload>
+                                        {
+                                            new TextPayload($"{currentInstance} 的当前可触发点位:")
+                                        };
+
+            if (huntMaps.spawnPoints.Count > 7)
+            {
+                payloads.Add(new TextPayload($"\n因为点位超过7个所以将会用界面显示."));
+                Plugin.Print(payloads);
+
+                var texture = GeTexture(currentTerritory);
+                Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMaps.spawnPoints, currentInstance);
+                Plugin.Windows.HuntMapWindow.IsOpen = true;
+
+                return;
+            }
+
+            var mapId = _territoryType.GetRow(currentTerritory)!.Map.Row;
+
+            foreach (var spawnPoint in huntMaps.spawnPoints)
+            {
+                payloads.Add(new TextPayload("\n"));
+                payloads.Add(new UIForegroundPayload(0x0225));
+                payloads.Add(new UIGlowPayload(0x0226));
+                payloads.Add(new MapLinkPayload(currentTerritory, mapId, spawnPoint.x, spawnPoint.y));
+                payloads.Add(new UIForegroundPayload(500));
+                payloads.Add(new UIGlowPayload(501));
+                payloads.Add(new TextPayload($"{(char)SeIconChar.LinkMarker}"));
+                payloads.Add(new UIForegroundPayload(0));
+                payloads.Add(new UIGlowPayload(0));
+                payloads.Add(new TextPayload($"{spawnPoint.key.Replace("SpawnPoint", "")} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
+                payloads.Add(RawPayload.LinkTerminator);
+            }
+
+            Plugin.Print(payloads);
+        }
+
         private void Condition_OnConditionChange(ConditionFlag flag, bool value)
         {
             if (flag != ConditionFlag.BetweenAreas51 || value)
                 return;
 
-            if (!Plugin.Configuration.AutoShowHuntMap)
+            if (!Plugin.Configuration.AutoShowHuntMap || (Plugin.Configuration.AutoShowHuntMap && Plugin.Configuration.OnlyFetchInDuration))
                 return;
 
             if (!_shouldRequest)
@@ -99,54 +162,10 @@ namespace RankSSpawnHelper.Features
                 _shouldRequest = true;
                 return;
             }
-
-            var currentTerritory = DalamudApi.ClientState.TerritoryType;
-            if (!_monsterTerritory.TryGetValue(currentTerritory, out var monsterId))
-                return;
-
+            
             Task.Run(async () =>
                      {
-                         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-                         var split           = currentInstance.Split('@');
-                         if (!int.TryParse(split[2], out var instance))
-                             return;
-
-                         var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
-                         if (huntMaps == null || huntMaps.spawnPoints.Count == 0)
-                         {
-                             return;
-                         }
-
-                         var payloads = new List<Payload>
-                                        {
-                                            new TextPayload($"{currentInstance} 的当前可触发点位:")
-                                        };
-
-                         if (huntMaps.spawnPoints.Count > 7)
-                         {
-                             payloads.Add(new TextPayload($"\n因为点位超过7个所以不显示. 当前数量: {huntMaps.spawnPoints.Count}."));
-                             Plugin.Print(payloads);
-                             return;
-                         }
-
-                         var mapId = _territoryType.GetRow(currentTerritory)!.Map.Row;
-
-                         foreach (var spawnPoint in huntMaps.spawnPoints)
-                         {
-                             payloads.Add(new TextPayload("\n"));
-                             payloads.Add(new UIForegroundPayload(0x0225));
-                             payloads.Add(new UIGlowPayload(0x0226));
-                             payloads.Add(new MapLinkPayload(currentTerritory, mapId, spawnPoint.x, spawnPoint.y));
-                             payloads.Add(new UIForegroundPayload(500));
-                             payloads.Add(new UIGlowPayload(501));
-                             payloads.Add(new TextPayload($"{(char)SeIconChar.LinkMarker}"));
-                             payloads.Add(new UIForegroundPayload(0));
-                             payloads.Add(new UIGlowPayload(0));
-                             payloads.Add(new TextPayload($"{spawnPoint.key.Replace("SpawnPoint", "")} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
-                             payloads.Add(RawPayload.LinkTerminator);
-                         }
-
-                         Plugin.Print(payloads);
+                         await FetchAndPrint();
                      });
         }
     }
