@@ -5,12 +5,16 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading.Tasks;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
+using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using ImGuiNET;
+using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Attributes;
 using RankSSpawnHelper.Models;
 using RankSSpawnHelper.Ui;
@@ -51,27 +55,52 @@ namespace RankSSpawnHelper
             _commandManager = new PluginCommandManager<EntryPoint>(this);
 
 #if RELEASE
-            if (Plugin.Configuration.UpdateNote05) 
+            if (Plugin.Configuration.UpdateNote06) 
                 return;
-            Plugin.Configuration.UpdateNote05 = true;
+            Plugin.Configuration.UpdateNote06 = true;
 #endif
 
             Plugin.Print(new List<Payload>
                          {
                              new TextPayload($"版本 {_assembly.GetName().Version} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [+] 在换图后,当前触发概率不在CD内会播放提示音<se.6> (防止有笨比触不在CD里的怪)\n"),
-                             new TextPayload("  [-] 修复了在登出更换角色后,用户名不更新的BUG\n"),
-                             new TextPayload("  [-] 修复了在特定情况下,出SS后会提示xx出货了的触发消息\n"),
-                             new TextPayload("  [-] 修复了在点位过多的时候会导致游戏炸掉的BUG(傻逼SE)(之后会加一个给排点用的功能)\n"),
-                             new UIForegroundPayload(0),
-                             new TextPayload("服务器的更新日志:\n"),
-                             new UIForegroundPayload(35),
-                             new TextPayload("  [+] 特定情况下会有奇怪的东西出现在消息里\n"),
-                             new TextPayload("  [-] 修复了在有本地计数的情况下连接到服务器时,部分计数不会被添加的BUG\n"),
-                             new TextPayload("  [-] 延迟一秒处理寄了的消息"),
+                             new TextPayload("  [+] 更新到API7\n"),
+                             new TextPayload("  [+] 增加了可以开关 当前触发概率不在CD内的提示音 的选项\n"),
+                             new TextPayload("  [+] 增加了可以开关 触发概率消息 的选项\n"),
+                             new TextPayload("  [+] 现在 迷津, 天外天垓, 加雷马 等地图也会有触发消息了\n"),
+                             new TextPayload("  [+] 现在 太阳神草原, 拉诺西亚高地和外地 也可以获取点位图了\n"),
+                             new TextPayload("  [-] 现在S怪状态查询不需要选服务器了(虽然不知道有没有人用这个功能)"),
                              new UIForegroundPayload(0)
                          });
+
+            /*unsafe
+            {
+                foreach (var fate in FateManager.Instance()->Fates.Span)
+                {
+                    if (fate.Value is null)
+                        continue;
+
+                    var dfate = *fate.Value;
+
+                    PluginLog.Debug($"{dfate.Location.X} | {dfate.Location.Y} | {dfate.Location.Z}");
+                }
+                
+            }
+
+            Task.Run(async () =>
+                     {
+                         await Task.Delay(4000);
+                         var texture = Plugin.Features.ShowHuntMap.GeTexture(815);
+                         if (texture != null)
+                         {
+                             Plugin.Windows.HuntMapWindow.SetCurrentMapTexture(texture);
+                             Plugin.Windows.HuntMapWindow.IsOpen = true;
+                         }
+                         else
+                         {
+                             Plugin.Print("Texture is null");
+                         }
+                     });*/
         }
 
         public string Name => "SpawnHelper";
@@ -223,6 +252,7 @@ namespace RankSSpawnHelper
 
             _commandManager.Dispose();
 
+            Plugin.Managers.Data.MapTexture.Dispose();
             Plugin.Configuration.Save();
             Plugin.Managers.Dispose();
             Plugin.Features.Dispose();

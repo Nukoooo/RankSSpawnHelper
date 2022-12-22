@@ -119,7 +119,9 @@ namespace RankSSpawnHelper.Managers
                                        };
                              _client.ReconnectionHappened.Subscribe(OnReconntion);
                              _client.MessageReceived.Subscribe(OnMessageReceived);
+#if RELEASE
                              await _client.Start();
+#endif
                          }
                          catch (Exception e)
                          {

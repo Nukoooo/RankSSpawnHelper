@@ -16,16 +16,23 @@ namespace RankSSpawnHelper.Features
 
         private readonly Dictionary<ushort, uint> _monsterIdMap = new()
                                                                   {
-                                                                      { 959, 10620 },
-                                                                      { 957, 10618 },
-                                                                      { 814, 8910 },
-                                                                      { 817, 8890 },
-                                                                      { 621, 5989 },
-                                                                      { 613, 5984 },
-                                                                      { 612, 5987 },
-                                                                      { 402, 4380 },
-                                                                      { 400, 4377 },
-                                                                      { 147, 2961 }
+                                                                      { 960, 10622 }, // 狭缝
+                                                                      { 959, 10620 }, // 沉思之物
+                                                                      { 958, 10619 }, // 阿姆斯特朗
+                                                                      { 957, 10618 }, // 颇胝迦
+                                                                      { 956, 10617 }, // 布弗鲁
+                                                                      { 814, 8910 }, // 得到宽恕的炫学
+                                                                      { 815, 8900 }, // 多智兽
+                                                                      { 816, 8653 }, // 阿格拉俄珀
+                                                                      { 817, 8890 }, // 伊休妲
+                                                                      { 621, 5989 }, // 盐和光
+                                                                      { 614, 5985 }, // 伽马
+                                                                      { 613, 5984 }, // 巨大鳐
+                                                                      { 612, 5987 }, // 优昙婆罗花
+                                                                      { 402, 4380 }, // 卢克洛塔
+                                                                      { 400, 4377 }, // 刚德瑞瓦
+                                                                      { 397, 4374 }, // 凯撒贝希摩斯
+                                                                      { 147, 2961 } // 蚓螈巨虫
                                                                   };
 
         private bool _shouldNotNotify;
@@ -63,6 +70,9 @@ namespace RankSSpawnHelper.Features
 
             Task.Run(async () =>
                      {
+                         if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.Off)
+                             return;
+
                          var e = DalamudApi.ClientState.TerritoryType;
 
                          if (!_monsterIdMap.ContainsKey(e))
@@ -106,6 +116,9 @@ namespace RankSSpawnHelper.Features
                          }
                          else
                          {
+                             if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.SpawnableOnly)
+                                 return;
+
                              payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
                              payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
                              var minTime = DateTimeOffset.FromUnixTimeSeconds(result.expectMinTime);
@@ -114,15 +127,25 @@ namespace RankSSpawnHelper.Features
                              payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
                              payloads.Add(new UIForegroundPayload(0));
 
-                             UIModule.PlayChatSoundEffect(6);
-                             UIModule.PlayChatSoundEffect(6);
-                             UIModule.PlayChatSoundEffect(6);
+                             if (Plugin.Configuration.CoolDownNotificationSound)
+                             {
+                                 UIModule.PlayChatSoundEffect(6);
+                                 UIModule.PlayChatSoundEffect(6);
+                                 UIModule.PlayChatSoundEffect(6);
+                             }
                          }
 
                          payloads.Add(new UIForegroundPayload(0));
 
                          Plugin.Print(payloads);
                      });
+        }
+
+        private enum SpawnNotificationType
+        {
+            Off,
+            SpawnableOnly,
+            All
         }
     }
 }

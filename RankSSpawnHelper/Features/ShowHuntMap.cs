@@ -6,8 +6,10 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
+using ImGuiScene;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.Features
 {
@@ -15,13 +17,16 @@ namespace RankSSpawnHelper.Features
     {
         private readonly Dictionary<uint, uint> _monsterTerritory = new()
                                                                     {
-                                                                        { 956, 10617 },
-                                                                        { 815, 8900 },
-                                                                        { 958, 10619 },
-                                                                        { 816, 8653 },
-                                                                        { 960, 10622 },
-                                                                        { 614, 5985 },
-                                                                        { 397, 4373 }
+                                                                        { 956, 10617 }, // 布弗鲁
+                                                                        { 815, 8900 }, // 多智兽
+                                                                        { 958, 10619 }, // 阿姆斯特朗
+                                                                        { 816, 8653 }, // 阿格拉俄珀
+                                                                        { 960, 10622 }, // 狭缝
+                                                                        { 614, 5985 }, // 伽马
+                                                                        { 397, 4374 }, // 凯撒贝希摩斯
+                                                                        { 622, 5986 }, // 兀鲁忽乃朝鲁
+                                                                        { 139, 2966 }, // 南迪
+                                                                        { 180, 2967 } // 牛头黑神
                                                                     };
 
         private readonly ExcelSheet<TerritoryType> _territoryType;
@@ -33,12 +38,45 @@ namespace RankSSpawnHelper.Features
 
             DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
             DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
+
+            /*Task.Run(async () =>
+                     {
+                         await Task.Delay(1000);
+                         foreach (var (k, _) in _monsterTerritory)
+                         {
+                             var territory = _territoryType.GetRow(k);
+                             var mapRow    = territory.Map;
+                             if (mapRow == null) 
+                                 continue;
+                             PluginLog.Debug($"Adding territory {k} | mapId: {territory.Map.Row}");
+
+                             if (mapRow.Value == null)
+                             {
+                                 PluginLog.Debug($"mapRow.Value null");
+                                 continue;
+                             }
+
+                             Plugin.Managers.Data.MapTexture.AddMapTexture(mapRow.Value);
+                         }
+                     });*/
+
         }
 
         public void Dispose()
         {
             DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
             DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
+        }
+
+        public bool CanShowHuntMap(uint territroy)
+        {
+            return _monsterTerritory.ContainsKey(territroy);
+        }
+
+        public MapTextureInfo? GeTexture(uint territory)
+        {
+            var map = _territoryType.GetRow(territory).Map;
+            return Plugin.Managers.Data.MapTexture.GetTexture(map.Row);
         }
 
         private void ChatGui_OnChatMessage(XivChatType type, uint senderid, ref SeString sender, ref SeString message, ref bool ishandled)
@@ -76,7 +114,6 @@ namespace RankSSpawnHelper.Features
                          var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
                          if (huntMaps == null || huntMaps.spawnPoints.Count == 0)
                          {
-                             PluginLog.Debug("huntMap list is 0 / null");
                              return;
                          }
 
@@ -105,7 +142,7 @@ namespace RankSSpawnHelper.Features
                              payloads.Add(new TextPayload($"{(char)SeIconChar.LinkMarker}"));
                              payloads.Add(new UIForegroundPayload(0));
                              payloads.Add(new UIGlowPayload(0));
-                             payloads.Add(new TextPayload($"{spawnPoint.key} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
+                             payloads.Add(new TextPayload($"{spawnPoint.key.Replace("SpawnPoint", "")} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
                              payloads.Add(RawPayload.LinkTerminator);
                          }
 

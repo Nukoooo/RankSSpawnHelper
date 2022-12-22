@@ -23,15 +23,14 @@ namespace RankSSpawnHelper.Managers.DataManagers
     internal class Monster
     {
         private const string Url = "https://tracker-api.beartoolkit.com/";
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _httpClient = new();
         private readonly List<SRankMonster> _sRankMonsters = new();
         private string _errorMessage = string.Empty;
         private FetchStatus _fetchStatus = FetchStatus.None;
-        private HuntStatus _lastHuntStatus;
+        private readonly List<HuntStatus> _lastHuntStatus = new();
 
         public Monster()
         {
-            _httpClient         = new HttpClient();
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
             InitSRankMonsterData();
@@ -162,7 +161,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
             return _sRankMonsters.Where(i => expansion == i.expansion).Select(i => i.localizedName).ToList();
         }
 
-        public uint GetMonsterByName(string name)
+        public uint GetMonsterIdByName(string name)
         {
             return _sRankMonsters.Where(i => i.localizedName == name).Select(i => i.id).First();
         }
@@ -171,7 +170,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
         {
             return _sRankMonsters.Where(i => i.id == id).Select(i => i.localizedName).First();
         }
-
+        
         public string GetErrorMessage()
         {
             return _errorMessage;
@@ -182,12 +181,12 @@ namespace RankSSpawnHelper.Managers.DataManagers
             return _fetchStatus;
         }
 
-        public HuntStatus GetHuntStatus()
+        public List<HuntStatus> GetHuntStatus()
         {
             return _lastHuntStatus;
         }
 
-        public void FetchData(string server, string monsterName, int instance)
+        public void FetchData(List<string> servers, string monsterName, int instance)
         {
             if (_fetchStatus == FetchStatus.Fetching)
                 return;
@@ -197,41 +196,56 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
             Task.Run(async () =>
                      {
-                         var body = new Dictionary<string, string>
-                                    {
-                                        { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
-                                        { "WorldName", server }
-                                    };
-
-                         var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
-
-                         if (response.StatusCode != HttpStatusCode.OK)
+                         if (servers.Count == 0)
                          {
-                             _errorMessage = "HttpStatusCode: " + response.StatusCode;
                              _fetchStatus  = FetchStatus.Error;
+                             _errorMessage = "服务器为空??";
                              return;
                          }
 
-                         try
+                         _lastHuntStatus.Clear();
+                         PluginLog.Debug("_lastHuntStatus.Clear();");
+
+                         foreach (var body in servers.Select(server => new Dictionary<string, string>
+                                                                       {
+                                                                           { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
+                                                                           { "WorldName", server }
+                                                                       }))
                          {
-                             var content = await response.Content.ReadAsStringAsync();
-                             _lastHuntStatus = JsonConvert.DeserializeObject<HuntStatus>(content);
-                             if (_lastHuntStatus != null)
+                             var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
+
+                             PluginLog.Debug($"server: {body["WorldName"]}");
+                             if (response.StatusCode != HttpStatusCode.OK)
                              {
-                                 _lastHuntStatus.localizedName =  monsterName;
-                                 _lastHuntStatus.expectMaxTime /= 1000;
-                                 _lastHuntStatus.expectMinTime /= 1000;
-                                 _lastHuntStatus.instance      =  instance;
+                                 _errorMessage = "HttpStatusCode: " + response.StatusCode;
+                                 _fetchStatus  = FetchStatus.Error;
+                                 return;
                              }
 
-                             _fetchStatus = FetchStatus.Success;
+                             try
+                             {
+                                 var content    = await response.Content.ReadAsStringAsync();
+                                 var huntStatus = JsonConvert.DeserializeObject<HuntStatus>(content);
+                                 if (huntStatus != null)
+                                 {
+                                     huntStatus.localizedName =  monsterName;
+                                     huntStatus.expectMaxTime         /= 1000;
+                                     huntStatus.expectMinTime /= 1000;
+                                     huntStatus.instance      =  instance;
+                                     
+                                     _lastHuntStatus.Add(huntStatus);
+                                 }
+                             }
+                             catch (Exception e)
+                             {
+                                 PluginLog.Error(e.Message);
+                                 _errorMessage = "An error occurred when fetching hunt status.";
+                                 _fetchStatus  = FetchStatus.Error;
+                                 return;
+                             }
                          }
-                         catch (Exception e)
-                         {
-                             PluginLog.Error(e.Message);
-                             _errorMessage = "An error occurred when fetching hunt status.";
-                             _fetchStatus  = FetchStatus.Error;
-                         }
+
+                         _fetchStatus = FetchStatus.Success;
                      });
         }
 
@@ -292,15 +306,14 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-
                 return null;
             }
 
             try
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var huntMap  = JsonConvert.DeserializeObject<HuntMap>(content);
-                
+                var huntMap = JsonConvert.DeserializeObject<HuntMap>(content);
+
                 _fetchStatus = FetchStatus.Success;
                 return huntMap;
             }

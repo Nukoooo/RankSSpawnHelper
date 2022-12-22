@@ -29,11 +29,12 @@ namespace RankSSpawnHelper.Ui.Window
         private int _selectedInstance;
         private int _selectedMonster;
 
-        private int _selectedServer;
         private List<string> _servers;
 
         private string _serverUrl = string.Empty;
         private bool _showColorPicker;
+
+        private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
 
         public ConfigWindow() : base("菜单设置##ranksspawnhelper1337")
         {
@@ -265,7 +266,6 @@ namespace RankSSpawnHelper.Ui.Window
 
         private void DrawQueryTab()
         {
-            ImGui.Combo("服务器", ref _selectedServer, _servers.ToArray(), _servers.Count);
             if (ImGui.Combo("版本", ref _selectedExpansion, _expansions.ToArray(), _expansions.Count))
             {
                 _monsterNames    = Plugin.Managers.Data.Monster.GetMonstersByExpansion((GameExpansion)_selectedExpansion);
@@ -280,7 +280,7 @@ namespace RankSSpawnHelper.Ui.Window
             {
                 ImGui.PushFont(UiBuilder.IconFont);
                 if (ImGui.Button(FontAwesomeIcon.Search.ToIconString()))
-                    Plugin.Managers.Data.Monster.FetchData(_servers[_selectedServer], _monsterNames[_selectedMonster], _selectedInstance);
+                    Plugin.Managers.Data.Monster.FetchData(_servers, _monsterNames[_selectedMonster], _selectedInstance);
                 ImGui.PopFont();
             }
 
@@ -292,44 +292,39 @@ namespace RankSSpawnHelper.Ui.Window
                     ImGui.Text("正在获取数据");
                 else if (Plugin.Managers.Data.Monster.GetFetchStatus() == FetchStatus.Success)
                 {
-                    var status = Plugin.Managers.Data.Monster.GetHuntStatus();
-                    if (status == null)
+                    var huntStatus = Plugin.Managers.Data.Monster.GetHuntStatus();
+                    if (huntStatus == null)
                         return;
 
-                    ImGui.Text($"{status.localizedName}@{status.worldName}@{status.instance} 的状态:");
-
-                    var lastDeathTime = DateTimeOffset.FromUnixTimeMilliseconds(status.lastDeathTime).ToLocalTime().DateTime;
-                    ImGui.Text($"上一次死亡时间: {lastDeathTime.ToShortDateString()} {lastDeathTime.ToLongTimeString()}");
-
-                    ImGui.Text("是否丢失:");
-                    ImGui.SameLine();
-                    ImGui.TextColored(status.missing ? ImGuiColors.DPSRed : ImGuiColors.ParsedGreen, status.missing ? "是" : "否");
-                    ImGui.Text($"尝试触发次数: {status.attemptCount}");
-                    if (status.lastAttempt != null)
+                    foreach (var status in huntStatus)
                     {
-                        var time = DateTime.Parse(status.lastAttempt).ToLocalTime();
-                        ImGui.Text($"上一次尝试触发时间: {time.ToShortDateString()} {time.ToLongTimeString()}");
-                    }
+                        ImGui.Text($"{status.localizedName}@{status.worldName}@{status.instance} 的状态:");
 
-                    var now     = DateTimeOffset.Now;
-                    var minTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMinTime).AddMinutes(-30);
-                    var maxTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMaxTime);
-                    if (minTime > now)
-                    {
-                        var delta = minTime - now;
-                        ImGui.Text($"距离进入可触发时间还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
-                    }
-                    else
-                    {
-                        var percentage = 100 * ((now.ToUnixTimeSeconds() - status.expectMinTime) / (double)(status.expectMaxTime - status.expectMinTime));
-                        ImGui.Text("当前可触发的概率为:");
+                        ImGui.Text("\t是否丢失:");
                         ImGui.SameLine();
-                        ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen, $"{percentage:F2}%%");
-                        if (now >= maxTime)
-                            return;
+                        ImGui.TextColored(status.missing ? ImGuiColors.DPSRed : ImGuiColors.ParsedGreen, status.missing ? "是" : "否");
 
-                        var delta = maxTime - now;
-                        ImGui.Text($"距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
+                        var now     = DateTimeOffset.Now;
+                        var minTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMinTime).AddMinutes(-30);
+                        var maxTime = DateTimeOffset.FromUnixTimeSeconds(status.expectMaxTime);
+                        if (minTime > now)
+                        {
+                            var delta = minTime - now;
+                            ImGui.Text($"\t距离进入可触发时间还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
+                        }
+                        else
+                        {
+                            var percentage = 100 * ((now.ToUnixTimeSeconds() - status.expectMinTime) / (double)(status.expectMaxTime - status.expectMinTime));
+                            ImGui.Text("\t当前可触发的概率为:");
+                            ImGui.SameLine();
+                            ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen, $"{percentage:F2}%%");
+                            // ReSharper disable once InvertIf
+                            if (now < maxTime)
+                            {
+                                var delta = maxTime - now;
+                                ImGui.Text($"\t距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
+                            }
+                        }
                     }
                 }
             }
@@ -366,6 +361,25 @@ namespace RankSSpawnHelper.Ui.Window
                 if (ImGui.Checkbox("接收其他大区的触发消息", ref receiveMessageFromOtherDc))
                 {
                     Plugin.Configuration.ReceiveAttempMessageFromOtherDc = receiveMessageFromOtherDc;
+                    Plugin.Configuration.Save();
+                }
+            }
+
+            ImGui.SetNextItemWidth(100);
+            var spawnNotificationType = Plugin.Configuration.SpawnNotificationType;
+            if (ImGui.Combo("触发概率提示", ref spawnNotificationType, _spawnNotificationType, _spawnNotificationType.Length))
+            {
+                Plugin.Configuration.SpawnNotificationType = spawnNotificationType;
+                Plugin.Configuration.Save();
+            }
+
+            if (Plugin.Configuration.SpawnNotificationType == 2)
+            {
+                ImGui.SameLine();
+                var coolDownNotificationSound = Plugin.Configuration.CoolDownNotificationSound;
+                if (ImGui.Checkbox("不在触发期时播放提示音", ref coolDownNotificationSound))
+                {
+                    Plugin.Configuration.CoolDownNotificationSound = coolDownNotificationSound;
                     Plugin.Configuration.Save();
                 }
             }

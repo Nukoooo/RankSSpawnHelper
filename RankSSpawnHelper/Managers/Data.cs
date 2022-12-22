@@ -52,13 +52,16 @@ namespace RankSSpawnHelper.Managers
                                                            "梦羽宝境"
                                                        };
 
+        public MapTexture MapTexture;
+
         public Monster Monster;
         public Player Player;
 
         public Data()
         {
-            Monster = new Monster();
-            Player  = new Player();
+            Monster    = new Monster();
+            Player     = new Player();
+            MapTexture = new MapTexture();
         }
 
         public List<string> GetServers()

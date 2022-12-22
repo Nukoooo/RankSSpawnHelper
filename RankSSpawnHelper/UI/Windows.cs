@@ -9,16 +9,19 @@ namespace RankSSpawnHelper.Ui
         public CounterWindow CounterWindow;
         public ConfigWindow PluginWindow;
         public WeeEaWindow WeeEaWindow;
+        public HuntMapWindow HuntMapWindow;
 
         public Windows(ref WindowSystem windowSystem)
         {
             PluginWindow  = new ConfigWindow();
             CounterWindow = new CounterWindow();
             WeeEaWindow   = new WeeEaWindow();
+            HuntMapWindow = new HuntMapWindow();
 
             windowSystem.AddWindow(PluginWindow);
             windowSystem.AddWindow(CounterWindow);
             windowSystem.AddWindow(WeeEaWindow);
+            windowSystem.AddWindow(HuntMapWindow);
         }
     }
 }
