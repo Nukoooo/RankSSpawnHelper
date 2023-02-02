@@ -44,7 +44,7 @@ namespace RankSSpawnHelper.Features
 
             var bNpcName = DalamudApi.DataManager.GetExcelSheet<BNpcName>();
 
-            _ssList.Add(bNpcName.GetRow(8910).Singular.RawString);
+            _ssList.Add(bNpcName.GetRow(8915).Singular.RawString);
             _ssList.Add(bNpcName.GetRow(10615).Singular.RawString);
 
             ActorControlSelf.Enable();
