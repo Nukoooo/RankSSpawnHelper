@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -238,6 +239,12 @@ namespace RankSSpawnHelper.Managers
                     }
                     case "Attempt":
                     {
+                        if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
+                            return;
+
+                        if (DalamudApi.Condition[ConditionFlag.BoundByDuty])
+                            return;
+
                         var message     = result.Message;
                         var serverName  = message[..message.IndexOf('@')];
                         var shouldPrint = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
