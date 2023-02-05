@@ -8,6 +8,7 @@ namespace RankSSpawnHelper.Features
         public ShowHuntMap ShowHuntMap;
         public ShowInstance ShowInstance;
         public SpawnNotification SpawnNotification;
+        public SearchCounter SearchCounter;
 
         public Features()
         {
@@ -15,6 +16,7 @@ namespace RankSSpawnHelper.Features
             SpawnNotification = new SpawnNotification();
             ShowInstance      = new ShowInstance();
             ShowHuntMap       = new ShowHuntMap();
+            SearchCounter     = new SearchCounter();
         }
 
         public void Dispose()
@@ -23,6 +25,7 @@ namespace RankSSpawnHelper.Features
             SpawnNotification.Dispose();
             ShowInstance.Dispose();
             ShowHuntMap.Dispose();
+            SearchCounter.Dispose();
         }
     }
 }

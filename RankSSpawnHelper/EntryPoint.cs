@@ -67,6 +67,9 @@ namespace RankSSpawnHelper
                              new TextPayload("  [-] 修复了在成功触发炫学后不会向服务器发送触发成功的BUG\n"),
                              new TextPayload("  [-] 修复了接收触发消息总开关无效的BUG\n"),
                              new TextPayload("  [+] 现在在副本里不会接受触发消息了\n"),
+                             new TextPayload("  [+] 新增玩家搜索计数功能\n"),
+                             new TextPayload("      注: 1.计数不是100%准确. 如果在计数里的玩家离开地图后不会从计数里移除\n"),
+                             new TextPayload("           2.计数会在自己过图后清除并且只能从游戏里的 玩家搜索 这个功能增加"),
                          });
         }
 
