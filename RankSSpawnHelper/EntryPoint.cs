@@ -54,15 +54,17 @@ namespace RankSSpawnHelper
             // Load all of our commands
             _commandManager = new PluginCommandManager<EntryPoint>(this);
 
+            var pluginVersion = _assembly.GetName().Version.ToString();
+
 #if RELEASE
-            if (Plugin.Configuration.UpdateNote07) 
+            if (Plugin.Configuration.PluginVersion == pluginVersion) 
                 return;
-            Plugin.Configuration.UpdateNote07 = true;
+            Plugin.Configuration.PluginVersion = pluginVersion;
 #endif
 
             Plugin.Print(new List<Payload>
                          {
-                             new TextPayload($"版本 {_assembly.GetName().Version} 的更新日志:\n"),
+                             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
                              new TextPayload("  [-] 修复了在成功触发炫学后不会向服务器发送触发成功的BUG\n"),
                              new TextPayload("  [-] 修复了接收触发消息总开关无效的BUG\n"),
