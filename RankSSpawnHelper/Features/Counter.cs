@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -177,8 +178,13 @@ namespace RankSSpawnHelper.Features
                 // _huntStatus.Remove(currentInstance);
 
                 // Find Rank SS
-                if (DalamudApi.ObjectTable.Any(i => _ssList.Contains(i.Name.TextValue)))
+                if (DalamudApi.ObjectTable.Any(i => i.IsValid() && _ssList.Contains(i.Name.TextValue)))
                     return;
+
+                if ((from obj in DalamudApi.ObjectTable where obj.IsValid() where !obj.IsDead where obj.ObjectKind == ObjectKind.BattleNpc select obj as BattleNpc into npc where npc.BattleNpcKind == BattleNpcSubKind.Enemy select npc).Any(npc => _ssList.Contains(npc.Name.TextValue)))
+                {
+                    return;
+                }
 
                 currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
