@@ -66,7 +66,7 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [-] 修复了 在附近有与SS重名的玩家或陆行鸟不会向服务器发送触发消息 的BUG")
+                             new TextPayload("  [-] 修复了S怪状态查询的时间显示错误BUG")
                          });
         }
 

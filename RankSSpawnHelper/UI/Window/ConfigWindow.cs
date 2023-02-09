@@ -317,7 +317,7 @@ namespace RankSSpawnHelper.Ui.Window
                         if (minTime > now)
                         {
                             var delta = minTime - now;
-                            ImGui.Text($"\t距离进入可触发时间还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
+                            ImGui.Text($"\t距离进入可触发时间还有: {delta.Hours + delta.Days * 24:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
                         }
                         else
                         {
@@ -329,7 +329,7 @@ namespace RankSSpawnHelper.Ui.Window
                             if (now < maxTime)
                             {
                                 var delta = maxTime - now;
-                                ImGui.Text($"\t距离进入强制期还有: {delta.Hours:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
+                                ImGui.Text($"\t距离进入强制期还有: {delta.Hours + delta.Days * 24:D2}小时{delta.Minutes:D2}分{delta.Seconds:D2}秒");
                             }
                         }
 
