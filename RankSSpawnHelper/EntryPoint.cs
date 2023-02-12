@@ -66,7 +66,7 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [-] 修复了S怪状态查询的时间显示错误BUG")
+                             new TextPayload("  [+] 增加了玩家搜索的使用方法以及原理")
                          });
         }
 

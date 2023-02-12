@@ -44,6 +44,8 @@ namespace RankSSpawnHelper
 
         public bool EnableAttemptMessagesFromOtherDcs = false;
         public bool ReceiveAttempMessageFromOtherDc = false;
+
+        public bool PlayerSearchTip = true;
         
         public string PluginVersion = "";
 #endregion

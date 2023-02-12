@@ -106,7 +106,7 @@ namespace RankSSpawnHelper.Managers
                                                                          {
                                                                              var client = new ClientWebSocket
                                                                                           {
-                                                                                              Options = { KeepAliveInterval = TimeSpan.FromSeconds(8) }
+                                                                                              Options = { KeepAliveInterval = TimeSpan.FromSeconds(4) }
                                                                                           };
                                                                              PluginLog.Debug($"Setting header. {_userName}");
                                                                              client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));

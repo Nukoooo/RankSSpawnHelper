@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -11,6 +13,7 @@ namespace RankSSpawnHelper.Features
     internal class SearchCounter : IDisposable
     {
         private readonly List<ulong> _playerIds = new();
+        private int _searchCount = 0;
 
         public SearchCounter()
         {
@@ -36,6 +39,7 @@ namespace RankSSpawnHelper.Features
             }
 
             _playerIds.Clear();
+            _searchCount = 0;
         }
 
         private IntPtr Detour_ProcessSocialListPacket(IntPtr a1, IntPtr packetData)
@@ -63,7 +67,33 @@ namespace RankSSpawnHelper.Features
 
             if (original != (IntPtr)1)
             {
-                Plugin.Print($"按照当前搜索的设置, 和你在同一张地图里大约有 {_playerIds.Count} 人.");
+                _searchCount++;
+                Plugin.Print(new List<Payload>()
+                             {
+                                 new TextPayload("在经过 "),
+                                 new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                 new TextPayload($"{_searchCount} "),
+                                 new UIForegroundPayload(0),
+                                 new TextPayload("次搜索后, 和你在同一张图里大约有 "),
+                                 new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                 new TextPayload($"{_playerIds.Count} "),
+                                 new UIForegroundPayload(0),
+                                 new TextPayload("人.")
+                             });
+
+                if (Plugin.Configuration.PlayerSearchTip)
+                {
+                    Plugin.Print(new List<Payload>()
+                                 {
+                                     new TextPayload("对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " +
+                                                     "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" +
+                                                     "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" +
+                                                     "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" +
+                                                     "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
+                                     new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                     new TextPayload("\n本消息可以在 设置 -> 其他 里关掉"),
+                                 });
+                }
             }
 
             return original;

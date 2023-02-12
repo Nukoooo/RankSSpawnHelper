@@ -431,6 +431,13 @@ namespace RankSSpawnHelper.Ui.Window
                 }
             }
 
+            var playerSearchTip = Plugin.Configuration.PlayerSearchTip;
+            if (ImGui.Checkbox("显示玩家搜索提示", ref playerSearchTip))
+            {
+                Plugin.Configuration.PlayerSearchTip = playerSearchTip;
+                Plugin.Configuration.Save();
+            }
+
             ImGui.NewLine();
 
             ImGui.Text("触发失败消息颜色");
