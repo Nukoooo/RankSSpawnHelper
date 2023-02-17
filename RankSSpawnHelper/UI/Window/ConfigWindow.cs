@@ -106,12 +106,6 @@ namespace RankSSpawnHelper.Ui.Window
                 Plugin.Configuration.Save();
             }
 
-            /*ImGui.SameLine();
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("开始时间是按照本地时间，如果需要填农怪表格什么的需要自行转换到相对应的时区\n");
-                */
-
             var trackMode = Plugin.Configuration.TrackRangeMode;
             if (ImGui.Checkbox("范围计数", ref trackMode))
             {
@@ -161,16 +155,9 @@ namespace RankSSpawnHelper.Ui.Window
                 Plugin.Configuration.Save();
             }
 
-            var noNotification = Plugin.Configuration.TrackerNoNotification;
-            if (ImGui.Checkbox("连接服务器成功时不显示消息", ref noNotification))
-            {
-                Plugin.Configuration.TrackerNoNotification = noNotification;
-                Plugin.Configuration.Save();
-            }
-
 #if DEBUG
             ImGui.SetNextItemWidth(200);
-            ImGui.InputTextWithHint("服务器链接", "比如ws://127.0.0.1:8000", ref _serverUrl, 256);
+            ImGui.InputText("服务器链接", ref _serverUrl, 256);
 
             if (ImGui.Button("连接")) Plugin.Managers.Socket.Connect(_serverUrl);
             ImGui.SameLine();

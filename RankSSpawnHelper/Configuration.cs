@@ -24,7 +24,6 @@ namespace RankSSpawnHelper
         public bool TrackerWindowNoBackground { get; set; } = true;
         public bool TrackerAutoResize { get; set; } = true;
         public float TrackerClearThreshold { get; set; } = 45f;
-        public bool TrackerNoNotification { get; set; } = false;
 
         // 小异亚计数
         public bool WeeEaCounter { get; set; } = false;

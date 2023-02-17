@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Security;
 using System.Net.WebSockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
@@ -11,24 +9,20 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
-using Dalamud.Utility;
 using ImGuiNET;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Models;
-using Websocket.Client;
-using Websocket.Client.Models;
+using WatsonWebsocket;
 
 namespace RankSSpawnHelper.Managers
 {
     internal class Socket : IDisposable
     {
-        private readonly DalamudLinkPayload _linkPayload;
-
         private bool _oldRangeModeState;
         private const string ServerVersion = "v4";
 
         private List<string> _servers;
-        private IWebsocketClient _client;
+        private WatsonWsClient _client;
 
 #if DEBUG
         private const string Url = "ws://127.0.0.1:8000";
@@ -38,17 +32,9 @@ namespace RankSSpawnHelper.Managers
 
         private string _userName = string.Empty;
 
-        private const int ChatLinkCommandId = 694201337;
 
         public Socket()
         {
-            _linkPayload = DalamudApi.Interface.AddChatLinkHandler(ChatLinkCommandId,
-                                                                   (_, s) =>
-                                                                   {
-                                                                       var link = s.TextValue.Replace($"{(char)0x00A0}", "").Replace("\n", "").Replace("\r", "");
-                                                                       Util.OpenLink(link);
-                                                                   });
-
             DalamudApi.ClientState.Login  += ClientState_OnLogin;
             DalamudApi.ClientState.Logout += ClientState_OnLogout;
 
@@ -71,7 +57,6 @@ namespace RankSSpawnHelper.Managers
         public void Dispose()
         {
             Plugin.Configuration.TrackRangeMode = _oldRangeModeState;
-            DalamudApi.Interface.RemoveChatLinkHandler(ChatLinkCommandId);
 
             DalamudApi.ClientState.Login  -= ClientState_OnLogin;
             DalamudApi.ClientState.Logout -= ClientState_OnLogout;
@@ -79,6 +64,21 @@ namespace RankSSpawnHelper.Managers
             _client.Dispose();
 
             GC.SuppressFinalize(this);
+        }
+
+
+        private static string EncodeNonAsciiCharacters(string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+
+            var sb = new StringBuilder();
+            foreach (var c in bytes)
+            {
+                var encodedValue = ((int)c).ToString("x2").ToUpper() + " ";
+                sb.Append(encodedValue);
+            }
+
+            return sb.ToString();
         }
 
 #if DEBUG
@@ -91,6 +91,12 @@ namespace RankSSpawnHelper.Managers
                      {
                          try
                          {
+                             if (_client != null)
+                             {
+                                 _client.MessageReceived -= ClientOnMessageReceived;
+                                 _client.ServerConnected -= ClientOnServerConnected;
+                             }
+
                              _client?.Dispose();
                              _userName = string.Empty;
 
@@ -102,26 +108,19 @@ namespace RankSSpawnHelper.Managers
 
                              _servers = Plugin.Managers.Data.GetServers();
 
-                             _client = new WebsocketClient(new Uri(url), () =>
-                                                                         {
-                                                                             var client = new ClientWebSocket
-                                                                                          {
-                                                                                              Options = { KeepAliveInterval = TimeSpan.FromSeconds(4) }
-                                                                                          };
-                                                                             PluginLog.Debug($"Setting header. {_userName}");
-                                                                             client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
-                                                                             client.Options.SetRequestHeader("server-version", ServerVersion);
-                                                                             client.Options.SetRequestHeader("user-type", "Dalamud");
-                                                                             return client;
-                                                                         })
-                                       {
-                                           ReconnectTimeout      = TimeSpan.FromSeconds(16),
-                                           ErrorReconnectTimeout = TimeSpan.FromSeconds(16)
-                                       };
-                             _client.ReconnectionHappened.Subscribe(OnReconntion);
-                             _client.MessageReceived.Subscribe(OnMessageReceived);
+                             _client = new WatsonWsClient(new Uri(url));
+                             _client.ConfigureOptions(options =>
+                                                      {
+                                                          options.KeepAliveInterval = TimeSpan.FromSeconds(8);
+                                                          options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
+                                                          options.SetRequestHeader("server-version", ServerVersion);
+                                                          options.SetRequestHeader("user-type", "Dalamud");
+                                                      });
+
+                             _client.MessageReceived += ClientOnMessageReceived;
+                             _client.ServerConnected += ClientOnServerConnected;
 #if RELEASE
-                             await _client.Start();
+                             await _client.StartAsync();
 #endif
                          }
                          catch (Exception e)
@@ -130,58 +129,10 @@ namespace RankSSpawnHelper.Managers
                          }
                      });
         }
-        
-        public bool Connected()
+
+        private void ClientOnServerConnected(object sender, EventArgs e)
         {
-            return _client != null && _client.IsRunning;
-        }
-
-#if DEBUG
-        public async void Disconnect()
-        {
-            if (!Connected())
-                return;
-
-            await _client.Stop(WebSocketCloseStatus.NormalClosure, "Disconnection");
-        }
-#else
-        public async void Reconnect()
-        {
-            await _client.Reconnect();
-        }
-#endif
-
-        public void SendMessage(NetMessage message)
-        {
-            if (!Connected())
-                return;
-
-            var str = JsonConvert.SerializeObject(message);
-            _client.Send(str);
-            PluginLog.Debug($"Managers::Socket::SendMessage: {str}");
-        }
-
-        private void OnReconntion(ReconnectionInfo args)
-        {
-            _oldRangeModeState                  = Plugin.Configuration.TrackRangeMode;
-            Plugin.Configuration.TrackRangeMode = false;
-
-            if (args.Type == ReconnectionType.Initial && !Plugin.Configuration.TrackerNoNotification)
-            {
-                DalamudApi.ChatGui.PrintChat(new XivChatEntry
-                                             {
-                                                 Message = new SeString(new List<Payload>
-                                                                        {
-                                                                            new TextPayload("成功连接到服务器！如果有问题或者意见可以到Github上开Issue:"),
-                                                                            new UIForegroundPayload(527),
-                                                                            _linkPayload,
-                                                                            new TextPayload("https://github.com/NukoOoOoOoO/DalamudPlugins/issues/new"),
-                                                                            RawPayload.LinkTerminator,
-                                                                            new UIForegroundPayload(0)
-                                                                        }),
-                                                 Type = XivChatType.CustomEmote
-                                             });
-            }
+            _oldRangeModeState = Plugin.Configuration.TrackRangeMode;
 
             var localTracker = Plugin.Features.Counter.GetLocalTrackers();
 
@@ -200,16 +151,16 @@ namespace RankSSpawnHelper.Managers
                         });
         }
 
-        private void OnMessageReceived(ResponseMessage args)
+        private void ClientOnMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            if (args.MessageType != WebSocketMessageType.Binary)
+            if (e.MessageType != WebSocketMessageType.Binary)
                 return;
 
             // ping pong
-            if (args.Binary.Length == 0)
+            if (e.Data.Count <= 1)
                 return;
 
-            var msg = Encoding.UTF8.GetString(args.Binary);
+            var msg = Encoding.UTF8.GetString(e.Data);
 
             if (!msg.StartsWith("{"))
             {
@@ -378,18 +329,87 @@ namespace RankSSpawnHelper.Managers
             }
         }
 
-        private static string EncodeNonAsciiCharacters(string value)
+        public bool Connected()
         {
-            var bytes = Encoding.UTF8.GetBytes(value);
+            return _client != null && _client.Connected;
+        }
 
-            var sb = new StringBuilder();
-            foreach (var c in bytes)
+#if DEBUG
+        public async void Disconnect()
+        {
+            if (!Connected())
+                return;
+
+            await _client.StopAsync(WebSocketCloseStatus.NormalClosure, "Disconnection");
+        }
+#else
+        public void Reconnect()
+        {
+            Connect(Url);
+        }
+#endif
+
+        public void SendMessage(NetMessage message)
+        {
+            if (!Connected())
+                return;
+
+            var str = JsonConvert.SerializeObject(message);
+            _client.SendAsync(str);
+            PluginLog.Debug($"Managers::Socket::SendMessage: {str}");
+        }
+
+        /*
+        private void OnReconntion(ReconnectionInfo args)
+        {
+            _oldRangeModeState                  = Plugin.Configuration.TrackRangeMode;
+            Plugin.Configuration.TrackRangeMode = false;
+
+            if (args.Type == ReconnectionType.Initial && !Plugin.Configuration.TrackerNoNotification)
             {
-                var encodedValue = ((int)c).ToString("x2").ToUpper() + " ";
-                sb.Append(encodedValue);
+                DalamudApi.ChatGui.PrintChat(new XivChatEntry
+                                             {
+                                                 Message = new SeString(new List<Payload>
+                                                                        {
+                                                                            new TextPayload("成功连接到服务器！如果有问题或者意见可以到Github上开Issue:"),
+                                                                            new UIForegroundPayload(527),
+                                                                            _linkPayload,
+                                                                            new TextPayload("https://github.com/NukoOoOoOoO/DalamudPlugins/issues/new"),
+                                                                            RawPayload.LinkTerminator,
+                                                                            new UIForegroundPayload(0)
+                                                                        }),
+                                                 Type = XivChatType.CustomEmote
+                                             });
             }
 
-            return sb.ToString();
+            var localTracker = Plugin.Features.Counter.GetLocalTrackers();
+
+            if (localTracker == null || localTracker.Count == 0 || !DalamudApi.ClientState.LocalPlayer)
+                return;
+
+            var list = localTracker.Select(t => new NetMessage.Tracker { Data = t.Value.counter, Time = t.Value.startTime, Instance = t.Key, TerritoryId = t.Value.territoryId }).ToList();
+            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+
+            SendMessage(new NetMessage
+                        {
+                            Type            = "NewConnection",
+                            CurrentInstance = currentInstance,
+                            Trackers        = list,
+                            TerritoryId     = DalamudApi.ClientState.TerritoryType
+                        });
         }
+
+        private void OnMessageReceived(ResponseMessage args)
+        {
+            if (args.MessageType != WebSocketMessageType.Binary)
+                return;
+
+            // ping pong
+            if (args.Binary.Length == 0)
+                return;
+
+            var msg = Encoding.UTF8.GetString(args.Binary);
+
+        }*/
     }
 }
