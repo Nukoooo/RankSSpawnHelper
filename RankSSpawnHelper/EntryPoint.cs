@@ -66,7 +66,7 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [-] 尝试修复会出现两次触发消息/联网计数翻倍的BUG")
+                             new TextPayload("  [-] 尝试修复会出现两次触发消息/联网计数翻倍的BUG #2")
                          });
         }
 

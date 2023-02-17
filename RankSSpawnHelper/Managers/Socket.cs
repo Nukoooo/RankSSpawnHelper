@@ -49,6 +49,8 @@ namespace RankSSpawnHelper.Managers
 
         private void ClientState_OnLogout(object sender, EventArgs e)
         {
+            _client.ServerConnected -= ClientOnServerConnected;
+            _client.MessageReceived -= ClientOnMessageReceived;
             _client.Dispose();
             _userName = string.Empty;
             PluginLog.Debug("ClientState_OnLogout");
@@ -60,6 +62,8 @@ namespace RankSSpawnHelper.Managers
 
             DalamudApi.ClientState.Login  -= ClientState_OnLogin;
             DalamudApi.ClientState.Logout -= ClientState_OnLogout;
+            _client.ServerConnected       -= ClientOnServerConnected;
+            _client.MessageReceived       -= ClientOnMessageReceived;
 
             _client.Dispose();
 
