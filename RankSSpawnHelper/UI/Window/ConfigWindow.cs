@@ -22,6 +22,8 @@ namespace RankSSpawnHelper.Ui.Window
 
         private readonly List<ColorInfo> _colorInfos = new();
         private readonly List<string> _expansions = new() { "2.0", "3.0", "4.0", "5.0", "6.0" };
+
+        private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
         private ColorPickerType _colorPickerType = ColorPickerType.Failed;
 
         private TextureWrap _image;
@@ -34,8 +36,6 @@ namespace RankSSpawnHelper.Ui.Window
 
         private string _serverUrl = string.Empty;
         private bool _showColorPicker;
-
-        private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
 
         public ConfigWindow() : base("菜单设置##ranksspawnhelper1337")
         {

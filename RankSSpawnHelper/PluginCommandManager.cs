@@ -15,13 +15,13 @@ namespace RankSSpawnHelper
 
         public PluginCommandManager(THost host)
         {
-            this._host = host;
+            _host = host;
 
             _pluginCommands = host.GetType()
-                                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                                 .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
-                                 .SelectMany(GetCommandInfoTuple)
-                                 .ToArray();
+                                  .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+                                  .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
+                                  .SelectMany(GetCommandInfoTuple)
+                                  .ToArray();
 
             AddCommandHandlers();
         }

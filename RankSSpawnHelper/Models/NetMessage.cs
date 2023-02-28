@@ -8,7 +8,9 @@ namespace RankSSpawnHelper.Models
         public string CurrentInstance;
         public List<Tracker> Trackers;
         public long Time { get; set; }
+
         public string Type { get; set; }
+
         // public string Instance { get; set; }
         public Dictionary<string, int> Data { get; set; }
         public bool Failed { get; set; }

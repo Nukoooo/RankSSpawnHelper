@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Logging;
 using ImGuiNET;
 using RankSSpawnHelper.Models;
 

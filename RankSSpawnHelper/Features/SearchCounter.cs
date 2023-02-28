@@ -13,7 +13,7 @@ namespace RankSSpawnHelper.Features
     internal class SearchCounter : IDisposable
     {
         private readonly List<ulong> _playerIds = new();
-        private int _searchCount = 0;
+        private int _searchCount;
 
         public SearchCounter()
         {
@@ -68,7 +68,7 @@ namespace RankSSpawnHelper.Features
             if (original != (IntPtr)1)
             {
                 _searchCount++;
-                Plugin.Print(new List<Payload>()
+                Plugin.Print(new List<Payload>
                              {
                                  new TextPayload("在经过 "),
                                  new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
@@ -83,7 +83,7 @@ namespace RankSSpawnHelper.Features
 
                 if (Plugin.Configuration.PlayerSearchTip)
                 {
-                    Plugin.Print(new List<Payload>()
+                    Plugin.Print(new List<Payload>
                                  {
                                      new TextPayload("对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " +
                                                      "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" +
@@ -91,7 +91,7 @@ namespace RankSSpawnHelper.Features
                                                      "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" +
                                                      "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
                                      new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                     new TextPayload("\n本消息可以在 设置 -> 其他 里关掉"),
+                                     new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
                                  });
                 }
             }

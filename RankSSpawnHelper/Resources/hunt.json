@@ -1,0 +1,1402 @@
+{
+  "White Joker": {
+    "en": "White Joker",
+    "de": "Weiß[a] Joker",
+    "fr": "joker blanc",
+    "jp": "ホワイトジョーカー",
+    "cn": "白鬼鼠王"
+  },
+  "Forneus": {
+    "en": "Forneus",
+    "de": "Forneus",
+    "fr": "Forneus",
+    "jp": "ファルネウス",
+    "cn": "弗内乌斯"
+  },
+  "Laideronnette": {
+    "en": "Laideronnette",
+    "de": "Laideronette",
+    "fr": "Laideronnette",
+    "jp": "レドロネット",
+    "cn": "雷德罗巨蛇"
+  },
+  "Stinging Sophie": {
+    "en": "Stinging Sophie",
+    "de": "Stinkig[a] Sophie",
+    "fr": "Sophie la dardante",
+    "jp": "スティンギング・ソフィー",
+    "cn": "击刺魔蜂索菲"
+  },
+  "Melt": {
+    "en": "Melt",
+    "de": "Schmelze",
+    "fr": "Fondu",
+    "jp": "メルティゼリー",
+    "cn": "千眼凝胶"
+  },
+  "Wulgaru": {
+    "en": "Wulgaru",
+    "de": "Wulgaru",
+    "fr": "Wulgaru",
+    "jp": "ウルガル",
+    "cn": "乌尔伽鲁"
+  },
+  "Monarch Ogrefly": {
+    "en": "Monarch Ogrefly",
+    "de": "Monarch Ogerlibelle",
+    "fr": "agrion ogre monarque",
+    "jp": "モナーク・オーガフライ",
+    "cn": "君王鬼蜻蜓"
+  },
+  "Ghede Ti Malice": {
+    "en": "Ghede Ti Malice",
+    "de": "Ghede Titus Häme",
+    "fr": "Guédé Ti-Malice",
+    "jp": "ゲーデ",
+    "cn": "盖得"
+  },
+  "Mindflayer": {
+    "en": "mindflayer",
+    "de": "Seelenbrenner",
+    "fr": "flagelleur mental",
+    "jp": "マインドフレア",
+    "cn": "夺心魔"
+  },
+  "Phecda": {
+    "en": "Phecda",
+    "de": "Phecda",
+    "fr": "Phecda",
+    "jp": "フェクダ",
+    "cn": "天玑巨熊"
+  },
+  "Girtab": {
+    "en": "Girtab",
+    "de": "Girtab",
+    "fr": "Girtab",
+    "jp": "ギルタブ",
+    "cn": "尾宿蛛蝎"
+  },
+  "Thousand-cast Theda": {
+    "en": "Thousand-cast Theda",
+    "de": "Tausendzahn Theda",
+    "fr": "Theda la tripoteuse",
+    "jp": "サウザンドキャスト・セダ",
+    "cn": "千竿口花希达"
+  },
+  "Sewer Syrup": {
+    "en": "Sewer Syrup",
+    "de": "Abwasser-Sirup",
+    "fr": "Syrop d'égout",
+    "jp": "スェアーシロップ",
+    "cn": "阴沟毒液"
+  },
+  "Alectryon": {
+    "en": "Alectryon",
+    "de": "Alectryon",
+    "fr": "Alectryon",
+    "jp": "アレクトリオン",
+    "cn": "阿列刻特利昂"
+  },
+  "Zona Seeker": {
+    "en": "Zona Seeker",
+    "de": "Zona Sucher",
+    "fr": "Zona Seeker",
+    "jp": "ゾーナ・シーカー",
+    "cn": "虚无探索者"
+  },
+  "Ovjang": {
+    "en": "Ovjang",
+    "de": "Ovjang",
+    "fr": "Ovjang",
+    "jp": "アヴゼン",
+    "cn": "奥弗杰恩"
+  },
+  "Sabotender Bailarina": {
+    "en": "Sabotender Bailarina",
+    "de": "Sabotender Bailarina",
+    "fr": "pampa ballerine",
+    "jp": "サボテンダー・バイラリーナ",
+    "cn": "花舞仙人刺"
+  },
+  "Brontes": {
+    "en": "Brontes",
+    "de": "Brontes",
+    "fr": "Brontes",
+    "jp": "ブロンテス",
+    "cn": "布隆特斯"
+  },
+  "Gatling": {
+    "en": "Gatling",
+    "de": "Gatling",
+    "fr": "Acanthor",
+    "jp": "ガトリングス",
+    "cn": "加特林针鼹"
+  },
+  "Maahes": {
+    "en": "Maahes",
+    "de": "Maahes",
+    "fr": "Maahes",
+    "jp": "マヘス",
+    "cn": "玛赫斯"
+  },
+  "Lampalagua": {
+    "en": "Lampalagua",
+    "de": "Balaur",
+    "fr": "Balaur",
+    "jp": "バルウール",
+    "cn": "巴拉乌尔"
+  },
+  "Albin the Ashen": {
+    "en": "Albin the Ashen",
+    "de": "Albin Aschfahl",
+    "fr": "Albin\r\nle blafard",
+    "jp": "死灰のアルビン",
+    "cn": "死灰复燃的阿尔宾"
+  },
+  "Zanigoh": {
+    "en": "Zanig'oh",
+    "de": "Zanig'oh",
+    "fr": "Zanig'oh",
+    "jp": "ザニゴ",
+    "cn": "札尼戈"
+  },
+  "Nunyunuwi": {
+    "en": "Nunyunuwi",
+    "de": "Nunyunuwi",
+    "fr": "Nunyunuwi",
+    "jp": "ヌニュヌウィ",
+    "cn": "努纽努维"
+  },
+  "Flame Sergeant Dalvag": {
+    "en": "Flame Sergeant Dalvag",
+    "de": "Dalvag",
+    "fr": "sergent-major Dalvag",
+    "jp": "不滅のフェランド闘軍曹",
+    "cn": "永恒不灭的菲兰德副耀士"
+  },
+  "Dalvags Final Flame": {
+    "en": "Dalvag's Final Flame",
+    "de": "Letzt[a] Flamme[p] Dalvags",
+    "fr": "dernière flamme de Dalvag",
+    "jp": "ファイナルフレイム",
+    "cn": "菲兰德的遗火"
+  },
+  "Minhocao": {
+    "en": "Minhocao",
+    "de": "Minhocao",
+    "fr": "Minhocao",
+    "jp": "ミニョーカオン",
+    "cn": "蚓螈巨虫"
+  },
+  "Skogs Fru": {
+    "en": "Skogs Fru",
+    "de": "Skogs Fru",
+    "fr": "Skogs Fru",
+    "jp": "スコッグ・フリュー",
+    "cn": "花林女郎"
+  },
+  "Vogaal Ja": {
+    "en": "Vogaal Ja",
+    "de": "Vogaal Ja",
+    "fr": "Vogaal Ja",
+    "jp": "醜男のヴォガージャ",
+    "cn": "丑男子 沃迦加"
+  },
+  "Croque-Mitaine": {
+    "en": "Croque-mitaine",
+    "de": "Croque Mitaine",
+    "fr": "Croque-mitaine",
+    "jp": "クロック・ミテーヌ",
+    "cn": "护土精灵"
+  },
+  "Barbastelle": {
+    "en": "Barbastelle",
+    "de": "Barbastelle",
+    "fr": "Barbastelle",
+    "jp": "バーバステル",
+    "cn": "宽耳凶蝠"
+  },
+  "Unktehi": {
+    "en": "Unktehi",
+    "de": "Unktehi",
+    "fr": "Unktehi",
+    "jp": "ウンクテヒ",
+    "cn": "乌克提希"
+  },
+  "Croakadile": {
+    "en": "Croakadile",
+    "de": "Quakquak",
+    "fr": "Croabéros",
+    "jp": "ケロゲロス",
+    "cn": "咕尔呱洛斯"
+  },
+  "Bloody Mary": {
+    "en": "Bloody Mary",
+    "de": "Bloody Mary",
+    "fr": "Mary la sanglante",
+    "jp": "ブラッディ・マリー",
+    "cn": "血腥玛丽"
+  },
+  "Hellsclaw": {
+    "en": "Hellsclaw",
+    "de": "Höllenklaue",
+    "fr": "griffe des enfers magitek",
+    "jp": "魔導ヘルズクロー",
+    "cn": "魔导地狱爪"
+  },
+  "The Garlok": {
+    "en": "the Garlok",
+    "de": "Garlok",
+    "fr": "Garlok",
+    "jp": "ガーロック",
+    "cn": "伽洛克"
+  },
+  "Dark Helmet": {
+    "en": "Dark Helmet",
+    "de": "Dunkelhelm",
+    "fr": "Casque noir",
+    "jp": "ダークヘルメット",
+    "cn": "暗盔魔蟹"
+  },
+  "Nahn": {
+    "en": "Nahn",
+    "de": "Nahn",
+    "fr": "Nahn",
+    "jp": "ナン",
+    "cn": "纳恩"
+  },
+  "Bonnacon": {
+    "en": "Bonnacon",
+    "de": "Bonnacon",
+    "fr": "Bonnacon",
+    "jp": "ボナコン",
+    "cn": "火愤牛"
+  },
+  "Myradrosh": {
+    "en": "Myradrosh",
+    "de": "Myradrosh",
+    "fr": "Myradrosh",
+    "jp": "ミラドロッシュ",
+    "cn": "米腊德罗斯蜂鸟"
+  },
+  "Marberry": {
+    "en": "Marberry",
+    "de": "Marberry",
+    "fr": "marberry",
+    "jp": "マーベリー",
+    "cn": "玛贝利"
+  },
+  "Nandi": {
+    "en": "Nandi",
+    "de": "Nandi",
+    "fr": "Nandi",
+    "jp": "ナンディ",
+    "cn": "南迪"
+  },
+  "Vuokho": {
+    "en": "Vuokho",
+    "de": "Vuokho",
+    "fr": "Vuokho",
+    "jp": "ヴオコー",
+    "cn": "巫刻猎鹫"
+  },
+  "Cornu": {
+    "en": "Cornu",
+    "de": "Cornu",
+    "fr": "Cornu",
+    "jp": "コンヌ",
+    "cn": "角祖"
+  },
+  "Chernobog": {
+    "en": "Chernobog",
+    "de": "Czernobog",
+    "fr": "Czernobog",
+    "jp": "チェルノボーグ",
+    "cn": "牛头黑神"
+  },
+  "Naul": {
+    "en": "Naul",
+    "de": "Naul",
+    "fr": "Naul",
+    "jp": "ナウル",
+    "cn": "纳乌尔"
+  },
+  "Marraco": {
+    "en": "Marraco",
+    "de": "Marraco",
+    "fr": "Marraco",
+    "jp": "マラク",
+    "cn": "马拉克"
+  },
+  "Safat": {
+    "en": "Safat",
+    "de": "Safat",
+    "fr": "Safat",
+    "jp": "サファト",
+    "cn": "萨法特"
+  },
+  "Leech King": {
+    "en": "Leech King",
+    "de": "Egelkönig",
+    "fr": "roi des sangsues",
+    "jp": "リーチキング",
+    "cn": "水蛭王"
+  },
+  "Kurrea": {
+    "en": "Kurrea",
+    "de": "Kurrea",
+    "fr": "Kurrea",
+    "jp": "クーレア",
+    "cn": "库雷亚"
+  },
+  "Agrippa the Mighty": {
+    "en": "Agrippa the Mighty",
+    "de": "Agrippa",
+    "fr": "Agrippa",
+    "jp": "アグリッパ",
+    "cn": "阿格里帕"
+  },
+  "Alteci": {
+    "en": "Alteci",
+    "de": "Artic",
+    "fr": "Altek",
+    "jp": "アルティック",
+    "cn": "阿尔提克"
+  },
+  "Kreutzet": {
+    "en": "Kreutzet",
+    "de": "Kreutzet",
+    "fr": "Kreutzet",
+    "jp": "クルーゼ",
+    "cn": "克鲁泽"
+  },
+  "Mirka": {
+    "en": "Mirka",
+    "de": "Mirka",
+    "fr": "Mirka",
+    "jp": "ミルカ",
+    "cn": "米勒卡"
+  },
+  "Lyuba": {
+    "en": "Lyuba",
+    "de": "Lyuba",
+    "fr": "Lyuba",
+    "jp": "リューバ",
+    "cn": "卢芭"
+  },
+  "Kaiser Behemoth": {
+    "en": "kaiser behemoth",
+    "de": "Kaiser-Behemoth",
+    "fr": "béhémoth empereur",
+    "jp": "カイザーベヒーモス",
+    "cn": "凯撒贝希摩斯"
+  },
+  "Gnath cometdrone": {
+    "en": "Gnath cometdrone",
+    "de": "Gnath-Kometdrohne",
+    "fr": "Gnathe myrmicomète",
+    "jp": "グナース・コメットドローン",
+    "cn": "骨颌彗星兵"
+  },
+  "Thextera": {
+    "en": "Thextera",
+    "de": "Dexter",
+    "fr": "Texta",
+    "jp": "テクスタ",
+    "cn": "提克斯塔"
+  },
+  "Pylraster": {
+    "en": "Pylraster",
+    "de": "Xhauron",
+    "fr": "Pirlasta",
+    "jp": "パイルラスタ",
+    "cn": "派拉斯特暴龙"
+  },
+  "Lord of the Wyverns": {
+    "en": "Lord of the Wyverns",
+    "de": "Wyvern-Lord",
+    "fr": "seigneur des wyvernes",
+    "jp": "ワイバーンロード",
+    "cn": "双足飞龙之王"
+  },
+  "Senmurv": {
+    "en": "Senmurv",
+    "de": "Simurgh",
+    "fr": "Sênmurw",
+    "jp": "セーンムルウ",
+    "cn": "神穆尔鸟"
+  },
+  "Scitalis": {
+    "en": "Scitalis",
+    "de": "Scitalis",
+    "fr": "Scitalis",
+    "jp": "スキタリス",
+    "cn": "斯奇塔利斯"
+  },
+  "The Scarecrow": {
+    "en": "the Scarecrow",
+    "de": "Tyranno",
+    "fr": "dracosaure primus",
+    "jp": "スケアクロウ",
+    "cn": "惊慌稻草龙"
+  },
+  "Bune": {
+    "en": "Bune",
+    "de": "Bune",
+    "fr": "Bune",
+    "jp": "ブネ",
+    "cn": "布涅"
+  },
+  "Agathos": {
+    "en": "Agathos",
+    "de": "Agathos",
+    "fr": "Agathos",
+    "jp": "アガトス",
+    "cn": "阿伽托斯"
+  },
+  "Gandarewa": {
+    "en": "Gandarewa",
+    "de": "Gandalva",
+    "fr": "Gandharva",
+    "jp": "ガンダルヴァ",
+    "cn": "刚德瑞瓦"
+  },
+  "Pterygotus": {
+    "en": "Pterygotus",
+    "de": "Pterygotus",
+    "fr": "Pterygotus",
+    "jp": "プテリゴトゥス",
+    "cn": "翼肢鲎"
+  },
+  "False Gigantopithecus": {
+    "en": "false gigantopithecus",
+    "de": "Gigantopithecus",
+    "fr": "gigantopithèque",
+    "jp": "ブラクキ",
+    "cn": "布拉巨猿"
+  },
+  "Slipkinx Steeljoints": {
+    "en": "Slipkinx Steeljoints",
+    "de": "Rutschfix Stahlscharnier",
+    "fr": "Slipkinx Joints-d'acier",
+    "jp": "機兵のスリップキンクス",
+    "cn": "机工兵 斯利普金克斯"
+  },
+  "Stolas": {
+    "en": "Stolas",
+    "de": "Stolas",
+    "fr": "Stolas",
+    "jp": "ストラス",
+    "cn": "斯特拉斯"
+  },
+  "The Pale Rider": {
+    "en": "the Pale Rider",
+    "de": "Bleich[a] Reiter",
+    "fr": "Cavalier pâle",
+    "jp": "ペイルライダー",
+    "cn": "苍白骑士"
+  },
+  "Squonk": {
+    "en": "Squonk",
+    "de": "Squonk",
+    "fr": "Squonk",
+    "jp": "スクオンク",
+    "cn": "斯奎克"
+  },
+  "Sanu Vali of Dancing Wings": {
+    "en": "Sanu Vali of Dancing Wings",
+    "de": "Sanu Vali [t] Tanzend[a] Schwinge",
+    "fr": "Sanu Vali",
+    "jp": "舞手のサヌバリ",
+    "cn": "飞舞翼 萨努瓦力"
+  },
+  "Enkelados": {
+    "en": "Enkelados",
+    "de": "Engedoras",
+    "fr": "Enkélados",
+    "jp": "エンケドラス",
+    "cn": "恩克拉多斯"
+  },
+  "Sisiutl": {
+    "en": "Sisiutl",
+    "de": "Sisiutl",
+    "fr": "Sisiutl",
+    "jp": "シシウトゥル",
+    "cn": "西斯尤"
+  },
+  "Bird of Paradise": {
+    "en": "Bird of Paradise",
+    "de": "Paradiesvogel",
+    "fr": "oiseau de Paradis",
+    "jp": "極楽鳥",
+    "cn": "极乐鸟"
+  },
+  "Lycidas": {
+    "en": "Lycidas",
+    "de": "Lykidas",
+    "fr": "Lycidas",
+    "jp": "リュキダス",
+    "cn": "利西达斯"
+  },
+  "Omni": {
+    "en": "Omni",
+    "de": "Omni",
+    "fr": "Omni",
+    "jp": "オムニ",
+    "cn": "全能机甲"
+  },
+  "Campacti": {
+    "en": "Campacti",
+    "de": "Campacti",
+    "fr": "Campacti",
+    "jp": "キャムパクティ",
+    "cn": "坎帕提"
+  },
+  "Stench Blossom": {
+    "en": "stench blossom",
+    "de": "Pestwurz",
+    "fr": "fleur nauséabonde",
+    "jp": "センチブロッサム",
+    "cn": "恶臭狂花"
+  },
+  "Leucrotta": {
+    "en": "Leucrotta",
+    "de": "Leucrotta",
+    "fr": "leucrotta",
+    "jp": "レウクロッタ",
+    "cn": "卢克洛塔"
+  },
+  "Shadow-Dweller Yamini": {
+    "en": "Shadow-dweller Yamini",
+    "de": "Schattenkauer-Yamini",
+    "fr": "Yamini la Nocturne",
+    "jp": "宵闇のヤミニ",
+    "cn": "影中暗 雅弥尼"
+  },
+  "Ouzelum": {
+    "en": "Ouzelum",
+    "de": "Ouzelum",
+    "fr": "Ouzelum",
+    "jp": "オゼルム",
+    "cn": "奥祖鲁姆"
+  },
+  "Orcus": {
+    "en": "Orcus",
+    "de": "Orcus",
+    "fr": "Orcus",
+    "jp": "オルクス",
+    "cn": "奥迦斯"
+  },
+  "Erle": {
+    "en": "Erle",
+    "de": "Erle",
+    "fr": "Erle",
+    "jp": "アール",
+    "cn": "女王蜂"
+  },
+  "Udumbara": {
+    "en": "Udumbara",
+    "de": "Udumbara",
+    "fr": "Udumbara",
+    "jp": "ウドンゲ",
+    "cn": "优昙婆罗花"
+  },
+  "Gwas-y-neidr": {
+    "en": "Gwas-y-neidr",
+    "de": "Gwas-y-neidr",
+    "fr": "Gwas-y-neidr",
+    "jp": "グアス・ア・ニードル",
+    "cn": "蛇仆蚂蜓"
+  },
+  "Buccaboo": {
+    "en": "Buccaboo",
+    "de": "Buccaboo",
+    "fr": "Bucca-boo",
+    "jp": "ブッカブー",
+    "cn": "布卡卜"
+  },
+  "Vochstein": {
+    "en": "Vochstein",
+    "de": "Vochstein",
+    "fr": "Vochstein",
+    "jp": "バックスタイン",
+    "cn": "弗克施泰因"
+  },
+  "Aqrabuamelu": {
+    "en": "Aqrabuamelu",
+    "de": "Aqrabuamelu",
+    "fr": "Aqrabuamelu",
+    "jp": "アクラブアメル",
+    "cn": "熔骨炎蝎"
+  },
+  "Bone Crawler": {
+    "en": "Bone Crawler",
+    "de": "Knochenkriecher",
+    "fr": "Mangeur d'os",
+    "jp": "ボーンクローラー",
+    "cn": "爬骨怪龙"
+  },
+  "Manes": {
+    "en": "Manes",
+    "de": "Manes",
+    "fr": "Manes",
+    "jp": "マネス",
+    "cn": "玛涅斯"
+  },
+  "Kiwa": {
+    "en": "Kiwa",
+    "de": "Kiwa",
+    "fr": "Kiwa",
+    "jp": "キワ",
+    "cn": "奇洼"
+  },
+  "Mahisha": {
+    "en": "Mahisha",
+    "de": "Mahisha",
+    "fr": "Mahisha",
+    "jp": "マヒシャ",
+    "cn": "马希沙"
+  },
+  "Luminare": {
+    "en": "Luminare",
+    "de": "Luminare",
+    "fr": "Luminare",
+    "jp": "ルミナーレ",
+    "cn": "泛光晶体"
+  },
+  "Salt and Light": {
+    "en": "Salt and Light",
+    "de": "Salzlicht",
+    "fr": "Salaclux",
+    "jp": "ソルト・アンド・ライト",
+    "cn": "盐和光"
+  },
+  "Gauki Strongblade": {
+    "en": "Gauki Strongblade",
+    "de": "Gauki Starkklinge",
+    "fr": "Gauki la Lame forte",
+    "jp": "剣豪ガウキ",
+    "cn": "剑豪 刑具"
+  },
+  "Guhuo Niao": {
+    "en": "Guhuo Niao",
+    "de": "Guhuo Niao",
+    "fr": "Guhuo Niao",
+    "jp": "姑獲鳥",
+    "cn": "姑获鸟"
+  },
+  "Funa Yurei": {
+    "en": "Funa Yurei",
+    "de": "Funa Yurei",
+    "fr": "Funa Yurei",
+    "jp": "船幽霊",
+    "cn": "船幽灵"
+  },
+  "Oni Yumemi": {
+    "en": "Oni Yumemi",
+    "de": "Oni Yumemi",
+    "fr": "Oni Yumemi",
+    "jp": "オニユメミ",
+    "cn": "鬼观梦"
+  },
+  "Okina": {
+    "en": "Okina",
+    "de": "Okina",
+    "fr": "Okina",
+    "jp": "オキナ",
+    "cn": "巨大鳐"
+  },
+  "Deidar": {
+    "en": "Deidar",
+    "de": "Deidar",
+    "fr": "Deidar",
+    "jp": "デイダラ",
+    "cn": "大太"
+  },
+  "Gyorai Quickstrike": {
+    "en": "Gyorai Quickstrike",
+    "de": "Gyorai Schnellschlag",
+    "fr": "Gyorai le Vif",
+    "jp": "雷撃のギョライ",
+    "cn": "闪雷击 鱼雷"
+  },
+  "Gajasura": {
+    "en": "Gajasura",
+    "de": "Gajasura",
+    "fr": "Gajasura",
+    "jp": "ガジャースラ",
+    "cn": "象魔修罗"
+  },
+  "Angada": {
+    "en": "Angada",
+    "de": "Angada",
+    "fr": "Angada",
+    "jp": "アンガダ",
+    "cn": "安迦达"
+  },
+  "Gamma": {
+    "en": "Gamma",
+    "de": "Gamma",
+    "fr": "Gamma",
+    "jp": "ガンマ",
+    "cn": "伽马"
+  },
+  "Kurma": {
+    "en": "Kurma",
+    "de": "Kurma",
+    "fr": "Kurma",
+    "jp": "クールマ",
+    "cn": "俱利摩"
+  },
+  "Aswang": {
+    "en": "Aswang",
+    "de": "Aswang",
+    "fr": "Aswang",
+    "jp": "アスワング",
+    "cn": "阿苏黄"
+  },
+  "Girimekhala": {
+    "en": "Girimekhala",
+    "de": "Girimekhala",
+    "fr": "Girimekhala",
+    "jp": "ギリメカラ",
+    "cn": "基里麦卡拉"
+  },
+  "Sum": {
+    "en": "Sum",
+    "de": "Sum",
+    "fr": "Sum",
+    "jp": "ソム",
+    "cn": "硕姆"
+  },
+  "Orghana": {
+    "en": "Orghana",
+    "de": "Orghana",
+    "fr": "Orghana",
+    "jp": "オルガナ",
+    "cn": "兀鲁忽乃朝鲁"
+  },
+  "La Velue": {
+    "en": "La Velue",
+    "de": "La Velue",
+    "fr": "Velue",
+    "jp": "ラ・ヴェリュ",
+    "cn": "浓毛兽"
+  },
+  "Itzpapalotl": {
+    "en": "Itzpapalotl",
+    "de": "Itzpapalotl",
+    "fr": "Itzpapalotl",
+    "jp": "イツパパロツル",
+    "cn": "伊兹帕帕洛特尔"
+  },
+  "Nuckelavee": {
+    "en": "Nuckelavee",
+    "de": "Nuckelavee",
+    "fr": "Nuckelavee",
+    "jp": "ナックラヴィー",
+    "cn": "纳克拉维"
+  },
+  "Nariphon": {
+    "en": "Nariphon",
+    "de": "Nariphon",
+    "fr": "Nariphon",
+    "jp": "ナリーポン",
+    "cn": "纳里蓬"
+  },
+  "Tyger": {
+    "en": "Tyger",
+    "de": "Tyger",
+    "fr": "Tygre",
+    "jp": "ティガー",
+    "cn": "戾虫"
+  },
+  "Coquecigrue": {
+    "en": "Coquecigrue",
+    "de": "Coquecigrue",
+    "fr": "Coquecigrue",
+    "jp": "コクシグルー",
+    "cn": "三合鸟儿"
+  },
+  "Indomitable": {
+    "en": "Indomitable",
+    "de": "Unbezähmbar",
+    "fr": "Indomptable",
+    "jp": "インドミタブル",
+    "cn": "不屈号"
+  },
+  "Lil Murderer": {
+    "en": "Li'l Murderer",
+    "de": "Klein[a] Mörder",
+    "fr": "Traître",
+    "jp": "リルマーダー",
+    "cn": "小小杀手"
+  },
+  "Huracan": {
+    "en": "Huracan",
+    "de": "Huracan",
+    "fr": "Huracan",
+    "jp": "フラカン",
+    "cn": "乌拉坎"
+  },
+  "Forgiven Pedantry": {
+    "en": "forgiven pedantry",
+    "de": "geläutert[a] Pedanterie",
+    "fr": "pédanterie pardonnée",
+    "jp": "フォーギヴン・ペダントリー",
+    "cn": "得到宽恕的炫学"
+  },
+  "Worm of the Well": {
+    "en": "Worm of the Well",
+    "de": "Wurm[p] des Brunnens",
+    "fr": "Verpuy",
+    "jp": "ウェルウォーム",
+    "cn": "大井巨虫"
+  },
+  "Juggler Hecatomb": {
+    "en": "Juggler Hecatomb",
+    "de": "Gaukler[p] Hecatomb",
+    "fr": "Jongleur hécatombe",
+    "jp": "ジャグラー・ヘカトゥーム",
+    "cn": "残虐杂技师"
+  },
+  "Maliktender": {
+    "en": "Maliktender",
+    "de": "Malikkaktor",
+    "fr": "Malikpampa",
+    "jp": "マリクテンダー",
+    "cn": "马利克巨人掌"
+  },
+  "Sugaar": {
+    "en": "Sugaar",
+    "de": "Sugaar",
+    "fr": "Sugaar",
+    "jp": "シュガール",
+    "cn": "休格尔"
+  },
+  "Tarchia": {
+    "en": "Tarchia",
+    "de": "Tarchia",
+    "fr": "Tarchia",
+    "jp": "タルキア",
+    "cn": "多智兽"
+  },
+  "Domovoi": {
+    "en": "Domovoi",
+    "de": "Domovoi",
+    "fr": "Domovoï",
+    "jp": "ドモヴォーイ",
+    "cn": "杜莫伊"
+  },
+  "Vulpangue": {
+    "en": "Vulpangue",
+    "de": "Vulpangue",
+    "fr": "Vulpangue",
+    "jp": "ヴルパングエ",
+    "cn": "狐首虺"
+  },
+  "The Mudman": {
+    "en": "the mudman",
+    "de": "Matschklops",
+    "fr": "tas de boue",
+    "jp": "泥人",
+    "cn": "泥人"
+  },
+  "O Poorest Pauldia": {
+    "en": "O Poorest Pauldia",
+    "de": "gepeinigt[a] Pauldia",
+    "fr": "Pauldia",
+    "jp": "ポールディア",
+    "cn": "保尔迪雅"
+  },
+  "Aglaope": {
+    "en": "Aglaope",
+    "de": "Aglaope",
+    "fr": "Aglaope",
+    "jp": "アグラオペ",
+    "cn": "阿格拉俄珀"
+  },
+  "Mindmaker": {
+    "en": "Mindmaker",
+    "de": "Freigeist",
+    "fr": "Maître-penseur",
+    "jp": "マインドメーカー",
+    "cn": "启灵果"
+  },
+  "Pachamama": {
+    "en": "Pachamama",
+    "de": "Pachamama",
+    "fr": "Pachamama",
+    "jp": "パチャママ",
+    "cn": "帕查玛玛"
+  },
+  "Supay": {
+    "en": "Supay",
+    "de": "Supay",
+    "fr": "Supay",
+    "jp": "スペイ",
+    "cn": "苏帕伊"
+  },
+  "Grassman": {
+    "en": "Grassman",
+    "de": "Grasmann",
+    "fr": "Sasquatch arboricole",
+    "jp": "グラスマン",
+    "cn": "格拉斯曼"
+  },
+  "Ixtab": {
+    "en": "Ixtab",
+    "de": "Ixtab",
+    "fr": "Ixtab",
+    "jp": "イシュタム",
+    "cn": "伊休妲"
+  },
+  "Gilshs Aath Swiftclaw": {
+    "en": "Gilshs Aath Swiftclaw",
+    "de": "Gilshs Aath",
+    "fr": "Gilshs Aath\r\nl'étrangleur",
+    "jp": "手掴のギウスィー・アース",
+    "cn": "徒手抓鱼 基乌嘶·渊斯"
+  },
+  "Deacon": {
+    "en": "Deacon",
+    "de": "Diakon",
+    "fr": "Diacre",
+    "jp": "ディーコン",
+    "cn": "助祭大蟹"
+  },
+  "Rusalka": {
+    "en": "Rusalka",
+    "de": "Rusalka",
+    "fr": "Roussalka",
+    "jp": "ルサルカ",
+    "cn": "卢莎卡"
+  },
+  "Baal": {
+    "en": "Baal",
+    "de": "Baal",
+    "fr": "Baal",
+    "jp": "バール",
+    "cn": "巴力"
+  },
+  "Gunitt": {
+    "en": "Gunitt",
+    "de": "Gunitt",
+    "fr": "Gunitt",
+    "jp": "グニット",
+    "cn": "顾尼图"
+  },
+  "Green Archon": {
+    "en": "green Archon",
+    "de": "grün[a] Exeget",
+    "fr": "Preux feuillu",
+    "jp": "草賢人",
+    "cn": "草贤人"
+  },
+  "ü-u-ü-u": {
+    "en": "ü-u-ü-u",
+    "de": "Ü-u-ü-u",
+    "fr": "Ü-u-ü-u",
+    "jp": "ウーヴウーヴ",
+    "cn": "哞哞"
+  },
+  "Hulder": {
+    "en": "hulder",
+    "de": "Hulder",
+    "fr": "huldre",
+    "jp": "フルドラ",
+    "cn": "胡睹"
+  },
+  "Storsie": {
+    "en": "Storsie",
+    "de": "Storsie",
+    "fr": "Storsie",
+    "jp": "ストーシー",
+    "cn": "斯图希"
+  },
+  "Burfurlur the Canny": {
+    "en": "Burfurlur the Canny",
+    "de": "Burfurlur [t] Gerissen[a]",
+    "fr": "Le Burfurlur",
+    "jp": "ブーフールー",
+    "cn": "布弗鲁"
+  },
+  "Vajrakumara": {
+    "en": "Vajrakumara",
+    "de": "Vajrakumara",
+    "fr": "vajrakumara",
+    "jp": "ヴァジュラクマーラ",
+    "cn": "金刚鸠摩罗"
+  },
+  "Iravati": {
+    "en": "Iravati",
+    "de": "Iravati",
+    "fr": "Iravati",
+    "jp": "イラーヴァティ",
+    "cn": "伊罗婆缇"
+  },
+  "Yilan": {
+    "en": "Yilan",
+    "de": "Yilan",
+    "fr": "yilan",
+    "jp": "ユラン",
+    "cn": "尤兰"
+  },
+  "Sugriva": {
+    "en": "Sugriva",
+    "de": "Sugriva",
+    "fr": "Sugriva",
+    "jp": "スグリーヴァ",
+    "cn": "须羯里婆"
+  },
+  "Sphatika": {
+    "en": "Sphatika",
+    "de": "Sphatika",
+    "fr": "Sphatika",
+    "jp": "スパティカ",
+    "cn": "颇胝迦"
+  },
+  "Warmonger": {
+    "en": "warmonger",
+    "de": "Kriegstreiber",
+    "fr": "Belliciste",
+    "jp": "ウォーモンガー",
+    "cn": "战争贩子"
+  },
+  "Emperors Rose": {
+    "en": "Emperor's rose",
+    "de": "Rose[p] des Kaisers",
+    "fr": "rosier de l'empereur",
+    "jp": "エンペラーズローズ",
+    "cn": "皇帝的玫瑰"
+  },
+  "Minerva": {
+    "en": "Minerva",
+    "de": "Minerva",
+    "fr": "Minerva",
+    "jp": "ミネルウァ",
+    "cn": "密涅瓦"
+  },
+  "Aegeiros": {
+    "en": "Aegeiros",
+    "de": "Aegeiros",
+    "fr": "ægeiros",
+    "jp": "アイゲイロス",
+    "cn": "黑杨树精"
+  },
+  "Armstrong": {
+    "en": "Armstrong",
+    "de": "Armstrong",
+    "fr": "Armstrong",
+    "jp": "アームストロング",
+    "cn": "阿姆斯特朗"
+  },
+  "Daphnia Magna": {
+    "en": "daphnia magna",
+    "de": "Daphnia Magna",
+    "fr": "magna daphnie",
+    "jp": "ダフニアマグナ",
+    "cn": "巨月蚤"
+  },
+  "Genesis Rock": {
+    "en": "genesis rock",
+    "de": "Genesisfels",
+    "fr": "pierre de la genèse",
+    "jp": "ジェネシスロック",
+    "cn": "起源石"
+  },
+  "Mousse Princess": {
+    "en": "mousse princess",
+    "de": "Mousse-Prinzessin",
+    "fr": "princesse mousse",
+    "jp": "ムースプリンセス",
+    "cn": "慕斯公主"
+  },
+  "Lunatender Queen": {
+    "en": "lunatender queen",
+    "de": "Lunatender-Königin",
+    "fr": "pampa sélénienne\r\nreine",
+    "jp": "ルナテンダー・クイーン",
+    "cn": "月面仙人刺女王"
+  },
+  "Ruminator": {
+    "en": "Ruminator",
+    "de": "Grübler",
+    "fr": "ruminateur",
+    "jp": "ルミネイター",
+    "cn": "沉思之物"
+  },
+  "Yumcax": {
+    "en": "Yumcax",
+    "de": "Yumcax",
+    "fr": "Yumcax",
+    "jp": "ユムカクス",
+    "cn": "尤姆卡克斯"
+  },
+  "Shockmaw": {
+    "en": "Shockmaw",
+    "de": "Schockschlund",
+    "fr": "choc-gueule",
+    "jp": "ショックモー",
+    "cn": "肖科莫"
+  },
+  "Petalodus": {
+    "en": "petalodus",
+    "de": "Petalodus",
+    "fr": "petalodus",
+    "jp": "ペタロドゥス",
+    "cn": "瓣齿鲨"
+  },
+  "Gurangatch": {
+    "en": "Gurangatch",
+    "de": "Gurangatch",
+    "fr": "Gurangatch",
+    "jp": "グランガチ",
+    "cn": "固兰盖奇"
+  },
+  "Ophioneus": {
+    "en": "Ophioneus",
+    "de": "Ophioneus",
+    "fr": "Ophion",
+    "jp": "オピオネウス",
+    "cn": "俄菲翁尼厄斯"
+  },
+  "Level Cheater": {
+    "en": "level cheater",
+    "de": "Stufenschummler",
+    "fr": "tricheniveau",
+    "jp": "レベルチーター",
+    "cn": "等级作弊仪"
+  },
+  "Oskh Rhei": {
+    "en": "Oskh Rhei",
+    "de": "Oskh Rhei",
+    "fr": "Oskh Rhei",
+    "jp": "オスク・レイ",
+    "cn": "欧斯克·雷伊"
+  },
+  "Arch-Eta": {
+    "en": "Arch-Eta",
+    "de": "Erz-Eta",
+    "fr": "Arch-Êta",
+    "jp": "アーチイータ",
+    "cn": "伊塔总领"
+  },
+  "Fan Ail": {
+    "en": "Fan Ail",
+    "de": "Fan Ail",
+    "fr": "Fan Ail",
+    "jp": "ファン・アイル",
+    "cn": "凡·艾尔"
+  },
+  "Narrow-rift": {
+    "en": "Narrow-rift",
+    "de": "Enger Riss",
+    "fr": "Rift-étroit",
+    "jp": "ナロー＝リフト",
+    "cn": "狭缝"
+  },
+  "FATE Odin": {
+    "en": "Steel Reign",
+    "de": "Der dunkle Reiter",
+    "fr": "Défi\u0002\u001d\u0001\u0003: le Chevalier des ombres",
+    "jp": "古の闘神「オーディン」",
+    "cn": "上古斗神——奥丁"
+  },
+  "FATE Behemoth": {
+    "en": "He Taketh It with His Eyes",
+    "de": "Kein Weg zurück",
+    "fr": "Défi\u0002\u001d\u0001\u0003: contre-traque",
+    "jp": "手負いの魔獣「ベヒーモス」",
+    "cn": "受伤的魔兽贝希摩斯"
+  },
+  "FATE Noctilucale": {
+    "en": "Prey Online",
+    "de": "Ultima: Ein Prototyp tankt auf",
+    "fr": "Proto-Ultima\u0002\u001d\u0001\u0003: la menace surgie du passé",
+    "jp": "太古の脅威：ノクチルカ撃滅戦",
+    "cn": "太古威胁 夜光花歼灭战"
+  },
+  "FATE Coeurlregina": {
+    "en": "Coeurls Chase Boys Chase Coeurls",
+    "de": "Entmachtung der Königin",
+    "fr": "Défi\u0002\u001d\u0001\u0003: coeurls brisés",
+    "jp": "幻影の女王「クァールレギナ」",
+    "cn": "幻影女王——长须豹女王"
+  },
+  "FATE Ixion": {
+    "en": "A Horse Outside",
+    "de": "Höllenross",
+    "fr": "Défi\u0002\u001d\u0001\u0003: l'étalon survolté",
+    "jp": "伝説の雷馬「イクシオン」",
+    "cn": "传说中的雷马——伊克西翁"
+  },
+  "FATE Foxy Lady": {
+    "en": "Foxy Lady",
+    "de": "Fuchsige Dame",
+    "fr": "Défi\u0002\u001d\u0001\u0003: la renarde fait surface",
+    "jp": "九尾の妖狐「玉藻御前」",
+    "cn": "九尾妖狐玉藻御前"
+  },
+  "FATE Archaeotania": {
+    "en": "The Head, the Tail, the Whole Damned Thing",
+    "de": "Schrecken der Tiefsee Archaeotania: Die Bestie",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: bataille au sommet des fonds",
+    "jp": "厄災のアルケオタニア：深海の討伐戦",
+    "cn": "灾厄的古塔尼亚之深海讨伐战"
+  },
+  "FATE Formidable": {
+    "en": "A Finale Most Formidable",
+    "de": "Ein formidabler Kampf: Der Gigant",
+    "fr": "Formidable\u0002\u001d\u0001\u0003: l'arme secrète",
+    "jp": "激闘フォーミダブル：切り札起動",
+    "cn": "激斗畏惧装甲之秘密武器"
+  },
+  "FATE Daivadipa": {
+    "en": "Devout Pilgrims vs. Daivadipa",
+    "de": "Im Dienste der Mrga: Blasphemie",
+    "fr": "Le culte des Mrga\u0002\u001d\u0001\u0003: le faux dieu",
+    "jp": "ムリガ信仰：偽りの神",
+    "cn": "兽道诸神信仰：伪神降临"
+  },
+  "FATE Chi": {
+    "en": "Omicron Recall: Killing Order",
+    "de": "Aus dem Speicher von Chi: Zerstörung",
+    "fr": "Mémoire vive\u0002\u001d\u0001\u0003: arrêter le processus",
+    "jp": "カイのメモリーより：侵略兵器の破壊",
+    "cn": "侵略兵器召回指令：破坏侵略兵器希"
+  },
+  "FATE Behemoth Chain #1": {
+    "en": "Behold Now Behemoth",
+    "de": "Der legendäre Behemoth",
+    "fr": "Défi\u0002\u001d\u0001\u0003: l'ire du béhémoth",
+    "jp": "伝説の魔獣「ベヒーモス」",
+    "cn": "传说的魔兽——贝希摩斯"
+  },
+  "FATE Coeurlregina Chain #1": {
+    "en": "Long Live the Coeurl",
+    "de": "Angriff der Königin",
+    "fr": "Défi\u0002\u001d\u0001\u0003: mort à la reine des coeurls",
+    "jp": "雷獣の女王「クァールレギナ」",
+    "cn": "雷兽女王——长须豹女王"
+  },
+  "FATE Coeurlregina Chain #2": {
+    "en": "Coeurls Chase Boys",
+    "de": "Rückkehr der Königin",
+    "fr": "Défi\u0002\u001d\u0001\u0003: du coeurl à l'ouvrage",
+    "jp": "逆襲の女王「クァールレギナ」",
+    "cn": "逆袭女王——长须豹女王"
+  },
+  "FATE Foxy Lady Chain #1": {
+    "en": "Outfoxed",
+    "de": "Ausgefuchst",
+    "fr": "Rusera bien qui rusera le dernier",
+    "jp": "その名はミクズメ",
+    "cn": "其名为藻女"
+  },
+  "FATE Archaeotania Chain #1": {
+    "en": "Where Has the Dagon",
+    "de": "Schrecken der Tiefsee Archaeotania: Die jpgd beginnt",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: l'ouverture de la chasse",
+    "jp": "厄災のアルケオタニア：追跡開始",
+    "cn": "灾厄的古塔尼亚之开始追踪"
+  },
+  "FATE Archaeotania Chain #2": {
+    "en": "Ondo of Blood",
+    "de": "Schrecken der Tiefsee Archaeotania: Zumshs Ritual",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: Zumshs la terreur des abysses",
+    "jp": "厄災のアルケオタニア：ズムスィー登場",
+    "cn": "灾厄的古塔尼亚之兹姆嘶登场"
+  },
+  "FATE Archaeotania Chain #3": {
+    "en": "Lookin' Back on the Track",
+    "de": "Schrecken der Tiefsee Archaeotania: Luntenschwarm",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: oléofurors furax",
+    "jp": "厄災のアルケオタニア：テウスィー防衛",
+    "cn": "灾厄的古塔尼亚之保护提乌嘶"
+  },
+  "FATE Archaeotania Chain #4": {
+    "en": "Coral Support",
+    "de": "Schrecken der Tiefsee Archaeotania: Dunkle Grotten",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: expédition spéléologique",
+    "jp": "厄災のアルケオタニア：テウスィー護衛",
+    "cn": "灾厄的古塔尼亚之护卫提乌嘶"
+  },
+  "FATE Archaeotania Chain #5": {
+    "en": "Low Coral Fiber",
+    "de": "Schrecken der Tiefsee Archaeotania: Blutkorallen",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: pêche aux coraux",
+    "jp": "厄災のアルケオタニア：紅血珊瑚の収集",
+    "cn": "灾厄的古塔尼亚之收集红血珊瑚"
+  },
+  "FATE Archaeotania Chain #6": {
+    "en": "Nothing Like a Trappin' Life",
+    "de": "Schrecken der Tiefsee Archaeotania: Köder",
+    "fr": "L'annonciatrice du chaos\u0002\u001d\u0001\u0003: les rets de Zumshs",
+    "jp": "厄災のアルケオタニア：決戦の下準備",
+    "cn": "灾厄的古塔尼亚之准备决战"
+  },
+  "FATE Formidable Chain #1": {
+    "en": "Ironbeard Builders - Rebuilt",
+    "de": "Krieg der Baumeister: Konstruktionsphase",
+    "fr": "Bataille d'ingénieurs\u0002\u001d\u0001\u0003: automate en con\u0002\u0016\u0001\u0003struc\u0002\u0016\u0001\u0003tion",
+    "jp": "ビルドウォリアーズ：オートマトン製作",
+    "cn": "制作战士之自走人偶"
+  },
+  "FATE Formidable Chain #2": {
+    "en": "Ironbeard Builders - Resist",
+    "de": "Krieg der Baumeister: Testphase",
+    "fr": "Bataille d'ingénieurs\u0002\u001d\u0001\u0003: dernière mise au point",
+    "jp": "ビルドウォリアーズ：試作品実戦テスト",
+    "cn": "制作战士之实机测试"
+  },
+  "FATE Formidable Chain #3": {
+    "en": "Ironbeard Builders - Revolt",
+    "de": "Krieg der Baumeister: Duell der Giganten",
+    "fr": "Bataille d'ingénieurs\u0002\u001d\u0001\u0003: la lutte finale",
+    "jp": "ビルドウォリアーズ：没収試合",
+    "cn": "制作战士之不公平对决"
+  },
+  "FATE Formidable Chain #4": {
+    "en": "Foes Most Formidable",
+    "de": "Ein formidabler Kampf: Die Bedrohung",
+    "fr": "Formidable\u0002\u001d\u0001\u0003: la menace",
+    "jp": "激闘フォーミダブル：迫る脅威",
+    "cn": "激斗畏惧装甲之危险逼近"
+  },
+  "FATE Formidable Chain #5": {
+    "en": "A Family Most Formidable",
+    "de": "Ein formidabler Kampf: Ein finsterer Plan",
+    "fr": "Formidable\u0002\u001d\u0001\u0003: la filature",
+    "jp": "激闘動フォーミダブル：新たな情報",
+    "cn": "激斗畏惧装甲之新的情报"
+  },
+  "FATE Daivadipa Chain #1": {
+    "en": "Devout Pilgrims vs. the Jungle Lizards",
+    "de": "Im Dienste der Mrga: Pilger in Not",
+    "fr": "Le culte des Mrga\u0002\u001d\u0001\u0003: pélerin perdu",
+    "jp": "ムリガ信仰：迷える巡礼者",
+    "cn": "ムリガ信仰：迷える巡礼者"
+  },
+  "FATE Daivadipa Chain #2": {
+    "en": "Devout Pilgrims vs. the Apalala",
+    "de": "Im Dienste der Mrga: Stoßgebet",
+    "fr": "Le culte des Mrga\u0002\u001d\u0001\u0003: l'heure de la prière",
+    "jp": "ムリガ信仰：祈りの時",
+    "cn": "ムリガ信仰：祈りの時"
+  },
+  "FATE Chi Chain #1": {
+    "en": "Omicron Recall: Comms Expansion",
+    "de": "Aus dem Speicher von Chi: Aufrüstung des Kommunikators",
+    "fr": "Mémoire vive\u0002\u001d\u0001\u0003: mise à niveau",
+    "jp": "カイのメモリーより：通信機拡張",
+    "cn": "カイのメモリーより：通信機拡張"
+  },
+  "FATE Chi Chain #2": {
+    "en": "Omicron Recall: Secure Connection",
+    "de": "Aus dem Speicher von Chi: Gefahrenabwehr",
+    "fr": "Mémoire vive\u0002\u001d\u0001\u0003: pare-feu",
+    "jp": "カイのメモリーより：N-6205防衛",
+    "cn": "カイのメモリーより：N-6205防衛"
+  }
+}

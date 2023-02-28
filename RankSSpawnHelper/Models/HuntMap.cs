@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace RankSSpawnHelper.Models
 {
     public class SpawnPoints
     {
+        public string key;
+        public string reporter;
+        public bool verified;
         public float x;
         public float y;
-        public string key;
-        public bool verified;
-        public string reporter;
     }
 
     public class HuntMap

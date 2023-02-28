@@ -4,14 +4,14 @@ namespace RankSSpawnHelper
 {
     public class Configuration : IPluginConfiguration
     {
-        public int Version { get; set; } 
+        public int Version { get; set; }
 
         public void Save()
         {
             DalamudApi.Interface.SavePluginConfig(this);
         }
-        
-        #region Saved configuration values
+
+#region Saved configuration values
         // 农怪计数
         public bool TrackKillCount { get; set; } = true;
 
@@ -45,7 +45,7 @@ namespace RankSSpawnHelper
         public bool ReceiveAttempMessageFromOtherDc = false;
 
         public bool PlayerSearchTip = true;
-        
+
         public string PluginVersion = "";
 #endregion
     }

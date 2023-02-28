@@ -21,9 +21,11 @@ namespace RankSSpawnHelper.Features
     {
         private readonly Dictionary<ushort, string> _conditionName = new()
                                                                      {
+                                                                         { 961, "厄尔庇斯之鸟蛋" },
                                                                          { 959, "思考之物,彷徨之物,叹息之物" }, // 叹息海
                                                                          { 957, "毕舍遮,金刚尾,阿输陀花" }, // 萨维奈岛
                                                                          { 814, "矮人棉" },
+                                                                         { 813, "秧鸡胸脯肉" },
                                                                          { 817, "破裂的隆卡器皿,破裂的隆卡石蒺藜,破裂的隆卡人偶" }, // 拉凯提卡大森林
                                                                          { 621, ".*" }, // 湖区
                                                                          { 613, "无壳观梦螺,观梦螺" }, // 红玉海
@@ -181,7 +183,14 @@ namespace RankSSpawnHelper.Features
                 if (DalamudApi.ObjectTable.Any(i => i.IsValid() && _ssList.Contains(i.Name.TextValue)))
                     return;
 
-                if ((from obj in DalamudApi.ObjectTable where obj.IsValid() where !obj.IsDead where obj.ObjectKind == ObjectKind.BattleNpc select obj as BattleNpc into npc where npc.BattleNpcKind == BattleNpcSubKind.Enemy select npc).Any(npc => _ssList.Contains(npc.Name.TextValue)))
+                if ((from obj in DalamudApi.ObjectTable
+                     where obj.IsValid()
+                     where !obj.IsDead
+                     where obj.ObjectKind == ObjectKind.BattleNpc
+                     select obj as BattleNpc
+                     into npc
+                     where npc.BattleNpcKind == BattleNpcSubKind.Enemy
+                     select npc).Any(npc => _ssList.Contains(npc.Name.TextValue)))
                 {
                     return;
                 }
@@ -201,7 +210,7 @@ namespace RankSSpawnHelper.Features
                 }
 
                 // 如果没tracker就不发
-                if (!_networkedTracker.ContainsKey(currentInstance))
+                if (!_networkedTracker.ContainsKey(currentInstance) && territory != 961 && territory != 813)
                 {
                     return;
                 }
@@ -219,9 +228,11 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            var condition = targetName == ".*" ? "舍弃了" : "获得了";
 
-            var reg = Regex.Match(message.ToString(), $"{condition}“({targetName})”");
+            var msg       = message.TextValue;
+            var condition = targetName is ".*" or "秧鸡胸脯肉" or "厄尔庇斯之鸟蛋" ? "舍弃了" : "获得了";
+
+            var reg = Regex.Match(msg, $"{condition}“({targetName})”");
             if (!reg.Success)
             {
                 return;
@@ -235,6 +246,13 @@ namespace RankSSpawnHelper.Features
                              621 => "扔垃圾",
                              _   => targetName
                          };
+
+            if (territory == 961)
+            {
+                // check if the amount is 5 or not
+                if (!msg[..^1].EndsWith("5"))
+                    return;
+            }
 
             currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
             AddToTracker(currentInstance, targetName);

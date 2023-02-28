@@ -1,9 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Logging;
 using ImGuiScene;
@@ -30,6 +28,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
             {
                 v?.texture?.Dispose();
             }
+
             _textures.Clear();
         }
 
@@ -47,11 +46,11 @@ namespace RankSSpawnHelper.Managers.DataManagers
                              if (texture != null && texture.ImGuiHandle != IntPtr.Zero)
                              {
                                  PluginLog.Debug($"Added mapid: {map.RowId}");
-                                 _textures[map.RowId] = new MapTextureInfo()
+                                 _textures[map.RowId] = new MapTextureInfo
                                                         {
-                                                            texture = texture,
-                                                            size = new Vector2(texture.Width, texture.Height),
-                                                            mapId = map.RowId,
+                                                            texture   = texture,
+                                                            size      = new Vector2(texture.Width, texture.Height),
+                                                            mapId     = map.RowId,
                                                             territory = territory
                                                         };
                              }
@@ -71,10 +70,10 @@ namespace RankSSpawnHelper.Managers.DataManagers
         {
             return _textures.ContainsKey(map) ? _textures[map] : null;
         }
-        
+
         private static TextureWrap? GetTexture(string path)
         {
-            if (path[0] is not ('/' or '\\') && path[1] != ':') 
+            if (path[0] is not ('/' or '\\') && path[1] != ':')
                 return DalamudApi.DataManager.GetImGuiTexture(path);
             var texFile = DalamudApi.DataManager.GameData.GetFileFromDisk<TexFile>(path);
             return DalamudApi.DataManager.GetImGuiTexture(texFile);

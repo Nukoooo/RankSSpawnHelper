@@ -20,7 +20,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
             _instanceNumberAddress = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");
             if (_instanceNumberAddress == IntPtr.Zero)
                 PluginLog.Warning("InstanceNumberAddress is null");
-            _terr                  = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
+            _terr = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
         }
 
         public string GetCurrentTerritory()
@@ -29,7 +29,8 @@ namespace RankSSpawnHelper.Managers.DataManagers
             {
                 var instanceNumber = Marshal.ReadByte(_instanceNumberAddress, 0x20);
 
-                return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData?.Name + "@" + _terr.GetRow(DalamudApi.ClientState.TerritoryType)?.PlaceName.Value?.Name.ToDalamudString().TextValue +
+                return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData?.Name + "@" +
+                       _terr.GetRow(DalamudApi.ClientState.TerritoryType)?.PlaceName.Value?.Name.ToDalamudString().TextValue +
                        "@" + instanceNumber;
             }
             catch (Exception e)

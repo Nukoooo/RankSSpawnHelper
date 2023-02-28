@@ -7,9 +7,9 @@ namespace RankSSpawnHelper.Ui
     internal class Windows
     {
         public CounterWindow CounterWindow;
+        public HuntMapWindow HuntMapWindow;
         public ConfigWindow PluginWindow;
         public WeeEaWindow WeeEaWindow;
-        public HuntMapWindow HuntMapWindow;
 
         public Windows(ref WindowSystem windowSystem)
         {

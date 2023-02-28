@@ -5,16 +5,12 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
-using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using ImGuiNET;
-using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Attributes;
 using RankSSpawnHelper.Models;
 using RankSSpawnHelper.Ui;
@@ -66,7 +62,11 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [-] 尝试修复会出现两次触发消息/联网计数翻倍的BUG #2")
+                             new TextPayload("  [+] 增加了 戾虫以及俄菲翁尼厄斯 的计数\n"),
+                             new TextPayload("  [-] 聊天框显示点位的上限变成了5个\n"),
+                             new TextPayload("  [-] 更改Websocket的相关设置,尝试修复会接收两次消息的问题\n"),
+                             new UIForegroundPayload(0),
+                             new TextPayload("因为没仔细测试过这个更新,所以如果发现BUG可以到Github开issue或者私戳我")
                          });
         }
 

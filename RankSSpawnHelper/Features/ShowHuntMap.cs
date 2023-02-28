@@ -7,7 +7,6 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
-using ImGuiScene;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
@@ -47,13 +46,13 @@ namespace RankSSpawnHelper.Features
                          {
                              var territory = _territoryType.GetRow(k);
                              var mapRow    = territory.Map;
-                             if (mapRow == null) 
+                             if (mapRow == null)
                                  continue;
                              PluginLog.Debug($"Adding territory {k} | mapId: {territory.Map.Row}");
 
                              if (mapRow.Value == null)
                              {
-                                 PluginLog.Debug($"mapRow.Value null");
+                                 PluginLog.Debug("mapRow.Value null");
                                  continue;
                              }
 
@@ -102,7 +101,7 @@ namespace RankSSpawnHelper.Features
                 return;
 
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-            var split = currentInstance.Split('@');
+            var split           = currentInstance.Split('@');
             if (!int.TryParse(split[2], out var instance))
                 return;
 
@@ -113,13 +112,13 @@ namespace RankSSpawnHelper.Features
             }
 
             var payloads = new List<Payload>
-                                        {
-                                            new TextPayload($"{currentInstance} 的当前可触发点位:")
-                                        };
+                           {
+                               new TextPayload($"{currentInstance} 的当前可触发点位:")
+                           };
 
-            if (huntMaps.spawnPoints.Count > 7)
+            if (huntMaps.spawnPoints.Count > 5)
             {
-                payloads.Add(new TextPayload($"\n因为点位超过7个所以将会用界面显示."));
+                payloads.Add(new TextPayload("\n因为点位超过5个所以将会用界面显示."));
                 Plugin.Print(payloads);
 
                 var texture = GeTexture(currentTerritory);
@@ -162,11 +161,8 @@ namespace RankSSpawnHelper.Features
                 _shouldRequest = true;
                 return;
             }
-            
-            Task.Run(async () =>
-                     {
-                         await FetchAndPrint();
-                     });
+
+            Task.Run(async () => { await FetchAndPrint(); });
         }
     }
 }

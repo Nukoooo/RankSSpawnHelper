@@ -3,9 +3,9 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
-		<Version>1.2.2.4</Version>
+		<Version>1.2.2.5</Version>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
@@ -24,10 +24,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="Costura.Fody" Version="5.7.0">
-		  <PrivateAssets>all</PrivateAssets>
+			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="DalamudPackager" Version="2.1.8" />
-		<PackageReference Include="WatsonWebsocket" Version="4.0.6" />
+		<PackageReference Include="Websocket.Client" Version="4.6.1" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -67,18 +67,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Resource.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>Resource.resx</DependentUpon>
-	  </Compile>
+		<Compile Update="Resource.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resource.resx</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Update="Resource.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
+		<EmbeddedResource Update="Resource.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resource.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 	</ItemGroup>
 
 </Project>

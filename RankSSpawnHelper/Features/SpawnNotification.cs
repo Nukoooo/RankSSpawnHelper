@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using RankSSpawnHelper.Models;
 
@@ -112,13 +113,17 @@ namespace RankSSpawnHelper.Features
                          {
                              payloads.Add(new TextPayload("\n当前可触发概率: "));
                              payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
-                             payloads.Add(new TextPayload($"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
+                             payloads.Add(new
+                                              TextPayload($"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
                              payloads.Add(new UIForegroundPayload(0));
                          }
                          else
                          {
                              if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.SpawnableOnly)
+                             {
+                                 PluginLog.Debug("Not spawnable, ignoring");
                                  return;
+                             }
 
                              payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
                              payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
@@ -147,8 +152,7 @@ namespace RankSSpawnHelper.Features
         private enum SpawnNotificationType
         {
             Off,
-            SpawnableOnly,
-            All
+            SpawnableOnly
         }
     }
 }

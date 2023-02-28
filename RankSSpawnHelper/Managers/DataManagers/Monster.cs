@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Dalamud;
 using Dalamud.Logging;
@@ -24,10 +25,10 @@ namespace RankSSpawnHelper.Managers.DataManagers
     {
         private const string Url = "https://tracker-api.beartoolkit.com/";
         private readonly HttpClient _httpClient = new();
+        private readonly List<HuntStatus> _lastHuntStatus = new();
         private readonly List<SRankMonster> _sRankMonsters = new();
         private string _errorMessage = string.Empty;
         private FetchStatus _fetchStatus = FetchStatus.None;
-        private readonly List<HuntStatus> _lastHuntStatus = new();
 
         public Monster()
         {
@@ -134,8 +135,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
                          try
                          {
-                             var result  = _httpClient.GetAsync("https://tracker.beartoolkit.com/resources/hunt.json");
-                             var content = await result.Result.Content.ReadAsStringAsync();
+                             var content = Encoding.UTF8.GetString(Resource.hunt);
                              var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
 
                              foreach (var (key, value) in json)
@@ -170,7 +170,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
         {
             return _sRankMonsters.Where(i => i.id == id).Select(i => i.localizedName).First();
         }
-        
+
         public string GetErrorMessage()
         {
             return _errorMessage;
@@ -207,7 +207,11 @@ namespace RankSSpawnHelper.Managers.DataManagers
 
                          foreach (var body in servers.Select(server => new Dictionary<string, string>
                                                                        {
-                                                                           { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
+                                                                           {
+                                                                               "HuntName",
+                                                                               _sRankMonsters.Find(i => i.localizedName == monsterName).keyName +
+                                                                               (instance == 0 ? string.Empty : $" {instance}")
+                                                                           },
                                                                            { "WorldName", server }
                                                                        }))
                          {
@@ -227,10 +231,10 @@ namespace RankSSpawnHelper.Managers.DataManagers
                                  if (huntStatus != null)
                                  {
                                      huntStatus.localizedName =  monsterName;
-                                     huntStatus.expectMaxTime         /= 1000;
+                                     huntStatus.expectMaxTime /= 1000;
                                      huntStatus.expectMinTime /= 1000;
                                      huntStatus.instance      =  instance;
-                                     
+
                                      _lastHuntStatus.Add(huntStatus);
                                  }
                              }
