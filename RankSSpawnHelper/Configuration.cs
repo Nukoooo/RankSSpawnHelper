@@ -2,6 +2,20 @@
 
 namespace RankSSpawnHelper
 {
+    public enum SpawnNotificationType
+    {
+        Off = 0,
+        SpawnableOnly,
+        Full,
+    }
+
+    public enum AttemptMessageType
+    {
+        Off,
+        Basic,
+        Detailed
+    }
+
     public class Configuration : IPluginConfiguration
     {
         public int Version { get; set; }
@@ -31,7 +45,7 @@ namespace RankSSpawnHelper
         // 服务器信息显示几线
         public bool ShowInstance { get; set; } = false;
 
-        public int SpawnNotificationType { get; set; } = 0;
+        public SpawnNotificationType SpawnNotificationType { get; set; } = 0;
         public bool CoolDownNotificationSound { get; set; } = true;
 
         public bool AutoShowHuntMap { get; set; } = false;
@@ -40,6 +54,8 @@ namespace RankSSpawnHelper
         public uint FailedMessageColor { get; set; } = 518;
         public uint SpawnedMessageColor { get; set; } = 59;
         public uint HighlightColor { get; set; } = 71;
+
+        public AttemptMessageType AttemptMessage { get; set; } = AttemptMessageType.Detailed;
 
         public bool EnableAttemptMessagesFromOtherDcs = false;
         public bool ReceiveAttempMessageFromOtherDc = false;

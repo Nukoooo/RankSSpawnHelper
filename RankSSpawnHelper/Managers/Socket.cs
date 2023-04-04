@@ -50,7 +50,7 @@ namespace RankSSpawnHelper.Managers
 
         private void ClientState_OnLogout(object sender, EventArgs e)
         {
-            _client.Dispose();
+            _client?.Dispose();
             _userName = string.Empty;
             PluginLog.Debug("ClientState_OnLogout");
         }
@@ -77,11 +77,23 @@ namespace RankSSpawnHelper.Managers
                      {
                          try
                          {
+                             if (!DalamudApi.ClientState.IsLoggedIn)
+                             {
+                                 _client?.Dispose();
+                                 return;
+                             }
+
                              _client?.Dispose();
                              _userName = string.Empty;
 
                              while (_userName == string.Empty)
                              {
+                                 if (!DalamudApi.ClientState.IsLoggedIn)
+                                 {
+                                     _client?.Dispose();
+                                     return;
+                                 }
+
                                  _userName = Plugin.Managers.Data.Player.GetLocalPlayerName();
                                  await Task.Delay(500);
                              }
@@ -106,6 +118,7 @@ namespace RankSSpawnHelper.Managers
                                        };
                              _client.ReconnectionHappened.Subscribe(OnReconntion);
                              _client.MessageReceived.Subscribe(OnMessageReceived);
+                             _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
 // #if RELEASE
                              await _client.Start();
 // #endif
@@ -115,6 +128,13 @@ namespace RankSSpawnHelper.Managers
                              PluginLog.Debug(e, "Exception in Managers::Socket::Connect()");
                          }
                      });
+        }
+
+        private void OnDisconnectionHappened(DisconnectionInfo obj)
+        {
+            PluginLog.Debug($"Disconnection type: {obj.Type}");
+            if (!DalamudApi.ClientState.IsLoggedIn)
+                _client?.Dispose();
         }
 
         public bool Connected()
@@ -149,6 +169,8 @@ namespace RankSSpawnHelper.Managers
 
         private void OnReconntion(ReconnectionInfo args)
         {
+            PluginLog.Debug($"ReconnectionType: {args.Type}");
+
             _oldRangeModeState                  = Plugin.Configuration.TrackRangeMode;
             Plugin.Configuration.TrackRangeMode = false;
 
@@ -182,7 +204,7 @@ namespace RankSSpawnHelper.Managers
 
             if (!msg.StartsWith("{"))
             {
-                PluginLog.Error("Managers::Socket::OnMessageReceived. Not a valid json format message");
+                PluginLog.Error($"Managers::Socket::OnMessageReceived. Not a valid json format message. {msg}");
                 return;
             }
 
@@ -191,6 +213,9 @@ namespace RankSSpawnHelper.Managers
             try
             {
                 var result = JsonConvert.DeserializeObject<ReceivedMessage>(msg);
+
+                if (result == null) 
+                    return;
 
                 switch (result.Type)
                 {
@@ -208,13 +233,16 @@ namespace RankSSpawnHelper.Managers
                     }
                     case "Attempt":
                     {
+                        var message  = result.Message;
+                        var instance = message[..message.IndexOf(message.Contains(" 寄了.") ? " 寄了." : " 出货了.")];
+                        Plugin.Features.Counter.RemoveInstance(instance);
+
                         if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
                             return;
 
                         if (DalamudApi.Condition[ConditionFlag.BoundByDuty])
                             return;
 
-                        var message     = result.Message;
                         var serverName  = message[..message.IndexOf('@')];
                         var shouldPrint = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
 
@@ -235,6 +263,8 @@ namespace RankSSpawnHelper.Managers
                     }
                     case "ggnore":
                     {
+                        if (Plugin.Configuration.AttemptMessage <= AttemptMessageType.Off)
+                            return;
                         var localTime = DateTimeOffset.FromUnixTimeSeconds(result.Time).LocalDateTime;
 
                         var color = (ushort)(result.Failed ? Plugin.Configuration.FailedMessageColor : Plugin.Configuration.SpawnedMessageColor);
@@ -255,6 +285,10 @@ namespace RankSSpawnHelper.Managers
 
                         payloads.Add(new UIForegroundPayload(0));
 
+                        if (Plugin.Configuration.AttemptMessage == AttemptMessageType.Basic)
+                            goto end;
+                        
+
                         payloads.Add(new TextPayload("人数详情:\n"));
                         payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
 
@@ -269,7 +303,7 @@ namespace RankSSpawnHelper.Managers
 
                         payloads.Add(new UIForegroundPayload(0));
 
-                        if (result.Failed)
+                        if (result.Failed && result.Leader != "null")
                         {
                             payloads.Add(new TextPayload("\n喊寄的人: "));
                             payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
@@ -285,7 +319,7 @@ namespace RankSSpawnHelper.Managers
                                 payloads.Add(new TextPayload("\n当前可触发概率: "));
                                 payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
                                 payloads.Add(new TextPayload(
-                                                             $"{100 * ((result.Time - result.ExpectMinTime) / (double)(result.ExpectMaxTime - result.ExpectMinTime)):F1}%"));
+                                                             $"{100 * ((result.Time - result.ExpectMinTime) / (double)(result.ExpectMaxTime - result.ExpectMinTime)):F2}%\n"));
                                 payloads.Add(new UIForegroundPayload(0));
                             }
                             else
@@ -295,25 +329,23 @@ namespace RankSSpawnHelper.Managers
                                 var minTime = DateTimeOffset.FromUnixTimeSeconds(result.ExpectMinTime);
                                 var delta   = (minTime - localTime).TotalMinutes;
 
-                                payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
+                                payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟\n"));
                                 payloads.Add(new UIForegroundPayload(0));
                             }
                         }
 
-                        payloads.Add(new TextPayload("\n\nPS: 本消息已复制到粘贴板\nPSS:以上数据仅供参考"));
+                    end:
+                        payloads.Add(new UIForegroundPayload(0));
+                        payloads.Add(new TextPayload("\nPS: 本消息已复制到粘贴板\nPSS:以上数据仅供参考"));
 
                         var chatMessage = payloads.Where(payload => payload.Type == PayloadType.RawText)
                                                   .Aggregate<Payload, string>(null, (current, payload) => current + ((TextPayload)payload).Text);
                         Plugin.Managers.Data.Player.SetLastAttempMessage(new Tuple<SeString, string>(new SeString(payloads), chatMessage));
 
-                        payloads.Add(new TextPayload("\nPSSS:本区域的计数器已清零"));
                         payloads.Add(new UIForegroundPayload(0));
 
                         Plugin.Features.Counter.RemoveInstance(result.Instance);
-                        DalamudApi.ChatGui.PrintChat(new XivChatEntry
-                                                     {
-                                                         Message = new SeString(payloads)
-                                                     });
+                        Plugin.Print(payloads);
 
                         ImGui.SetClipboardText(chatMessage);
 

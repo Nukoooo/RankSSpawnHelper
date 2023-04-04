@@ -24,6 +24,7 @@ namespace RankSSpawnHelper.Ui.Window
         private readonly List<string> _expansions = new() { "2.0", "3.0", "4.0", "5.0", "6.0" };
 
         private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
+        private readonly string[] _attemptMessageDisplayType = { "不显示", "简单", "详细" };
         private ColorPickerType _colorPickerType = ColorPickerType.Failed;
 
         private TextureWrap _image;
@@ -152,6 +153,14 @@ namespace RankSSpawnHelper.Ui.Window
             if (ImGui.Checkbox("窗口自动调整大小", ref autoResize))
             {
                 Plugin.Configuration.TrackerAutoResize = autoResize;
+                Plugin.Configuration.Save();
+            }
+
+            ImGui.SetNextItemWidth(90);
+            var attemptMessageType = (int)Plugin.Configuration.AttemptMessage;
+            if (ImGui.Combo("触发消息显示", ref attemptMessageType, _attemptMessageDisplayType, _attemptMessageDisplayType.Length))
+            {
+                Plugin.Configuration.AttemptMessage = (AttemptMessageType)attemptMessageType;
                 Plugin.Configuration.Save();
             }
 
@@ -382,14 +391,15 @@ namespace RankSSpawnHelper.Ui.Window
             }
 
             ImGui.SetNextItemWidth(100);
-            var spawnNotificationType = Plugin.Configuration.SpawnNotificationType;
+            // Fuck C#
+            var spawnNotificationType = (int)Plugin.Configuration.SpawnNotificationType;
             if (ImGui.Combo("触发概率提示", ref spawnNotificationType, _spawnNotificationType, _spawnNotificationType.Length))
             {
-                Plugin.Configuration.SpawnNotificationType = spawnNotificationType;
+                Plugin.Configuration.SpawnNotificationType = (SpawnNotificationType)spawnNotificationType;
                 Plugin.Configuration.Save();
             }
 
-            if (Plugin.Configuration.SpawnNotificationType == 2)
+            if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.Full)
             {
                 ImGui.SameLine();
                 var coolDownNotificationSound = Plugin.Configuration.CoolDownNotificationSound;
@@ -399,7 +409,7 @@ namespace RankSSpawnHelper.Ui.Window
                     Plugin.Configuration.Save();
                 }
             }
-
+            
             var autoShowHuntMap = Plugin.Configuration.AutoShowHuntMap;
             if (ImGui.Checkbox("自动获取点位列表", ref autoShowHuntMap))
             {

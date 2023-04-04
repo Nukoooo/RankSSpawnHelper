@@ -28,6 +28,10 @@ namespace RankSSpawnHelper
         {
             pi.Create<DalamudApi>();
             pi.Create<Plugin>();
+
+            // Load all of our commands
+            _commandManager = new PluginCommandManager<EntryPoint>(this);
+
             _assembly = Assembly.GetExecutingAssembly();
             _context  = AssemblyLoadContext.GetLoadContext(_assembly);
             DalamudApi.Interface.Inject(this, Array.Empty<object>());
@@ -47,9 +51,6 @@ namespace RankSSpawnHelper
             DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
             DalamudApi.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
 
-            // Load all of our commands
-            _commandManager = new PluginCommandManager<EntryPoint>(this);
-
             var pluginVersion = _assembly.GetName().Version.ToString();
 
 #if RELEASE
@@ -62,11 +63,9 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [+] 增加了 戾虫以及俄菲翁尼厄斯 的计数\n"),
-                             new TextPayload("  [-] 聊天框显示点位的上限变成了5个\n"),
-                             new TextPayload("  [-] 更改Websocket的相关设置,尝试修复会接收两次消息的问题\n"),
-                             new UIForegroundPayload(0),
-                             new TextPayload("因为没仔细测试过这个更新,所以如果发现BUG可以到Github开issue或者私戳我")
+                             new TextPayload("  [+] 现在如果用户本地有计数,在服务器下发触发成功/失败的消息时将会清除对应的计数\n"),
+                             new TextPayload("  [+] 增加了触发消息的显示类型(不显示/简单/详情)\n"),
+                             new TextPayload("  [-] 尝试修复连接上服务器后立马断开连接的问题"),
                          });
         }
 

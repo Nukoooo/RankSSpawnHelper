@@ -119,7 +119,7 @@ namespace RankSSpawnHelper.Features
                          }
                          else
                          {
-                             if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.SpawnableOnly)
+                             if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.SpawnableOnly)
                              {
                                  PluginLog.Debug("Not spawnable, ignoring");
                                  return;
@@ -149,10 +149,5 @@ namespace RankSSpawnHelper.Features
                      });
         }
 
-        private enum SpawnNotificationType
-        {
-            Off,
-            SpawnableOnly
-        }
     }
 }
