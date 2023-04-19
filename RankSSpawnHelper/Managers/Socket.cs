@@ -50,7 +50,17 @@ namespace RankSSpawnHelper.Managers
 
         private void ClientState_OnLogout(object sender, EventArgs e)
         {
-            _client?.Dispose();
+            async Task Function()
+            {
+                if (_client == null) return;
+
+                await _client.Stop(WebSocketCloseStatus.NormalClosure, "Logout");
+                await Task.Delay(100);
+                _client.Dispose();
+            }
+
+            Task.Run(Function);
+            // _client?.Dispose();
             _userName = string.Empty;
             PluginLog.Debug("ClientState_OnLogout");
         }
@@ -119,9 +129,7 @@ namespace RankSSpawnHelper.Managers
                              _client.ReconnectionHappened.Subscribe(OnReconntion);
                              _client.MessageReceived.Subscribe(OnMessageReceived);
                              _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
-// #if RELEASE
                              await _client.Start();
-// #endif
                          }
                          catch (Exception e)
                          {

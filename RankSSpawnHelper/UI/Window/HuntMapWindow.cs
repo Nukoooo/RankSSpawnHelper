@@ -38,7 +38,6 @@ namespace RankSSpawnHelper.UI.Window
                 {
                     var textureCoord = _currentMapTexture.GetTexturePosition(new Vector2(spawnPoint.x, spawnPoint.y));
                     var selected     = spawnPoint.key == _selectedSpawnPoint;
-
                     ImGui.GetWindowDrawList().AddCircleFilled(cursorScreenPos + textureCoord, 5, ImGui.GetColorU32(new Vector4(0, 0, 0, 1)));
                     ImGui.GetWindowDrawList().AddCircleFilled(cursorScreenPos + textureCoord, 4, ImGui.GetColorU32(new Vector4(selected ? 1 : 0, selected ? 215.0f / 255.0f : 1, 0, 1)));
                 }

@@ -63,9 +63,7 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [+] 现在如果用户本地有计数,在服务器下发触发成功/失败的消息时将会清除对应的计数\n"),
-                             new TextPayload("  [+] 增加了触发消息的显示类型(不显示/简单/详情)\n"),
-                             new TextPayload("  [-] 尝试修复连接上服务器后立马断开连接的问题"),
+                             new TextPayload("  [-] 修复在返回标题页面的时候会导致游戏卡死的问题"),
                          });
         }
 
