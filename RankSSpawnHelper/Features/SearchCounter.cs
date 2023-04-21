@@ -14,9 +14,18 @@ namespace RankSSpawnHelper.Features
     {
         private readonly List<ulong> _playerIds = new();
         private int _searchCount;
+        private readonly IntPtr rdataBegin = IntPtr.Zero;
+        private readonly IntPtr rdataEnd = IntPtr.Zero;
 
         public SearchCounter()
         {
+            rdataBegin = DalamudApi.SigScanner.RDataSectionBase;
+            rdataEnd   = DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize;
+            PluginLog.Debug($".data begin: {DalamudApi.SigScanner.DataSectionBase:X}, end: {DalamudApi.SigScanner.DataSectionBase + DalamudApi.SigScanner.DataSectionSize:X}, offset: {DalamudApi.SigScanner.DataSectionOffset}");
+            PluginLog.Debug($".rdata begin: {DalamudApi.SigScanner.RDataSectionBase:X}, end: {DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize:X}, offset: {DalamudApi.SigScanner.RDataSectionOffset}");
+            PluginLog.Debug($".text begin: {DalamudApi.SigScanner.TextSectionBase:X}, end: {DalamudApi.SigScanner.TextSectionBase + DalamudApi.SigScanner.TextSectionSize:X}, offset: {DalamudApi.SigScanner.TextSectionOffset}");
+            PluginLog.Debug($"{DalamudApi.SigScanner.SearchBase:X}");
+
             SignatureHelper.Initialise(this);
             ProcessSocailListPacket.Enable();
             DalamudApi.Condition.ConditionChange += Condition_ConditionChange;
@@ -65,7 +74,11 @@ namespace RankSSpawnHelper.Features
                 PluginLog.Debug($"TerritoryId: {playerEntry.territoryType} | PlayerUniqueId: {playerEntry.Id:X}");
             }
 
-            if (original == (IntPtr)1) 
+            PluginLog.Debug($"{original:X} | {packetData:X}");
+
+            // sometimes original would be at .rdata section
+            // so we are gonna skip that
+            if (original == (IntPtr)1 || (original >= (nint?)rdataBegin && original <= (nint?)rdataEnd))
                 return original;
 
             _searchCount++;
@@ -112,13 +125,13 @@ namespace RankSSpawnHelper.Features
         [StructLayout(LayoutKind.Sequential, Size = 896)]
         public struct SocialList
         {
-            public ulong CommunityID;
-            public ushort NextIndex;
-            public ushort Index;
-            public byte ListType;
-            public byte RequestKey;
-            public byte RequestParam;
-            public byte __padding1;
+            public ulong CommunityID; // 0
+            public ushort NextIndex; // 8
+            public ushort Index; // 10
+            public byte ListType; // 12
+            public byte RequestKey; // 13
+            public byte RequestParam; // 14
+            public byte __padding1; // 15
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
             public SearchPlayerEntry[] entries;

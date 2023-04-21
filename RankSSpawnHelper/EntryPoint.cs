@@ -63,7 +63,7 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [-] 修复在返回标题页面的时候会导致游戏卡死的问题"),
+                             new TextPayload("  [-] 尝试修复在某种不可描述的情况下,玩家搜索提示会在搜索时出现的BUG"),
                          });
         }
 
