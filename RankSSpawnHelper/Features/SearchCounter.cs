@@ -14,13 +14,13 @@ namespace RankSSpawnHelper.Features
     {
         private readonly List<ulong> _playerIds = new();
         private int _searchCount;
-        private readonly IntPtr rdataBegin = IntPtr.Zero;
-        private readonly IntPtr rdataEnd = IntPtr.Zero;
+        private readonly IntPtr _rdataBegin = IntPtr.Zero;
+        private readonly IntPtr _rdataEnd = IntPtr.Zero;
 
         public SearchCounter()
         {
-            rdataBegin = DalamudApi.SigScanner.RDataSectionBase;
-            rdataEnd   = DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize;
+            _rdataBegin = DalamudApi.SigScanner.RDataSectionBase;
+            _rdataEnd   = DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize;
             PluginLog.Debug($".data begin: {DalamudApi.SigScanner.DataSectionBase:X}, end: {DalamudApi.SigScanner.DataSectionBase + DalamudApi.SigScanner.DataSectionSize:X}, offset: {DalamudApi.SigScanner.DataSectionOffset}");
             PluginLog.Debug($".rdata begin: {DalamudApi.SigScanner.RDataSectionBase:X}, end: {DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize:X}, offset: {DalamudApi.SigScanner.RDataSectionOffset}");
             PluginLog.Debug($".text begin: {DalamudApi.SigScanner.TextSectionBase:X}, end: {DalamudApi.SigScanner.TextSectionBase + DalamudApi.SigScanner.TextSectionSize:X}, offset: {DalamudApi.SigScanner.TextSectionOffset}");
@@ -74,11 +74,11 @@ namespace RankSSpawnHelper.Features
                 PluginLog.Debug($"TerritoryId: {playerEntry.territoryType} | PlayerUniqueId: {playerEntry.Id:X}");
             }
 
-            PluginLog.Debug($"{original:X} | {packetData:X}");
+            PluginLog.Information($"{original:X} | {packetData:X}");
 
             // sometimes original would be at .rdata section
             // so we are gonna skip that
-            if (original == (IntPtr)1 || (original >= (nint?)rdataBegin && original <= (nint?)rdataEnd))
+            if (original == (IntPtr)1 || (original >= (nint?)_rdataBegin && original <= (nint?)_rdataEnd))
                 return original;
 
             _searchCount++;

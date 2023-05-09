@@ -62,7 +62,7 @@ namespace RankSSpawnHelper.Managers
             Task.Run(Function);
             // _client?.Dispose();
             _userName = string.Empty;
-            PluginLog.Debug("ClientState_OnLogout");
+            PluginLog.Information("ClientState_OnLogout");
         }
 
         public void Dispose()
