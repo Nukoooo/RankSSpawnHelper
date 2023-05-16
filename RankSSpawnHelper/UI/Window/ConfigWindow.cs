@@ -82,10 +82,10 @@ namespace RankSSpawnHelper.Ui.Window
                                "    - 游戏ID以及所在的服务器, 如 Deez Nuts@Siren\n" +
                                "    - 当前所在区域, 如: 海猫茶屋@叹息海@0\n" +
                                "    - 计数的数量&名字, 如: 矮人棉: 50, 彷徨之物: 12\n" +
-                               "    - 开始计数的时间, 如: 1667166428\n");
+                               "    - 开始计数的时间戳, 如: 1667166428\n");
 
                     if (_image != null)
-                        ImGui.Image(_image.ImGuiHandle, new Vector2(_image.Width, _image.Height));
+                        ImGui.Image(_image.ImGuiHandle, new Vector2(_image.Width, _image.Height) / 1.5f);
 
                     ImGui.EndTabItem();
                 }
