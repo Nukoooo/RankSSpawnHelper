@@ -30,7 +30,7 @@ namespace RankSSpawnHelper.Managers
 
             if (!File.Exists(fontName))
             {
-                PluginLog.Error($"找不到黑字体. 尝试搜寻的路径: {fontName}");
+                PluginLog.Error($"找不到字体 \"NotoSansCJKsc-Medium.otf\". 尝试搜寻的路径: {fontName}");
                 return;
             }
 

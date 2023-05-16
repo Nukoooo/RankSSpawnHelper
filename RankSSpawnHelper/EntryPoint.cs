@@ -63,7 +63,13 @@ namespace RankSSpawnHelper
                          {
                              new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                              new UIForegroundPayload(35),
-                             new TextPayload("  [-] 更新到API8"),
+                             new TextPayload("  [-] 加上去年忘了加的检查\n"),
+                             new TextPayload("  [-] 删掉一些没用的代码\n"),
+                             new TextPayload("  [-] .NET7-ize\n"),
+                             new TextPayload("  [-] 缩短了一些CD间隔\n"),
+                             new TextPayload("  [-] 稍微优化了一点点性能\n"),
+                             new UIForegroundPayload(0),
+                             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
                          });
         }
 
@@ -153,6 +159,7 @@ namespace RankSSpawnHelper
             }
         }
 
+#if DEBUG
         [Command("/ggnore")]
         [HelpMessage("触发失败,寄了")]
         public void AttempFailed_1(string cmd, string args)
@@ -207,6 +214,7 @@ namespace RankSSpawnHelper
                                                    Failed      = true
                                                });
         }
+#endif
 #endregion
 
 #region IDisposable Support

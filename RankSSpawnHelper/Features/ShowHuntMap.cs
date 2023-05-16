@@ -162,7 +162,7 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            Task.Run(async () => { await FetchAndPrint(); });
+            Task.Run(FetchAndPrint);
         }
     }
 }

@@ -266,9 +266,10 @@ namespace RankSSpawnHelper.Features
 
             // 死亡事件
             if (type != 6)
-            {
                 return;
-            }
+
+            if (DalamudApi.ClientState.TerritoryType is 961 or 813 or 621)
+                return;
 
             var target       = DalamudApi.ObjectTable.SearchById(entityId);
             var sourceTarget = DalamudApi.ObjectTable.SearchById(direct);
@@ -302,7 +303,7 @@ namespace RankSSpawnHelper.Features
                 return;
             }
 
-            if (!name.Contains(targetName.ToString()))
+            if (!name.Equals(targetName.ToString()))
                 return;
 
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();

@@ -148,6 +148,5 @@ namespace RankSSpawnHelper.Features
                              await Plugin.Features.ShowHuntMap.FetchAndPrint();
                      });
         }
-
     }
 }

@@ -91,7 +91,7 @@ namespace RankSSpawnHelper.UI.Window
                     {
                         var textToDraw = $"\t{subK} - {subV}";
 
-                        if (connected && localTracker.ContainsKey(k) && localTracker[k].counter.TryGetValue(subK, out var localValue))
+                        if (connected && localTracker.TryGetValue(k, out var val) && val.counter.TryGetValue(subK, out var localValue))
                             textToDraw += $" ({localValue})";
 
                         ImGui.Text(textToDraw);
@@ -126,7 +126,7 @@ namespace RankSSpawnHelper.UI.Window
             territory = split[1];
             instance  = split[2] == "0" ? string.Empty : $" - {split[2]}线";
 
-            if (ImGui.Button("[ 寄了点我 ]"))
+            if (ImGui.Button("[ 寄了点我 ]##only_show_single_instance"))
             {
                 if (DateTime.Now > _nextClickTime)
                 {
@@ -166,7 +166,7 @@ namespace RankSSpawnHelper.UI.Window
                         Plugin.Features.Counter.RemoveInstance(currentInstance);
                     }
 
-                    _nextClickTime = DateTime.Now.AddMinutes(1);
+                    _nextClickTime = DateTime.Now.AddSeconds(15);
                 }
                 else
                 {
@@ -189,7 +189,7 @@ namespace RankSSpawnHelper.UI.Window
             {
                 var textToDraw = $"\t{subKey} - {subValue}";
 
-                if (connected && localTracker.ContainsKey(currentInstance) && localTracker[currentInstance].counter.TryGetValue(subKey, out var localValue))
+                if (connected && localTracker.TryGetValue(currentInstance, out var v) && v.counter.TryGetValue(subKey, out var localValue))
                     textToDraw += $" ({localValue})";
 
                 ImGui.Text(textToDraw);

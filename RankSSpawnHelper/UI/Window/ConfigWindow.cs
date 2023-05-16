@@ -11,6 +11,7 @@ using Dalamud.Logging;
 using ImGuiNET;
 using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
+using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
 
@@ -19,12 +20,12 @@ namespace RankSSpawnHelper.Ui.Window
     public class ConfigWindow : Dalamud.Interface.Windowing.Window
     {
         private const ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
+        private readonly string[] _attemptMessageDisplayType = { "不显示", "简单", "详细" };
 
         private readonly List<ColorInfo> _colorInfos = new();
         private readonly List<string> _expansions = new() { "2.0", "3.0", "4.0", "5.0", "6.0" };
 
         private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
-        private readonly string[] _attemptMessageDisplayType = { "不显示", "简单", "详细" };
         private ColorPickerType _colorPickerType = ColorPickerType.Failed;
 
         private TextureWrap _image;
@@ -409,7 +410,7 @@ namespace RankSSpawnHelper.Ui.Window
                     Plugin.Configuration.Save();
                 }
             }
-            
+
             var autoShowHuntMap = Plugin.Configuration.AutoShowHuntMap;
             if (ImGui.Checkbox("自动获取点位列表", ref autoShowHuntMap))
             {
@@ -585,7 +586,7 @@ namespace RankSSpawnHelper.Ui.Window
                              await Task.Delay(100);
                          }
 
-                         _servers = Plugin.Managers.Data.GetServers();
+                         _servers = Data.GetServers();
                      });
         }
 

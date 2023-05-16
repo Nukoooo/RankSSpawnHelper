@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ImGuiNET;
@@ -21,7 +20,7 @@ namespace RankSSpawnHelper.UI.Window
 
         public override void PreOpenCheck()
         {
-            if (_currentMapTexture?.texture == null || _currentMapTexture.texture.ImGuiHandle == IntPtr.Zero)
+            if (_currentMapTexture?.texture == null || _currentMapTexture.texture.ImGuiHandle == nint.Zero)
             {
                 IsOpen = false;
             }

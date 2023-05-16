@@ -32,7 +32,7 @@ namespace RankSSpawnHelper.UI.Window
             var count2 = 0;
 
             var enumerator = DalamudApi.ObjectTable.Where(i =>
-                                                              i != null && i.Address != IntPtr.Zero &&
+                                                              i != null && i.Address != nint.Zero &&
                                                               i is Npc &&
                                                               i.ObjectKind == ObjectKind.Companion);
 
@@ -67,7 +67,7 @@ namespace RankSSpawnHelper.UI.Window
 
                         if (!_dateTimes.ContainsKey(currentInstance))
                         {
-                            _dateTimes.Add(currentInstance, DateTime.Now + FromMinutes(30.0));
+                            _dateTimes.Add(currentInstance, DateTime.Now + FromMinutes(15.0));
                             Plugin.Managers.Socket.SendMessage(new NetMessage
                                                                {
                                                                    Type        = "WeeEa",

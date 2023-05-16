@@ -6,7 +6,7 @@ namespace RankSSpawnHelper
     {
         Off = 0,
         SpawnableOnly,
-        Full,
+        Full
     }
 
     public enum AttemptMessageType

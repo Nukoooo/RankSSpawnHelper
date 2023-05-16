@@ -4,7 +4,7 @@ namespace RankSSpawnHelper.Models
 {
     public class UserCounter
     {
-        public Dictionary<string, int> Counter;
+        public Dictionary<string, int> Counter = null;
         public int TotalCount;
         public string UserName;
     }

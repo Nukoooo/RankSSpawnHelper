@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Logging;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
@@ -11,15 +10,10 @@ namespace RankSSpawnHelper.Managers.DataManagers
 {
     internal class Player
     {
-        private readonly IntPtr _instanceNumberAddress;
         private readonly ExcelSheet<TerritoryType> _terr;
-        private Tuple<SeString, string> _lastAttempMessage = new(new SeString(), string.Empty);
 
         public Player()
         {
-            _instanceNumberAddress = DalamudApi.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 80 BD");
-            if (_instanceNumberAddress == IntPtr.Zero)
-                PluginLog.Warning("InstanceNumberAddress is null");
             _terr = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
         }
 
@@ -27,7 +21,7 @@ namespace RankSSpawnHelper.Managers.DataManagers
         {
             try
             {
-                var instanceNumber = Marshal.ReadByte(_instanceNumberAddress, 0x20);
+                var instanceNumber = GetCurrentInstance();
 
                 return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData?.Name + "@" +
                        _terr.GetRow(DalamudApi.ClientState.TerritoryType)?.PlaceName.Value?.Name.ToDalamudString().TextValue +
@@ -40,11 +34,11 @@ namespace RankSSpawnHelper.Managers.DataManagers
             }
         }
 
-        public int GetCurrentInstance()
+        public unsafe int GetCurrentInstance()
         {
             try
             {
-                return Marshal.ReadByte(_instanceNumberAddress, 0x20);
+                return UIState.Instance()->AreaInstance.Instance;
             }
             catch
             {
@@ -58,16 +52,6 @@ namespace RankSSpawnHelper.Managers.DataManagers
                 return string.Empty;
 
             return $"{DalamudApi.ClientState.LocalPlayer.Name}@{DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.Name}";
-        }
-
-        /*public Tuple<SeString, string> GetLastAttempMessage()
-        {
-            return _lastAttempMessage;
-        }*/
-
-        public void SetLastAttempMessage(Tuple<SeString, string> msg)
-        {
-            _lastAttempMessage = msg;
         }
     }
 }

@@ -13,9 +13,9 @@ namespace RankSSpawnHelper.Features
     internal class SearchCounter : IDisposable
     {
         private readonly List<ulong> _playerIds = new();
+        private readonly nint _rdataBegin;
+        private readonly nint _rdataEnd;
         private int _searchCount;
-        private readonly IntPtr _rdataBegin = IntPtr.Zero;
-        private readonly IntPtr _rdataEnd = IntPtr.Zero;
 
         public SearchCounter()
         {
@@ -51,7 +51,7 @@ namespace RankSSpawnHelper.Features
             _searchCount = 0;
         }
 
-        private IntPtr Detour_ProcessSocialListPacket(IntPtr a1, IntPtr packetData)
+        private nint Detour_ProcessSocialListPacket(nint a1, nint packetData)
         {
             var original         = ProcessSocailListPacket.Original(a1, packetData);
             var socialListStruct = Marshal.PtrToStructure<SocialList>(packetData);
@@ -78,7 +78,7 @@ namespace RankSSpawnHelper.Features
 
             // sometimes original would be at .rdata section
             // so we are gonna skip that
-            if (original == (IntPtr)1 || (original >= (nint?)_rdataBegin && original <= (nint?)_rdataEnd))
+            if (original == 1 || (original >= (nint?)_rdataBegin && original <= (nint?)_rdataEnd))
                 return original;
 
             _searchCount++;
@@ -137,6 +137,6 @@ namespace RankSSpawnHelper.Features
             public SearchPlayerEntry[] entries;
         }
 
-        private delegate IntPtr ProcessSocialListPacketDelegate(IntPtr a1, IntPtr packetData);
+        private delegate nint ProcessSocialListPacketDelegate(nint a1, nint packetData);
     }
 }

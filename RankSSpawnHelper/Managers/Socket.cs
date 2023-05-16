@@ -5,11 +5,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
-using Dalamud.Utility;
 using ImGuiNET;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Models;
@@ -108,7 +106,7 @@ namespace RankSSpawnHelper.Managers
                                  await Task.Delay(500);
                              }
 
-                             _servers = Plugin.Managers.Data.GetServers();
+                             _servers = Data.GetServers();
 
                              _client = new WebsocketClient(new Uri(url), () =>
                                                                          {
@@ -222,7 +220,7 @@ namespace RankSSpawnHelper.Managers
             {
                 var result = JsonConvert.DeserializeObject<ReceivedMessage>(msg);
 
-                if (result == null) 
+                if (result == null)
                     return;
 
                 switch (result.Type)
@@ -242,7 +240,7 @@ namespace RankSSpawnHelper.Managers
                     case "Attempt":
                     {
                         var message  = result.Message;
-                        var instance = message[..message.IndexOf(message.Contains(" 寄了.") ? " 寄了." : " 出货了.")];
+                        var instance = message[..message.IndexOf(message.Contains(" 寄了.") ? " 寄了." : " 出货了.", StringComparison.Ordinal)];
                         Plugin.Features.Counter.RemoveInstance(instance);
 
                         if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
@@ -295,7 +293,7 @@ namespace RankSSpawnHelper.Managers
 
                         if (Plugin.Configuration.AttemptMessage == AttemptMessageType.Basic)
                             goto end;
-                        
+
 
                         payloads.Add(new TextPayload("人数详情:\n"));
                         payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
@@ -303,6 +301,8 @@ namespace RankSSpawnHelper.Managers
                         foreach (var userCounter in result.UserCounter)
                         {
                             payloads.Add(new TextPayload($"    {userCounter.UserName}: {userCounter.TotalCount}\n"));
+                            if (userCounter.Counter is not { Count: > 1 }) 
+                                continue;
                             foreach (var (k, v) in userCounter.Counter)
                             {
                                 payloads.Add(new TextPayload($"        {k}: {v}\n"));
@@ -348,7 +348,6 @@ namespace RankSSpawnHelper.Managers
 
                         var chatMessage = payloads.Where(payload => payload.Type == PayloadType.RawText)
                                                   .Aggregate<Payload, string>(null, (current, payload) => current + ((TextPayload)payload).Text);
-                        Plugin.Managers.Data.Player.SetLastAttempMessage(new Tuple<SeString, string>(new SeString(payloads), chatMessage));
 
                         payloads.Add(new UIForegroundPayload(0));
 
