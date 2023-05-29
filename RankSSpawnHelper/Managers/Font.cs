@@ -3,49 +3,53 @@ using System.IO;
 using Dalamud.Logging;
 using ImGuiNET;
 
-namespace RankSSpawnHelper.Managers
+namespace RankSSpawnHelper.Managers;
+
+internal class Font : IDisposable
 {
-    internal class Font : IDisposable
+    private bool _fontBuilt;
+
+    public Font()
     {
-        private bool _fontBuilt;
+        if (!Plugin.IsChina())
+            return;
+        DalamudApi.Interface.UiBuilder.BuildFonts += UiBuilder_OnBuildFonts;
+        DalamudApi.Interface.UiBuilder.RebuildFonts();
+    }
 
-        public Font()
+    public ImFontPtr NotoSan24 { get; private set; }
+
+    public void Dispose()
+    {
+        if (!Plugin.IsChina())
+            return;
+
+        DalamudApi.Interface.UiBuilder.BuildFonts -= UiBuilder_OnBuildFonts;
+    }
+
+    private unsafe void UiBuilder_OnBuildFonts()
+    {
+        // DalamudApi.Interface.DalamudAssetDirectory;
+        // var windowsFolder  = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System));
+        var fontName = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes", "NotoSansCJKsc-Medium.otf");
+
+        if (!File.Exists(fontName))
         {
-            DalamudApi.Interface.UiBuilder.BuildFonts += UiBuilder_OnBuildFonts;
-            DalamudApi.Interface.UiBuilder.RebuildFonts();
+            PluginLog.Error($"找不到字体 \"NotoSansCJKsc-Medium.otf\". 尝试搜寻的路径: {fontName}");
+            return;
         }
 
-        public ImFontPtr NotoSan24 { get; private set; }
+        ImFontConfigPtr fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
+        fontConfig.FontDataOwnedByAtlas = false;
+        fontConfig.PixelSnapH           = true;
+        NotoSan24                       = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontName, 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
 
-        public void Dispose()
-        {
-            DalamudApi.Interface.UiBuilder.BuildFonts -= UiBuilder_OnBuildFonts;
-        }
+        _fontBuilt = true;
+        fontConfig.Destroy();
+    }
 
-        private unsafe void UiBuilder_OnBuildFonts()
-        {
-            // DalamudApi.Interface.DalamudAssetDirectory;
-            // var windowsFolder  = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System));
-            var fontName = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes", "NotoSansCJKsc-Medium.otf");
-
-            if (!File.Exists(fontName))
-            {
-                PluginLog.Error($"找不到字体 \"NotoSansCJKsc-Medium.otf\". 尝试搜寻的路径: {fontName}");
-                return;
-            }
-
-            ImFontConfigPtr fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-            fontConfig.FontDataOwnedByAtlas = false;
-            fontConfig.PixelSnapH           = true;
-            NotoSan24                       = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontName, 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
-
-            _fontBuilt = true;
-            fontConfig.Destroy();
-        }
-
-        public bool IsFontBuilt()
-        {
-            return _fontBuilt;
-        }
+    public bool IsFontBuilt()
+    {
+        return _fontBuilt;
     }
 }

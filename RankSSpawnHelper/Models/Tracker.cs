@@ -2,13 +2,12 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace RankSSpawnHelper.Models
+namespace RankSSpawnHelper.Models;
+
+internal class Tracker
 {
-    internal class Tracker
-    {
-        public Dictionary<string, int> counter;
-        public long lastUpdateTime;
-        public long startTime;
-        public uint territoryId;
-    }
+    public Dictionary<string, int> counter;
+    public long lastUpdateTime;
+    public long startTime;
+    public uint territoryId;
 }

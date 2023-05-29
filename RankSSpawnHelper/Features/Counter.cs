@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
@@ -15,400 +15,517 @@ using Dalamud.Utility.Signatures;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
 
-namespace RankSSpawnHelper.Features
+namespace RankSSpawnHelper.Features;
+
+internal class Counter : IDisposable
 {
-    internal class Counter : IDisposable
+    private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionNamesNew = new()
+                                                                                       {
+                                                                                           { 961, new Dictionary<string, uint>() }, // 鸟蛋
+                                                                                           { 959, new Dictionary<string, uint>() }, // 叹息海
+                                                                                           { 957, new Dictionary<string, uint>() }, // 萨维奈岛
+                                                                                           { 814, new Dictionary<string, uint>() }, // 棉花
+                                                                                           { 813, new Dictionary<string, uint>() }, // Lakeland
+                                                                                           { 817, new Dictionary<string, uint>() }, // 拉凯提卡大森林
+                                                                                           { 621, new Dictionary<string, uint>() }, // 湖区
+                                                                                           { 613, new Dictionary<string, uint>() }, // 红玉海
+                                                                                           { 612, new Dictionary<string, uint>() }, // 边区
+                                                                                           { 402, new Dictionary<string, uint>() }, // 魔大陆
+                                                                                           { 400, new Dictionary<string, uint>() }, // 翻云雾海
+                                                                                           { 147, new Dictionary<string, uint>() } // 北萨
+                                                                                       };
+
+    private readonly CancellationTokenSource _eventLoopTokenSource = new();
+
+    private readonly Dictionary<string, Tracker> _localTracker = new();
+    private readonly Dictionary<string, Tracker> _networkedTracker = new();
+    private readonly List<string> _ssList = new();
+
+    public Counter()
     {
-        private readonly Dictionary<ushort, string> _conditionName = new()
-                                                                     {
-                                                                         { 961, "厄尔庇斯之鸟蛋" },
-                                                                         { 959, "思考之物,彷徨之物,叹息之物" }, // 叹息海
-                                                                         { 957, "毕舍遮,金刚尾,阿输陀花" }, // 萨维奈岛
-                                                                         { 814, "矮人棉" },
-                                                                         { 813, "秧鸡胸脯肉" },
-                                                                         { 817, "破裂的隆卡器皿,破裂的隆卡石蒺藜,破裂的隆卡人偶" }, // 拉凯提卡大森林
-                                                                         { 621, ".*" }, // 湖区
-                                                                         { 613, "无壳观梦螺,观梦螺" }, // 红玉海
-                                                                         { 612, "狄亚卡,莱西" }, // 边区
-                                                                         { 402, "美拉西迪亚薇薇尔飞龙,小海德拉,亚拉戈奇美拉" }, // 魔大陆
-                                                                         { 400, "星极花|皇金矿" }, // 翻云雾海
-                                                                         { 147, "土元精" } // 北萨
-                                                                     };
+        SignatureHelper.Initialise(this);
 
-        private readonly CancellationTokenSource _eventLoopTokenSource = new();
+        InitializeData();
+        ActorControlSelf.Enable();
+        SystemLogMessage.Enable();
+        InventoryTransactionDiscard.Enable();
+        Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
 
-        private readonly Dictionary<string, Tracker> _localTracker = new();
-        private readonly Dictionary<string, Tracker> _networkedTracker = new();
-        private readonly List<string> _ssList = new();
+        DalamudApi.ChatGui.ChatMessage       += ChatGui_ChatMessage;
+        DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
+    }
 
-        public Counter()
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(Detour_ActorControlSelf))]
+    private Hook<ActorControlSelfDelegate> ActorControlSelf { get; init; } = null!;
+
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("40 55 56 57 41 54 41 55 41 57 48 8D 6C 24", DetourName = nameof(Detour_ProcessSystemLogMessage))]
+    private Hook<SystemLogMessageDelegate> SystemLogMessage { get; init; } = null!;
+
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("40 53 55 56 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 ?? 4C 8B 89", DetourName = nameof(Detour_InventoryTransactionDiscard))]
+    private Hook<InventoryTransactionDiscardDelegate> InventoryTransactionDiscard { get; init; } = null!;
+
+    public void Dispose()
+    {
+        ActorControlSelf.Dispose();
+        SystemLogMessage.Dispose();
+        InventoryTransactionDiscard.Dispose();
+        _eventLoopTokenSource.Dispose();
+        DalamudApi.ChatGui.ChatMessage       -= ChatGui_ChatMessage;
+        DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
+        GC.SuppressFinalize(this);
+    }
+
+    public Dictionary<string, Tracker> GetLocalTrackers()
+    {
+        return _localTracker;
+    }
+
+    public Dictionary<string, Tracker> GetNetworkedTrackers()
+    {
+        return _networkedTracker;
+    }
+
+    /*
+     * Remove an instance local and networked tracker
+     * if instance is an empty string then it will clear the trackers
+     */
+    public void RemoveInstance(string instance = "")
+    {
+        if (instance == string.Empty)
         {
-            SignatureHelper.Initialise(this);
-
-            var bNpcName = DalamudApi.DataManager.GetExcelSheet<BNpcName>();
-
-            _ssList.Add(bNpcName.GetRow(8915).Singular.RawString);
-            _ssList.Add(bNpcName.GetRow(10615).Singular.RawString);
-
-            ActorControlSelf.Enable();
-            Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
-
-            DalamudApi.ChatGui.ChatMessage       += ChatGui_ChatMessage;
-            DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
+            _localTracker.Clear();
+            _networkedTracker.Clear();
+            return;
         }
 
-        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-        [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(Detour_ActorControlSelf))]
-        private Hook<ActorControlSelfDelegate> ActorControlSelf { get; init; } = null!;
+        _localTracker.Remove(instance);
+        _networkedTracker.Remove(instance);
+    }
 
-        public void Dispose()
+    public void UpdateNetworkedTracker(string instance, string condition, int value, long time, uint territoryId)
+    {
+        if (!_networkedTracker.ContainsKey(instance))
         {
-            ActorControlSelf.Dispose();
-            _eventLoopTokenSource.Dispose();
-            DalamudApi.ChatGui.ChatMessage       -= ChatGui_ChatMessage;
-            DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
-            GC.SuppressFinalize(this);
-        }
-
-        public Dictionary<string, Tracker> GetLocalTrackers()
-        {
-            return _localTracker;
-        }
-
-        public Dictionary<string, Tracker> GetNetworkedTrackers()
-        {
-            return _networkedTracker;
-        }
-
-        /*
-         * Remove an instance local and networked tracker
-         * if instance is an empty string then it will clear the trackers
-         */
-        public void RemoveInstance(string instance = "")
-        {
-            if (instance == string.Empty)
-            {
-                _localTracker.Clear();
-                _networkedTracker.Clear();
-                return;
-            }
-
-            _localTracker.Remove(instance);
-            _networkedTracker.Remove(instance);
-        }
-
-        public void UpdateNetworkedTracker(string instance, string condition, int value, long time, uint territoryId)
-        {
-            if (!_networkedTracker.ContainsKey(instance))
-            {
-                _networkedTracker.Add(instance, new Tracker
-                                                {
-                                                    startTime      = time,
-                                                    lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                                                    counter = new Dictionary<string, int>
-                                                              {
-                                                                  { condition, value }
-                                                              },
-                                                    territoryId = territoryId
-                                                });
-                PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
-                Plugin.Windows.CounterWindow.IsOpen = true;
-                return;
-            }
-
-            if (!_networkedTracker.TryGetValue(instance, out var result))
-            {
-                return;
-            }
-
-            if (!result.counter.ContainsKey(condition))
-            {
-                result.counter.Add(condition, value);
-                return;
-            }
-
-            result.counter[condition]           = value;
-            Plugin.Windows.CounterWindow.IsOpen = true;
-            result.lastUpdateTime               = DateTimeOffset.Now.ToUnixTimeSeconds();
-            PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
-        }
-
-        private void Condition_OnConditionChange(ConditionFlag flag, bool value)
-        {
-            if (flag != ConditionFlag.BetweenAreas51 || value)
-            {
-                return;
-            }
-
-            if (!Plugin.Configuration.TrackKillCount)
-            {
-                return;
-            }
-
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-
-            Plugin.Managers.Socket.SendMessage(new NetMessage
-                                               {
-                                                   Type        = "ChangeArea",
-                                                   Instance    = currentInstance,
-                                                   TerritoryId = DalamudApi.ClientState.TerritoryType
-                                               });
-
-            if (Plugin.Configuration.TrackerShowCurrentInstance && !_localTracker.ContainsKey(currentInstance))
-            {
-                Plugin.Windows.CounterWindow.IsOpen = false;
-            }
-        }
-
-        private void ChatGui_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
-        {
-            // 2115 = 采集的消息类型, SystemMessage = 舍弃物品的消息类型
-            if (type != (XivChatType)2115 && type != XivChatType.SystemMessage)
-            {
-                return;
-            }
-
-            var territory = DalamudApi.ClientState.TerritoryType;
-            if (!_conditionName.TryGetValue(territory, out var targetName) && territory != 960)
-            {
-                return;
-            }
-
-            string currentInstance;
-            if (message.TextValue == "感觉到了强大的恶名精英的气息……")
-            {
-                // _huntStatus.Remove(currentInstance);
-
-                // Find Rank SS
-                if (DalamudApi.ObjectTable.Any(i => i.IsValid() && _ssList.Contains(i.Name.TextValue)))
-                    return;
-
-                if ((from obj in DalamudApi.ObjectTable
-                     where obj.IsValid()
-                     where !obj.IsDead
-                     where obj.ObjectKind == ObjectKind.BattleNpc
-                     select obj as BattleNpc
-                     into npc
-                     where npc.BattleNpcKind == BattleNpcSubKind.Enemy
-                     select npc).Any(npc => _ssList.Contains(npc.Name.TextValue)))
-                {
-                    return;
-                }
-
-                currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-
-                if (territory == 960)
-                {
-                    Plugin.Managers.Socket.SendMessage(new NetMessage
-                                                       {
-                                                           Type        = "WeeEa",
-                                                           Instance    = currentInstance,
-                                                           TerritoryId = territory,
-                                                           Failed      = false
-                                                       });
-                    return;
-                }
-
-                // 如果没tracker就不发
-                if (!_networkedTracker.ContainsKey(currentInstance) && territory != 961 && territory != 813)
-                {
-                    return;
-                }
-
-                Plugin.Managers.Socket.SendMessage(new NetMessage
-                                                   {
-                                                       Type        = "ggnore",
-                                                       Instance    = currentInstance,
-                                                       TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                                       Time = !GetLocalTrackers().TryGetValue(currentInstance, out var currentTracker)
-                                                                  ? DateTimeOffset.Now.ToUnixTimeSeconds()
-                                                                  : currentTracker.startTime
-                                                   });
-
-                return;
-            }
-
-
-            var msg       = message.TextValue;
-            var condition = targetName is ".*" or "秧鸡胸脯肉" or "厄尔庇斯之鸟蛋" ? "舍弃了" : "获得了";
-
-            var reg = Regex.Match(msg, $"{condition}“({targetName})”");
-            if (!reg.Success)
-            {
-                return;
-            }
-
-            targetName = territory switch
-                         {
-                             // 云海的刚哥要各挖50个, 所以这里分开来
-                             400 => reg.Groups[1].ToString(),
-                             // 因为正则所以得这样子搞..
-                             621 => "扔垃圾",
-                             _   => targetName
-                         };
-
-            if (territory == 961)
-            {
-                // check if the amount is 5 or not
-                if (!msg[..^1].EndsWith("5"))
-                    return;
-            }
-
-            currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-            AddToTracker(currentInstance, targetName);
-        }
-
-        private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
-        {
-            ActorControlSelf.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
-            if (!Plugin.Configuration.TrackKillCount)
-                return;
-
-            // 死亡事件
-            if (type != 6)
-                return;
-
-            if (DalamudApi.ClientState.TerritoryType is 961 or 813 or 621)
-                return;
-
-            var target       = DalamudApi.ObjectTable.SearchById(entityId);
-            var sourceTarget = DalamudApi.ObjectTable.SearchById(direct);
-            if (target == null)
-            {
-                PluginLog.Error($"Cannot found target by id 0x{entityId:X}");
-                return;
-            }
-
-            if (sourceTarget == null)
-            {
-                PluginLog.Error($"Cannot found source target by id 0x{direct:X}");
-                return;
-            }
-
-            PluginLog.Information($"{target.Name} got killed by {sourceTarget.Name}");
-
-            Process(target, sourceTarget, DalamudApi.ClientState.TerritoryType);
-        }
-
-        private void Process(GameObject target, GameObject source, ushort territory)
-        {
-            if (!_conditionName.ContainsKey(territory))
-                return;
-
-            var targetName = target.Name;
-
-            if (!_conditionName.TryGetValue(territory, out var name))
-            {
-                PluginLog.Error($"Cannot get condition name with territory id \"{territory}\"");
-                return;
-            }
-
-            if (!name.Equals(targetName.ToString()))
-                return;
-
-            var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-
-            var sourceOwner = source.OwnerId;
-            if (!Plugin.Configuration.TrackRangeMode &&
-                (Plugin.Configuration.TrackRangeMode || (sourceOwner != DalamudApi.ClientState.LocalPlayer.ObjectId && source.ObjectId != DalamudApi.ClientState.LocalPlayer.ObjectId)))
-                return;
-
-            AddToTracker(currentInstance, targetName.ToString());
-        }
-
-        private void AddToTracker(string key, string targetName)
-        {
-            if (!_localTracker.ContainsKey(key))
-            {
-                var tracker = new Tracker
-                              {
-                                  counter = new Dictionary<string, int>
+            _networkedTracker.Add(instance, new Tracker
                                             {
-                                                { targetName, 1 }
-                                            },
-                                  lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                                  startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                                  territoryId    = DalamudApi.ClientState.TerritoryType
-                              };
-
-                _localTracker.Add(key, tracker);
-                goto Post;
-            }
-
-            if (!_localTracker.TryGetValue(key, out var value))
-            {
-                PluginLog.Error($"Cannot get value by key {key}");
-                return;
-            }
-
-            if (!value.counter.ContainsKey(targetName))
-            {
-                value.counter.Add(targetName, 1);
-            }
-            else
-            {
-                value.counter[targetName]++;
-            }
-
-            value.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
-        Post:
-            PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
-
+                                                startTime      = time,
+                                                lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                                                counter = new Dictionary<string, int>
+                                                          {
+                                                              { condition, value }
+                                                          },
+                                                territoryId = territoryId
+                                            });
+            PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
             Plugin.Windows.CounterWindow.IsOpen = true;
-
-            Plugin.Managers.Socket.SendMessage(new NetMessage
-                                               {
-                                                   Type = "AddData",
-                                                   Instance = key,
-                                                   TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                                   Time = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
-                                                   Data = new Dictionary<string, int>
-                                                          { { targetName, 1 } }
-                                               });
+            return;
         }
 
-        private async void RemoveInactiveTracker()
+        if (!_networkedTracker.TryGetValue(instance, out var result))
         {
-            var token = _eventLoopTokenSource.Token;
+            return;
+        }
 
-            while (!token.IsCancellationRequested)
+        if (!result.counter.ContainsKey(condition))
+        {
+            result.counter.Add(condition, value);
+            return;
+        }
+
+        result.counter[condition]           = value;
+        Plugin.Windows.CounterWindow.IsOpen = true;
+        result.lastUpdateTime               = DateTimeOffset.Now.ToUnixTimeSeconds();
+        PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
+    }
+
+    private void Condition_OnConditionChange(ConditionFlag flag, bool value)
+    {
+        if (flag != ConditionFlag.BetweenAreas51 || value)
+        {
+            return;
+        }
+
+        if (!Plugin.Configuration.TrackKillCount)
+        {
+            return;
+        }
+
+        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+
+        Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                                           {
+                                               Type        = "ChangeArea",
+                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               TerritoryId = DalamudApi.ClientState.TerritoryType
+                                               // Instance    = currentInstance,
+                                           });
+
+        if (Plugin.Configuration.TrackerShowCurrentInstance && !_localTracker.ContainsKey(currentInstance))
+        {
+            Plugin.Windows.CounterWindow.IsOpen = false;
+        }
+    }
+
+    private void ChatGui_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+    {
+        // 2115 = 采集的消息类型, SystemMessage = 舍弃物品的消息类型
+        if (type != XivChatType.SystemMessage)
+        {
+            return;
+        }
+
+        var territory = DalamudApi.ClientState.TerritoryType;
+        if (!_conditionNamesNew.TryGetValue(territory, out _) && territory != 960)
+        {
+            return;
+        }
+
+        // TODO: Find where the fuck is this net message from
+        if (message.TextValue != "感觉到了强大的恶名精英的气息……")
+            return;
+        // _huntStatus.Remove(currentInstance);
+
+        // Find Rank SS
+        if (DalamudApi.ObjectTable.Any(i => i.IsValid() && _ssList.Contains(i.Name.TextValue.ToLower())))
+            return;
+
+        if ((from obj in DalamudApi.ObjectTable
+             where obj.IsValid()
+             where !obj.IsDead
+             where obj.ObjectKind == ObjectKind.BattleNpc
+             select obj as BattleNpc
+             into npc
+             where npc.BattleNpcKind == BattleNpcSubKind.Enemy
+             select npc).Any(npc => _ssList.Contains(npc.Name.TextValue.ToLower())))
+        {
+            return;
+        }
+
+        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+
+        if (territory == 960)
+        {
+            Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                                               {
+                                                   Type        = "WeeEa",
+                                                   WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                                   InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                                   TerritoryId = territory,
+                                                   // Instance    = currentInstance,
+                                                   Failed      = false
+                                               });
+            return;
+        }
+
+        // 如果没tracker就不发
+        if (!_networkedTracker.ContainsKey(currentInstance) && territory != 961 && territory != 813)
+        {
+            return;
+        }
+
+        Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                                           {
+                                               Type        = "ggnore",
+                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               // Instance    = currentInstance,
+                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
+                                               Failed      = false
+                                           });
+
+        /*var msg       = message.TextValue;
+        var condition = targetName is ".*" or "秧鸡胸脯肉" or "厄尔庇斯之鸟蛋" ? "舍弃了" : "获得了";
+
+        var reg = Regex.Match(msg, $"{condition}“({targetName})”");
+        if (!reg.Success)
+        {
+            return;
+        }
+
+        targetName = territory switch
+                     {
+                         // 云海的刚哥要各挖50个, 所以这里分开来
+                         400 => reg.Groups[1].ToString(),
+                         // 因为正则所以得这样子搞..
+                         621 => "扔垃圾",
+                         _   => targetName
+                     };
+
+        if (territory == 961)
+        {
+            // check if the amount is 5 or not
+            if (!msg[..^1].EndsWith("5"))
+                return;
+        }
+        */
+    }
+
+    private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
+    {
+        ActorControlSelf.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
+        if (!Plugin.Configuration.TrackKillCount)
+            return;
+
+        // 死亡事件
+        if (type != 6)
+            return;
+
+        var target       = DalamudApi.ObjectTable.SearchById(entityId);
+        var sourceTarget = DalamudApi.ObjectTable.SearchById(direct);
+        if (target == null)
+        {
+            PluginLog.Error($"Cannot found target by id 0x{entityId:X}");
+            return;
+        }
+
+        if (sourceTarget == null)
+        {
+            PluginLog.Error($"Cannot found source target by id 0x{direct:X}");
+            return;
+        }
+
+        PluginLog.Information($"{target.Name} got killed by {sourceTarget.Name}");
+
+        Process(target, sourceTarget, DalamudApi.ClientState.TerritoryType);
+    }
+
+    private unsafe void Detour_ProcessSystemLogMessage(nint a1, int eventId, uint logId, nint a4, byte a5)
+    {
+        SystemLogMessage.Original(a1, eventId, logId, a4, a5);
+        PluginLog.Warning($"eventID: {eventId:X}");
+
+        // logId = 9932 => 特殊恶名精英的手下开始了侦察活动……
+
+        var isGatherMessage = logId is 1049 or 1050;
+
+        if (!isGatherMessage)
+        {
+            return;
+        }
+
+        var itemId = *(uint*)a4;
+
+        // 27759 -- 矮人棉
+        // 12634 -- 星极花, 12536 -- 皇金矿
+
+        var territoryType = DalamudApi.ClientState.TerritoryType;
+        if (!_conditionNamesNew.TryGetValue(territoryType, out var value))
+            return;
+
+        // if the item id isnt in the list
+        if (!value.ContainsValue(itemId))
+            return;
+
+        // TODO: Process stuff
+
+        PluginLog.Debug($"event_id: {eventId:X}, logId: {logId}, itemId: {itemId}");
+    }
+
+    private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)
+    {
+        InventoryTransactionDiscard.Original(a1, a2);
+
+        var territoryType = DalamudApi.ClientState.TerritoryType;
+
+        if (!_conditionNamesNew.TryGetValue(territoryType, out var value))
+            return;
+
+        // Use regenny or reclass to find this
+        var itemId = *(uint*)(a2 + 0x18);
+        var amount = *(uint*)(a2 + 0x14);
+
+        // you can discard anything in The Lochs
+        if (territoryType != 621 && !value.ContainsValue(itemId))
+            return;
+
+        // TODO: Add to tracker
+        Plugin.Print($"item: 0x{itemId:X}, a2: 0x{a2:x}, amount: {amount}");
+    }
+
+    private void Process(GameObject target, GameObject source, ushort territory)
+    {
+        if (!_conditionNamesNew.ContainsKey(territory))
+            return;
+
+        var targetName = target.Name.TextValue.ToLower();
+
+        if (!_conditionNamesNew.TryGetValue(territory, out var name))
+        {
+            PluginLog.Error($"Cannot get condition name with territory id \"{territory}\"");
+            return;
+        }
+
+        if (!name.ContainsKey(targetName))
+            return;
+
+        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+
+        var sourceOwner = source.OwnerId;
+        if (!Plugin.Configuration.TrackRangeMode &&
+            (Plugin.Configuration.TrackRangeMode || (sourceOwner != DalamudApi.ClientState.LocalPlayer.ObjectId && source.ObjectId != DalamudApi.ClientState.LocalPlayer.ObjectId)))
+            return;
+
+        AddToTracker(currentInstance, targetName, name[targetName]);
+    }
+
+    private void AddToTracker(string key, string targetName, uint targetId)
+    {
+        if (!_localTracker.ContainsKey(key))
+        {
+            var tracker = new Tracker
+                          {
+                              counter = new Dictionary<string, int>
+                                        {
+                                            { targetName, 1 }
+                                        },
+                              lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                              startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                              territoryId    = DalamudApi.ClientState.TerritoryType
+                          };
+
+            _localTracker.Add(key, tracker);
+            goto Post;
+        }
+
+        if (!_localTracker.TryGetValue(key, out var value))
+        {
+            PluginLog.Error($"Cannot get value by key {key}");
+            return;
+        }
+
+        if (!value.counter.ContainsKey(targetName))
+        {
+            value.counter.Add(targetName, 1);
+        }
+        else
+        {
+            value.counter[targetName]++;
+        }
+
+        value.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
+    Post:
+        PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
+
+        Plugin.Windows.CounterWindow.IsOpen = true;
+
+        Plugin.Managers.Socket.SendMessage(new CounterMessage()
+                                           {
+                                               Type        = "AddData",
+                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
+                                               // Instance    = key,
+                                               StartTime   = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
+                                               Data = new Dictionary<uint, int>
+                                                      { { targetId, 1 } }
+                                           });
+    }
+
+    private async void RemoveInactiveTracker()
+    {
+        var token = _eventLoopTokenSource.Token;
+
+        while (!token.IsCancellationRequested)
+        {
+            try
             {
-                try
+                if (_localTracker.Count == 0)
                 {
-                    if (_localTracker.Count == 0)
-                    {
-                        await Task.Delay(5000, token);
+                    await Task.Delay(5000, token);
 
+                    continue;
+                }
+
+                await Task.Delay(5000, token);
+
+                foreach (var (k, v) in _localTracker)
+                {
+                    var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
+                    if (delta.TotalMinutes <= Plugin.Configuration.TrackerClearThreshold)
+                    {
                         continue;
                     }
 
-                    await Task.Delay(5000, token);
+                    PluginLog.Debug($"Removing track {v}. delta: {delta}");
 
-                    foreach (var (k, v) in _localTracker)
-                    {
-                        var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
-                        if (delta.TotalMinutes <= Plugin.Configuration.TrackerClearThreshold)
-                        {
-                            continue;
-                        }
-
-                        PluginLog.Debug($"Removing track {v}. delta: {delta}");
-
-                        _networkedTracker.Remove(k);
-                        _localTracker.Remove(k);
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-                catch (ObjectDisposedException)
-                {
-                    break;
+                    _networkedTracker.Remove(k);
+                    _localTracker.Remove(k);
                 }
             }
+            catch (TaskCanceledException)
+            {
+                break;
+            }
+            catch (ObjectDisposedException)
+            {
+                break;
+            }
+        }
+    }
+
+    private void InitializeData()
+    {
+        var npcNames = DalamudApi.DataManager.GetExcelSheet<BNpcName>();
+        var items    = DalamudApi.DataManager.GetExcelSheet<Item>();
+
+        string GetNpcName(uint row)
+        {
+            var name = npcNames.GetRow(row).Singular.RawString.ToLower();
+            PluginLog.Debug($"Added NPC name {name}");
+            return name;
         }
 
-        private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte a10);
+        string GetItemName(uint row)
+        {
+            var name = items.GetRow(row).Singular.RawString.ToLower();
+            PluginLog.Debug($"Added item name {name}");
+            return name;
+        }
+
+        _ssList.Add(GetNpcName(8915));
+        _ssList.Add(GetNpcName(10615));
+
+        _conditionNamesNew[959].Add(GetNpcName(10461), 10461); // xx之物
+        _conditionNamesNew[959].Add(GetNpcName(10462), 10462);
+        _conditionNamesNew[959].Add(GetNpcName(10463), 10463);
+
+        _conditionNamesNew[957].Add(GetNpcName(10697), 10697); // 毕舍遮
+        _conditionNamesNew[957].Add(GetNpcName(10698), 10698); // 金刚尾
+        _conditionNamesNew[957].Add(GetNpcName(10701), 10701); // 阿输陀花
+
+        _conditionNamesNew[817].Add(GetNpcName(8789), 8789); // 破裂的隆卡器皿
+        _conditionNamesNew[817].Add(GetNpcName(8598), 8598); // 破裂的隆卡人偶
+        _conditionNamesNew[817].Add(GetNpcName(8599), 8599); // 破裂的隆卡石蒺藜
+
+        _conditionNamesNew[613].Add(GetNpcName(5750), 5750); // 观梦螺
+        _conditionNamesNew[613].Add(GetNpcName(5751), 5751); // 无壳观梦螺
+
+        _conditionNamesNew[612].Add(GetNpcName(5685), 5685); // 狄亚卡
+        _conditionNamesNew[612].Add(GetNpcName(5671), 5671); // 莱西
+
+        _conditionNamesNew[402].Add(GetNpcName(3556), 3556); // 美拉西迪亚薇薇尔飞龙
+        _conditionNamesNew[402].Add(GetNpcName(3580), 3580); // 小海德拉
+        _conditionNamesNew[402].Add(GetNpcName(3540), 3540); // 亚拉戈奇美拉
+
+        _conditionNamesNew[147].Add(GetNpcName(113), 113); // 土元精
+
+        // gather
+        _conditionNamesNew[814].Add(GetItemName(27759), 27759); // 矮人棉
+        _conditionNamesNew[400].Add(GetItemName(12634), 12634); // 星极花
+        _conditionNamesNew[400].Add(GetItemName(12536), 12536); // 皇金矿
+
+        // discard
+        _conditionNamesNew[961].Add(GetItemName(36256), 36256);
+        _conditionNamesNew[813].Add(GetItemName(27850), 27850);
     }
+
+    private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte a10);
+
+    private delegate void InventoryTransactionDiscardDelegate(nint a1, nint a2);
+
+    private delegate void SystemLogMessageDelegate(nint a1, int a2, uint a3, nint a4, byte a5);
 }

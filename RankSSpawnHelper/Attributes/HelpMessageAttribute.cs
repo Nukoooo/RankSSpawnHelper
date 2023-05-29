@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace RankSSpawnHelper.Attributes
-{
-    [AttributeUsage(AttributeTargets.Method)]
-    public class HelpMessageAttribute : Attribute
-    {
-        public HelpMessageAttribute(string helpMessage)
-        {
-            HelpMessage = helpMessage;
-        }
+namespace RankSSpawnHelper.Attributes;
 
-        public string HelpMessage { get; }
+[AttributeUsage(AttributeTargets.Method)]
+public class HelpMessageAttribute : Attribute
+{
+    public HelpMessageAttribute(string helpMessage)
+    {
+        HelpMessage = helpMessage;
     }
+
+    public string HelpMessage { get; }
 }

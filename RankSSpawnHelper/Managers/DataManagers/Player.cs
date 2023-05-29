@@ -6,52 +6,54 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace RankSSpawnHelper.Managers.DataManagers
+namespace RankSSpawnHelper.Managers.DataManagers;
+
+internal class Player
 {
-    internal class Player
+    private readonly ExcelSheet<TerritoryType> _terr;
+
+    public Player()
     {
-        private readonly ExcelSheet<TerritoryType> _terr;
+        _terr = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
+    }
 
-        public Player()
+    public string GetCurrentTerritory()
+    {
+        try
         {
-            _terr = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
-        }
+            var instanceNumber = GetCurrentInstance();
 
-        public string GetCurrentTerritory()
+            return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData?.Name + "@" +
+                   _terr.GetRow(DalamudApi.ClientState.TerritoryType)?.PlaceName.Value?.Name.ToDalamudString().TextValue +
+                   "@" + instanceNumber;
+        }
+        catch (Exception e)
         {
-            try
-            {
-                var instanceNumber = GetCurrentInstance();
-
-                return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData?.Name + "@" +
-                       _terr.GetRow(DalamudApi.ClientState.TerritoryType)?.PlaceName.Value?.Name.ToDalamudString().TextValue +
-                       "@" + instanceNumber;
-            }
-            catch (Exception e)
-            {
-                PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). Last CallStack:{new StackFrame(1).GetMethod()?.Name}");
-                return string.Empty;
-            }
+            PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). Last CallStack:{new StackFrame(1).GetMethod()?.Name}");
+            return string.Empty;
         }
+    }
 
-        public unsafe int GetCurrentInstance()
-        {
-            try
-            {
-                return UIState.Instance()->AreaInstance.Instance;
-            }
-            catch
-            {
-                return -1;
-            }
-        }
+    public uint GetCurrentWorldId()
+    {
+        if (DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId != null) 
+            return (uint)DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId;
 
-        public string GetLocalPlayerName()
-        {
-            if (DalamudApi.ClientState.LocalPlayer == null)
-                return string.Empty;
+        return 0;
+    }
 
-            return $"{DalamudApi.ClientState.LocalPlayer.Name}@{DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.Name}";
-        }
+    public uint GetCurrentTerritoryId()
+    {
+        return DalamudApi.ClientState.TerritoryType;
+    }
+
+    public unsafe int GetCurrentInstance()
+    {
+        return UIState.Instance()->AreaInstance.Instance;
+    }
+
+    public string GetLocalPlayerName()
+    {
+        return DalamudApi.ClientState.LocalPlayer == null ? string.Empty : $"{DalamudApi.ClientState.LocalPlayer.Name}@{DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.Name}";
     }
 }

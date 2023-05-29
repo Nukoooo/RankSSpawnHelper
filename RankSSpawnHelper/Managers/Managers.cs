@@ -1,24 +1,23 @@
 ﻿using System;
 
-namespace RankSSpawnHelper.Managers
+namespace RankSSpawnHelper.Managers;
+
+internal class Managers : IDisposable
 {
-    internal class Managers : IDisposable
+    public Data Data;
+    public Font Font;
+    public Socket Socket;
+
+    public Managers()
     {
-        public Data Data;
-        public Font Font;
-        public Socket Socket;
+        Data   = new Data();
+        Socket = new Socket();
+        Font   = new Font();
+    }
 
-        public Managers()
-        {
-            Data   = new Data();
-            Socket = new Socket();
-            Font   = new Font();
-        }
-
-        public void Dispose()
-        {
-            Socket.Dispose();
-            Font.Dispose();
-        }
+    public void Dispose()
+    {
+        Socket.Dispose();
+        Font.Dispose();
     }
 }

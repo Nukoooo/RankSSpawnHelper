@@ -1,31 +1,30 @@
 ﻿using System;
 
-namespace RankSSpawnHelper.Features
+namespace RankSSpawnHelper.Features;
+
+internal class Features : IDisposable
 {
-    internal class Features : IDisposable
+    public Counter Counter;
+    public SearchCounter SearchCounter;
+    public ShowHuntMap ShowHuntMap;
+    public ShowInstance ShowInstance;
+    public SpawnNotification SpawnNotification;
+
+    public Features()
     {
-        public Counter Counter;
-        public SearchCounter SearchCounter;
-        public ShowHuntMap ShowHuntMap;
-        public ShowInstance ShowInstance;
-        public SpawnNotification SpawnNotification;
+        Counter           = new Counter();
+        SpawnNotification = new SpawnNotification();
+        ShowInstance      = new ShowInstance();
+        ShowHuntMap       = new ShowHuntMap();
+        SearchCounter     = new SearchCounter();
+    }
 
-        public Features()
-        {
-            Counter           = new Counter();
-            SpawnNotification = new SpawnNotification();
-            ShowInstance      = new ShowInstance();
-            ShowHuntMap       = new ShowHuntMap();
-            SearchCounter     = new SearchCounter();
-        }
-
-        public void Dispose()
-        {
-            Counter.Dispose();
-            SpawnNotification.Dispose();
-            ShowInstance.Dispose();
-            ShowHuntMap.Dispose();
-            SearchCounter.Dispose();
-        }
+    public void Dispose()
+    {
+        Counter.Dispose();
+        SpawnNotification.Dispose();
+        ShowInstance.Dispose();
+        ShowHuntMap.Dispose();
+        SearchCounter.Dispose();
     }
 }
