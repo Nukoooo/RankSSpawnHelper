@@ -42,10 +42,10 @@ internal class Player
         return 0;
     }
 
-    public uint GetCurrentTerritoryId()
+    /*public uint GetCurrentTerritoryId()
     {
         return DalamudApi.ClientState.TerritoryType;
-    }
+    }*/
 
     public unsafe int GetCurrentInstance()
     {

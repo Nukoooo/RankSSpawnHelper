@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -215,8 +214,7 @@ internal class Counter : IDisposable
                                                    WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                    InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                    TerritoryId = territory,
-                                                   // Instance    = currentInstance,
-                                                   Failed      = false
+                                                   Failed = false
                                                });
             return;
         }
@@ -229,39 +227,13 @@ internal class Counter : IDisposable
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                            {
-                                               Type        = "ggnore",
-                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               Type       = "ggnore",
+                                               WorldId    = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               InstanceId = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                // Instance    = currentInstance,
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                Failed      = false
                                            });
-
-        /*var msg       = message.TextValue;
-        var condition = targetName is ".*" or "秧鸡胸脯肉" or "厄尔庇斯之鸟蛋" ? "舍弃了" : "获得了";
-
-        var reg = Regex.Match(msg, $"{condition}“({targetName})”");
-        if (!reg.Success)
-        {
-            return;
-        }
-
-        targetName = territory switch
-                     {
-                         // 云海的刚哥要各挖50个, 所以这里分开来
-                         400 => reg.Groups[1].ToString(),
-                         // 因为正则所以得这样子搞..
-                         621 => "扔垃圾",
-                         _   => targetName
-                     };
-
-        if (territory == 961)
-        {
-            // check if the amount is 5 or not
-            if (!msg[..^1].EndsWith("5"))
-                return;
-        }
-        */
     }
 
     private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
@@ -342,7 +314,9 @@ internal class Counter : IDisposable
         if (territoryType != 621 && !value.ContainsValue(itemId))
             return;
 
-        // TODO: Add to tracker
+        var name = territoryType == 621 ? (Plugin.IsChina() ? "扔垃圾" : "Item") : Plugin.Managers.Data.GetItemName(itemId);
+
+        AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
         Plugin.Print($"item: 0x{itemId:X}, a2: 0x{a2:x}, amount: {amount}");
     }
 
@@ -372,7 +346,7 @@ internal class Counter : IDisposable
         AddToTracker(currentInstance, targetName, name[targetName]);
     }
 
-    private void AddToTracker(string key, string targetName, uint targetId)
+    private void AddToTracker(string key, string targetName, uint targetId, bool isItem = false)
     {
         if (!_localTracker.ContainsKey(key))
         {
@@ -412,16 +386,17 @@ internal class Counter : IDisposable
 
         Plugin.Windows.CounterWindow.IsOpen = true;
 
-        Plugin.Managers.Socket.SendMessage(new CounterMessage()
+        Plugin.Managers.Socket.SendMessage(new CounterMessage
                                            {
                                                Type        = "AddData",
                                                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                // Instance    = key,
-                                               StartTime   = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
+                                               StartTime = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
                                                Data = new Dictionary<uint, int>
-                                                      { { targetId, 1 } }
+                                                      { { targetId, 1 } },
+                                               IsItem = isItem
                                            });
     }
 
@@ -475,7 +450,6 @@ internal class Counter : IDisposable
         string GetNpcName(uint row)
         {
             var name = npcNames.GetRow(row).Singular.RawString.ToLower();
-            PluginLog.Debug($"Added NPC name {name}");
             return name;
         }
 
