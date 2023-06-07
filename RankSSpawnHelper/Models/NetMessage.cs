@@ -13,21 +13,22 @@ internal class BaseMessage
 
 internal class NetTracker
 {
-    public Dictionary<string, int> Data;
-    public string Instance;
+    public Dictionary<uint, int> Data;
+    public uint WorldId;
     public uint TerritoryId;
+    public uint InstanceId;
     public long Time;
 }
 
 internal class NewConnectionMessage : BaseMessage
 {
-    public string CurrentInstance { get; set; }
     public List<NetTracker> Trackers;
 }
 
 internal class AttemptMessage : BaseMessage
 {
     public bool Failed { get; set; }
+    public List<string> Names { get; set; } = null;
 }
 
 internal class CounterMessage : BaseMessage

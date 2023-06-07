@@ -29,9 +29,6 @@ public class Configuration : IPluginConfiguration
     // 农怪计数
     public bool TrackKillCount { get; set; } = true;
 
-    // true = 范围计数, false = 单人计数
-    public bool TrackRangeMode { get; set; } = false;
-
     // true = 只显示当前区域, false = 显示所有计数
     public bool TrackerShowCurrentInstance { get; set; } = false;
     public bool TrackerWindowNoTitle { get; set; } = true;
@@ -62,6 +59,6 @@ public class Configuration : IPluginConfiguration
 
     public bool PlayerSearchTip = true;
 
-    public string PluginVersion = "";
+    public bool HideAfDian = false;
 #endregion
 }

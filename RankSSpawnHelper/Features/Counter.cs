@@ -18,7 +18,7 @@ namespace RankSSpawnHelper.Features;
 
 internal class Counter : IDisposable
 {
-    private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionNamesNew = new()
+    private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionsMob = new()
                                                                                        {
                                                                                            { 961, new Dictionary<string, uint>() }, // 鸟蛋
                                                                                            { 959, new Dictionary<string, uint>() }, // 叹息海
@@ -178,7 +178,7 @@ internal class Counter : IDisposable
         }
 
         var territory = DalamudApi.ClientState.TerritoryType;
-        if (!_conditionNamesNew.TryGetValue(territory, out _) && territory != 960)
+        if (!_conditionsMob.TryGetValue(territory, out _) && territory != 960)
         {
             return;
         }
@@ -186,6 +186,7 @@ internal class Counter : IDisposable
         // TODO: Find where the fuck is this net message from
         if (message.TextValue != "感觉到了强大的恶名精英的气息……")
             return;
+
         // _huntStatus.Remove(currentInstance);
 
         // Find Rank SS
@@ -221,9 +222,7 @@ internal class Counter : IDisposable
 
         // 如果没tracker就不发
         if (!_networkedTracker.ContainsKey(currentInstance) && territory != 961 && territory != 813)
-        {
             return;
-        }
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                            {
@@ -285,16 +284,16 @@ internal class Counter : IDisposable
         // 12634 -- 星极花, 12536 -- 皇金矿
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
-        if (!_conditionNamesNew.TryGetValue(territoryType, out var value))
+        if (!_conditionsMob.TryGetValue(territoryType, out var value))
             return;
 
         // if the item id isnt in the list
         if (!value.ContainsValue(itemId))
             return;
 
-        // TODO: Process stuff
-
-        PluginLog.Debug($"event_id: {eventId:X}, logId: {logId}, itemId: {itemId}");
+        var name = Plugin.Managers.Data.GetItemName(itemId);
+        
+        AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
     }
 
     private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)
@@ -303,7 +302,7 @@ internal class Counter : IDisposable
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
 
-        if (!_conditionNamesNew.TryGetValue(territoryType, out var value))
+        if (!_conditionsMob.TryGetValue(territoryType, out var value))
             return;
 
         // Use regenny or reclass to find this
@@ -314,20 +313,28 @@ internal class Counter : IDisposable
         if (territoryType != 621 && !value.ContainsValue(itemId))
             return;
 
+        switch (territoryType)
+        {
+            case 621:
+                itemId = 0;
+                break;
+            case 961 when amount != 5:
+                return;
+        }
+
         var name = territoryType == 621 ? (Plugin.IsChina() ? "扔垃圾" : "Item") : Plugin.Managers.Data.GetItemName(itemId);
 
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
-        Plugin.Print($"item: 0x{itemId:X}, a2: 0x{a2:x}, amount: {amount}");
     }
 
     private void Process(GameObject target, GameObject source, ushort territory)
     {
-        if (!_conditionNamesNew.ContainsKey(territory))
+        if (!_conditionsMob.ContainsKey(territory))
             return;
 
         var targetName = target.Name.TextValue.ToLower();
 
-        if (!_conditionNamesNew.TryGetValue(territory, out var name))
+        if (!_conditionsMob.TryGetValue(territory, out var name))
         {
             PluginLog.Error($"Cannot get condition name with territory id \"{territory}\"");
             return;
@@ -339,11 +346,10 @@ internal class Counter : IDisposable
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
         var sourceOwner = source.OwnerId;
-        if (!Plugin.Configuration.TrackRangeMode &&
-            (Plugin.Configuration.TrackRangeMode || (sourceOwner != DalamudApi.ClientState.LocalPlayer.ObjectId && source.ObjectId != DalamudApi.ClientState.LocalPlayer.ObjectId)))
+        if (sourceOwner != DalamudApi.ClientState.LocalPlayer.ObjectId && source.ObjectId != DalamudApi.ClientState.LocalPlayer.ObjectId)
             return;
 
-        AddToTracker(currentInstance, targetName, name[targetName]);
+        AddToTracker(currentInstance, Plugin.Managers.Data.GetNpcName(name[targetName]), name[targetName]);
     }
 
     private void AddToTracker(string key, string targetName, uint targetId, bool isItem = false)
@@ -392,8 +398,7 @@ internal class Counter : IDisposable
                                                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                               // Instance    = key,
-                                               StartTime = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
+                                               StartTime   = !GetLocalTrackers().TryGetValue(key, out var currentTracker) ? DateTimeOffset.Now.ToUnixTimeSeconds() : currentTracker.startTime,
                                                Data = new Dictionary<uint, int>
                                                       { { targetId, 1 } },
                                                IsItem = isItem
@@ -463,38 +468,38 @@ internal class Counter : IDisposable
         _ssList.Add(GetNpcName(8915));
         _ssList.Add(GetNpcName(10615));
 
-        _conditionNamesNew[959].Add(GetNpcName(10461), 10461); // xx之物
-        _conditionNamesNew[959].Add(GetNpcName(10462), 10462);
-        _conditionNamesNew[959].Add(GetNpcName(10463), 10463);
+        _conditionsMob[959].Add(GetNpcName(10461), 10461); // xx之物
+        _conditionsMob[959].Add(GetNpcName(10462), 10462);
+        _conditionsMob[959].Add(GetNpcName(10463), 10463);
 
-        _conditionNamesNew[957].Add(GetNpcName(10697), 10697); // 毕舍遮
-        _conditionNamesNew[957].Add(GetNpcName(10698), 10698); // 金刚尾
-        _conditionNamesNew[957].Add(GetNpcName(10701), 10701); // 阿输陀花
+        _conditionsMob[957].Add(GetNpcName(10697), 10697); // 毕舍遮
+        _conditionsMob[957].Add(GetNpcName(10698), 10698); // 金刚尾
+        _conditionsMob[957].Add(GetNpcName(10701), 10701); // 阿输陀花
 
-        _conditionNamesNew[817].Add(GetNpcName(8789), 8789); // 破裂的隆卡器皿
-        _conditionNamesNew[817].Add(GetNpcName(8598), 8598); // 破裂的隆卡人偶
-        _conditionNamesNew[817].Add(GetNpcName(8599), 8599); // 破裂的隆卡石蒺藜
+        _conditionsMob[817].Add(GetNpcName(8789), 8789); // 破裂的隆卡器皿
+        _conditionsMob[817].Add(GetNpcName(8598), 8598); // 破裂的隆卡人偶
+        _conditionsMob[817].Add(GetNpcName(8599), 8599); // 破裂的隆卡石蒺藜
 
-        _conditionNamesNew[613].Add(GetNpcName(5750), 5750); // 观梦螺
-        _conditionNamesNew[613].Add(GetNpcName(5751), 5751); // 无壳观梦螺
+        _conditionsMob[613].Add(GetNpcName(5750), 5750); // 观梦螺
+        _conditionsMob[613].Add(GetNpcName(5751), 5751); // 无壳观梦螺
 
-        _conditionNamesNew[612].Add(GetNpcName(5685), 5685); // 狄亚卡
-        _conditionNamesNew[612].Add(GetNpcName(5671), 5671); // 莱西
+        _conditionsMob[612].Add(GetNpcName(5685), 5685); // 狄亚卡
+        _conditionsMob[612].Add(GetNpcName(5671), 5671); // 莱西
 
-        _conditionNamesNew[402].Add(GetNpcName(3556), 3556); // 美拉西迪亚薇薇尔飞龙
-        _conditionNamesNew[402].Add(GetNpcName(3580), 3580); // 小海德拉
-        _conditionNamesNew[402].Add(GetNpcName(3540), 3540); // 亚拉戈奇美拉
+        _conditionsMob[402].Add(GetNpcName(3556), 3556); // 美拉西迪亚薇薇尔飞龙
+        _conditionsMob[402].Add(GetNpcName(3580), 3580); // 小海德拉
+        _conditionsMob[402].Add(GetNpcName(3540), 3540); // 亚拉戈奇美拉
 
-        _conditionNamesNew[147].Add(GetNpcName(113), 113); // 土元精
+        _conditionsMob[147].Add(GetNpcName(113), 113); // 土元精
 
         // gather
-        _conditionNamesNew[814].Add(GetItemName(27759), 27759); // 矮人棉
-        _conditionNamesNew[400].Add(GetItemName(12634), 12634); // 星极花
-        _conditionNamesNew[400].Add(GetItemName(12536), 12536); // 皇金矿
+        _conditionsMob[814].Add(GetItemName(27759), 27759); // 矮人棉
+        _conditionsMob[400].Add(GetItemName(12634), 12634); // 星极花
+        _conditionsMob[400].Add(GetItemName(12536), 12536); // 皇金矿
 
         // discard
-        _conditionNamesNew[961].Add(GetItemName(36256), 36256);
-        _conditionNamesNew[813].Add(GetItemName(27850), 27850);
+        _conditionsMob[961].Add(GetItemName(36256), 36256);
+        _conditionsMob[813].Add(GetItemName(27850), 27850);
     }
 
     private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte a10);

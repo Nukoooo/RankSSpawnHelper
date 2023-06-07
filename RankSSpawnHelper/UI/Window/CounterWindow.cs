@@ -11,10 +11,14 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
 {
     private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.None;
     private DateTime _nextClickTime = DateTime.Now;
+    private readonly string _startTime;
+    private readonly string _clickIfFailed;
 
     public CounterWindow() : base("农怪计数##RankSSpawnHelper1337")
     {
-        Flags = WindowFlags;
+        Flags          = WindowFlags;
+        _startTime     = Plugin.IsChina() ? "开始时间" : "Start time";
+        _clickIfFailed = Plugin.IsChina() ? "寄了点我" : "Click if failed";
     }
 
     private static ImGuiWindowFlags BuildWindowFlags(ImGuiWindowFlags var)
@@ -62,11 +66,6 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
         if (actualTracker == null)
             return;
 
-        // C# is so stupid
-        string   server;
-        string   territory;
-        string   instance;
-        string[] split;
 
         if (!Plugin.Configuration.TrackerShowCurrentInstance)
         {
@@ -78,14 +77,10 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
 
             foreach (var (k, v) in actualTracker)
             {
-                split     = k.Split('@');
-                server    = split[0];
-                territory = split[1];
-                instance  = split[2] == "0" ? string.Empty : $" - {split[2]}线";
-                ImGui.Text($"{server} - {territory}{instance}");
+                ImGui.Text(k);
 
                 var timeInLoop = DateTimeOffset.FromUnixTimeSeconds(v.startTime).LocalDateTime;
-                ImGui.Text($"\t开始时间: {timeInLoop.Month}-{timeInLoop.Day}@{timeInLoop.ToShortTimeString()}");
+                ImGui.Text($"\t{_startTime}: {timeInLoop.Month}-{timeInLoop.Day}@{timeInLoop.ToShortTimeString()}");
 
                 foreach (var (subK, subV) in v.counter)
                 {
@@ -113,19 +108,13 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
             IsOpen = false;
             return;
         }
-
-        split = currentInstance.Split('@');
-
+        
         if (Plugin.Managers.Font.IsFontBuilt())
         {
             ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
             ImGui.SetWindowFontScale(0.8f);
         }
-
-        server    = split[0];
-        territory = split[1];
-        instance  = split[2] == "0" ? string.Empty : $" - {split[2]}线";
-
+        
         if (ImGui.Button("[ 寄了点我 ]##only_show_single_instance"))
         {
             if (DateTime.Now > _nextClickTime)
@@ -182,10 +171,10 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
         }
 
         ImGui.SameLine();
-        ImGui.Text($"{server} - {territory}{instance}");
+        ImGui.Text($"{currentInstance}");
 
         var time = DateTimeOffset.FromUnixTimeSeconds(value.startTime).LocalDateTime;
-        ImGui.Text($"\t开始时间: {time.Month}-{time.Day}@{time.ToShortTimeString()}");
+        ImGui.Text($"\t{_startTime}: {time.Month}-{time.Day}@{time.ToShortTimeString()}");
 
         foreach (var (subKey, subValue) in value.counter)
         {

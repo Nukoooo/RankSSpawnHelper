@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Dalamud;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using RankSSpawnHelper.Ui;
@@ -7,9 +8,7 @@ namespace RankSSpawnHelper;
 
 internal class Plugin
 {
-    private static bool _isChina;
-    private static bool _init;
-
+    internal static string PluginVersion { get; set; } = null!;
     internal static Configuration Configuration { get; set; } = null!;
     internal static Features.Features Features { get; set; } = null!;
     internal static Managers.Managers Managers { get; set; } = null!;
@@ -17,12 +16,7 @@ internal class Plugin
 
     public static bool IsChina()
     {
-        if (_init)
-            return _isChina;
-        _isChina = DalamudApi.SigScanner.TryScanText("48 8D 15 ?? ?? ?? ?? 33 F6 44 89 4C 24", out _);
-        _init    = true;
-
-        return _isChina;
+        return DalamudApi.DataManager.Language == (ClientLanguage)4;;
     }
 
     public static void Print(string text)

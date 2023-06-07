@@ -18,14 +18,12 @@ namespace RankSSpawnHelper.Managers;
 
 internal class Socket : IDisposable
 {
-    private bool _oldRangeModeState;
-    private const string ServerVersion = "v4";
+    private const string ServerVersion = "v5";
 
-    private List<string> _servers;
     private IWebsocketClient _client;
-    
+
 #if DEBUG || DEBUG_CN
-        private const string Url = "ws://127.0.0.1:8000";
+    private const string Url = "ws://127.0.0.1:8000";
 #else
     private const string Url = "ws://124.220.161.157:8000";
 #endif
@@ -64,8 +62,6 @@ internal class Socket : IDisposable
 
     public void Dispose()
     {
-        Plugin.Configuration.TrackRangeMode = _oldRangeModeState;
-
         DalamudApi.ClientState.Login  -= ClientState_OnLogin;
         DalamudApi.ClientState.Logout -= ClientState_OnLogout;
 
@@ -74,8 +70,8 @@ internal class Socket : IDisposable
         GC.SuppressFinalize(this);
     }
 
-#if DEBUG
-        public void Connect(string url)
+#if DEBUG || DEBUG_CN
+    public void Connect(string url)
 #else
     private void Connect(string url)
 #endif
@@ -105,7 +101,7 @@ internal class Socket : IDisposable
                              await Task.Delay(500);
                          }
 
-                         _servers = Data.GetServers();
+                         Plugin.Managers.Data.GetServers();
 
                          _client = new WebsocketClient(new Uri(url), () =>
                                                                      {
@@ -116,7 +112,8 @@ internal class Socket : IDisposable
                                                                          client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
                                                                          client.Options.SetRequestHeader("server-version", ServerVersion);
                                                                          client.Options.SetRequestHeader("user-type", "Dalamud");
-                                                                         client.Options.SetRequestHeader("is-china", Plugin.IsChina().ToString());
+                                                                         client.Options.SetRequestHeader("plugin-version", Plugin.PluginVersion);
+                                                                         client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
                                                                          return client;
                                                                      })
                                    {
@@ -147,14 +144,14 @@ internal class Socket : IDisposable
         return _client != null && _client.IsRunning;
     }
 
-#if DEBUG
-        public async void Disconnect()
-        {
-            if (!Connected())
-                return;
+#if DEBUG || DEBUG_CN
+    public async void Disconnect()
+    {
+        if (!Connected())
+            return;
 
-            await _client.Stop(WebSocketCloseStatus.NormalClosure, "Disconnection");
-        }
+        await _client.Stop(WebSocketCloseStatus.NormalClosure, "Disconnection");
+    }
 #else
     public async void Reconnect()
     {
@@ -176,24 +173,56 @@ internal class Socket : IDisposable
     {
         PluginLog.Debug($"ReconnectionType: {args.Type}");
 
-        _oldRangeModeState                  = Plugin.Configuration.TrackRangeMode;
-        Plugin.Configuration.TrackRangeMode = false;
-
         var localTracker = Plugin.Features.Counter.GetLocalTrackers();
 
         if (localTracker == null || localTracker.Count == 0 || !DalamudApi.ClientState.LocalPlayer)
             return;
 
-        /*var list = localTracker.Select(t => new NetMessage.Tracker { Data = t.Value.counter, Time = t.Value.startTime, Instance = t.Key, TerritoryId = t.Value.territoryId }).ToList();
-        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+        List<NetTracker> trackers = new();
 
-        SendMessage(new NetMessage
-                    {
-                        Type            = "NewConnection",
-                        CurrentInstance = currentInstance,
-                        Trackers        = list,
-                        TerritoryId     = DalamudApi.ClientState.TerritoryType
-                    });*/
+        foreach (var tracker in localTracker)
+        {
+            var split       = tracker.Key.Split('@');
+            var worldId     = Plugin.Managers.Data.GetWorldIdByName(split[0]);
+            var territoryId = Plugin.Managers.Data.GetTerritoryIdByName(split[1]);
+            var instanceId  = 0u;
+            if (split.Length == 3)
+                _ = uint.TryParse(split[2], out instanceId);
+
+            Dictionary<uint, int> data = new();
+
+            var isItem = tracker.Value.territoryId is 814 or 400 or 961 or 813;
+
+            foreach (var counter in tracker.Value.counter)
+            {
+                if (isItem)
+                    data[Plugin.Managers.Data.GetItemIdByName(counter.Key)] = counter.Value;
+                else if (tracker.Value.territoryId == 621)
+                    data[0] = counter.Value;
+                else
+                    data[Plugin.Managers.Data.GetNpcIdByName(counter.Key)] = counter.Value;
+            }
+
+            var netTracker = new NetTracker
+                             {
+                                 WorldId     = worldId,
+                                 TerritoryId = territoryId,
+                                 InstanceId  = instanceId,
+                                 Data = data,
+                                 Time = tracker.Value.startTime
+                             };
+
+            trackers.Add(netTracker);
+        }
+
+        Plugin.Managers.Socket.SendMessage(new NewConnectionMessage
+                                           {
+                                               Type        = "NewConnection",
+                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
+                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               Trackers = trackers
+                                           });
     }
 
     private void OnMessageReceived(ResponseMessage args)
@@ -238,8 +267,7 @@ internal class Socket : IDisposable
                 }
                 case "Attempt":
                 {
-                    var message  = result.Message;
-                    var instance = message[..message.IndexOf(message.Contains(" 寄了.") ? " 寄了." : " 出货了.", StringComparison.Ordinal)];
+                    var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
                     Plugin.Features.Counter.RemoveInstance(instance);
 
                     if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
@@ -248,20 +276,29 @@ internal class Socket : IDisposable
                     if (DalamudApi.Condition[ConditionFlag.BoundByDuty])
                         return;
 
-                    var serverName  = message[..message.IndexOf('@')];
-                    var shouldPrint = (_servers.Contains(serverName) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) || Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
+                    var shouldPrint = (Plugin.Managers.Data.IsFromOtherServer(result.WorldId) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) ||
+                                      Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
 
                     if (!shouldPrint)
                         return;
+
+                    var message = $"{instance} {(result.Failed ? "寄了" : "出货了")}. 概率: ";
+                    if (result.StartPercent != null)
+                        message += $"{result.StartPercent:F2}% / ";
+                    message += $"{result.StartPercent:F2}%";
 
                     Plugin.Print(message);
                     break;
                 }
                 case "Counter":
                 {
+                    var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
+
                     foreach (var (key, value) in result.Counter)
                     {
-                        Plugin.Features.Counter.UpdateNetworkedTracker(result.Instance, key, value, result.Time, result.TerritoryId);
+                        var isItem  = result.TerritoryId is 814 or 400 or 961 or 813;
+                        var keyName = isItem ? Plugin.Managers.Data.GetItemName(key) : result.TerritoryId == 621 ? Plugin.IsChina() ? "扔垃圾" : "Item" : Plugin.Managers.Data.GetNpcName(key);
+                        Plugin.Features.Counter.UpdateNetworkedTracker(instance, keyName, value, result.Time, result.TerritoryId);
                     }
 
                     return;
@@ -270,10 +307,13 @@ internal class Socket : IDisposable
                 {
                     if (Plugin.Configuration.AttemptMessage <= AttemptMessageType.Off)
                         return;
+
                     var localTime = DateTimeOffset.FromUnixTimeSeconds(result.Time).LocalDateTime;
 
+                    var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
+
                     var color = (ushort)(result.Failed ? Plugin.Configuration.FailedMessageColor : Plugin.Configuration.SpawnedMessageColor);
-                    var message = (result.Failed ? $"不好啦！ {result.Instance}寄啦！\n寄时: " : $"太好啦！{result.Instance}出货啦！\n出时: ") +
+                    var message = (result.Failed ? $"不好啦！ {instance}寄啦！\n寄时: " : $"太好啦！{instance}出货啦！\n出时: ") +
                                   $"{localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n计数总数: {result.Total}\n计数详情:\n";
 
                     var payloads = new List<Payload>
@@ -283,9 +323,19 @@ internal class Socket : IDisposable
                                        new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor)
                                    };
 
+                    var isItem = result.TerritoryId is 814 or 400 or 961 or 813;
+
                     foreach (var (k, v) in result.Counter)
                     {
-                        payloads.Add(new TextPayload($"    {k}: {v}\n"));
+                        string name;
+                        if (isItem)
+                            name = Plugin.Managers.Data.GetItemName(k);
+                        else if (result.TerritoryId == 621)
+                            name = Plugin.IsChina() ? "扔垃圾" : "Item";
+                        else
+                            name = Plugin.Managers.Data.GetNpcName(k);
+
+                        payloads.Add(new TextPayload($"    {name}: {v}\n"));
                     }
 
                     payloads.Add(new UIForegroundPayload(0));
@@ -293,20 +343,28 @@ internal class Socket : IDisposable
                     if (Plugin.Configuration.AttemptMessage == AttemptMessageType.Basic)
                         goto end;
 
-
                     payloads.Add(new TextPayload("人数详情:\n"));
                     payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
 
                     foreach (var userCounter in result.UserCounter)
                     {
                         payloads.Add(new TextPayload($"    {userCounter.UserName}: {userCounter.TotalCount}\n"));
-                        if (userCounter.Counter is not { Count: > 1 }) 
+                        if (userCounter.Counter == null)
                             continue;
                         foreach (var (k, v) in userCounter.Counter)
                         {
-                            payloads.Add(new TextPayload($"        {k}: {v}\n"));
+                            string name;
+                            if (isItem)
+                                name = Plugin.Managers.Data.GetItemName(k);
+                            else if (result.TerritoryId == 621)
+                                name = Plugin.IsChina() ? "扔垃圾" : "Item";
+                            else
+                                name = Plugin.Managers.Data.GetNpcName(k);
+
+                            payloads.Add(new TextPayload($"        {name}: {v}\n"));
                         }
                     }
+
 
                     payloads.Add(new UIForegroundPayload(0));
 
@@ -350,7 +408,7 @@ internal class Socket : IDisposable
 
                     payloads.Add(new UIForegroundPayload(0));
 
-                    Plugin.Features.Counter.RemoveInstance(result.Instance);
+                    Plugin.Features.Counter.RemoveInstance(instance);
                     Plugin.Print(payloads);
 
                     ImGui.SetClipboardText(chatMessage);
@@ -364,11 +422,12 @@ internal class Socket : IDisposable
                 }
                 case "ChangeArea":
                 {
-                    var time = DateTimeOffset.FromUnixTimeSeconds(result.Time).ToLocalTime();
+                    var time     = DateTimeOffset.FromUnixTimeSeconds(result.Time).ToLocalTime();
+                    var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
                     Plugin.Print(new List<Payload>
                                  {
                                      new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                     new TextPayload($"{result.Instance} "),
+                                     new TextPayload($"{instance}"),
                                      new UIForegroundPayload(0),
                                      new TextPayload("上一次尝试触发的时间: "),
                                      new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),

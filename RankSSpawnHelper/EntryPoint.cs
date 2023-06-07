@@ -52,10 +52,9 @@ public class EntryPoint : IDalamudPlugin
 
         DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
         DalamudApi.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
-        DalamudApi.GameNetwork.NetworkMessage       += GameNetworkOnNetworkMessage;
 
         var pluginVersion = _assembly.GetName().Version.ToString();
-
+        Plugin.PluginVersion = pluginVersion;
 #if RELEASE
             if (Plugin.Configuration.PluginVersion == pluginVersion)
                 return;
@@ -66,28 +65,14 @@ public class EntryPoint : IDalamudPlugin
                      {
                          new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                          new UIForegroundPayload(35),
-                         new TextPayload("  [-] 加上去年忘了加的检查\n"),
-                         new TextPayload("  [-] 删掉一些没用的代码\n"),
-                         new TextPayload("  [-] .NET7-ize\n"),
-                         new TextPayload("  [-] 缩短了一些CD间隔\n"),
-                         new TextPayload("  [-] 稍微优化了一点点性能\n"),
-                         new TextPayload("  [-] 修复了1..2.2.10版本中不会计数的问题\n"),
+                         new TextPayload("  [+] 部分功能已适配国际服(没有完全适配)\n"),
+                         new TextPayload("  [+] 增加 爱发电 链接,可以在 菜单设置 -> 其他 -> 隐藏爱发电按钮 关闭 \n"),
+                         new TextPayload("  [-] 服务器稍微优化了下性能\n"),
                          new UIForegroundPayload(0),
                          new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
                      });
     }
-
-    private void GameNetworkOnNetworkMessage(IntPtr dataptr, ushort opcode, uint sourceactorid, uint targetactorid, NetworkMessageDirection direction)
-    {
-        if (direction != NetworkMessageDirection.ZoneDown)
-            return;
-
-        if (opcode is 0x2a9 or 0x14f or 0x21a or 0x381 or 0x8a or 0x2c0 or 0x2cf or 0x131 or 0x1c4 or 0x31c or 0x3c9)
-            return;
-
-        // PluginLog.Debug($"Opcode: {opcode:X}");
-    }
-
+    
     public string Name => "SpawnHelper";
 
     private void LoadCosturaAssembles()
@@ -246,7 +231,6 @@ public class EntryPoint : IDalamudPlugin
         Plugin.Features.Dispose();
 
         DalamudApi.Interface.UiBuilder.Draw   -= _windowSystem.Draw;
-        DalamudApi.GameNetwork.NetworkMessage -= GameNetworkOnNetworkMessage;
         _windowSystem.RemoveAllWindows();
     }
 

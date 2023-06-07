@@ -10,11 +10,9 @@ namespace RankSSpawnHelper.Managers.DataManagers;
 
 internal class Player
 {
-    private readonly ExcelSheet<TerritoryType> _terr;
 
     public Player()
     {
-        _terr = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
     }
 
     public string GetCurrentTerritory()
@@ -23,9 +21,7 @@ internal class Player
         {
             var instanceNumber = GetCurrentInstance();
 
-            return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData?.Name + "@" +
-                   _terr.GetRow(DalamudApi.ClientState.TerritoryType)?.PlaceName.Value?.Name.ToDalamudString().TextValue +
-                   "@" + instanceNumber;
+            return Plugin.Managers.Data.FormatInstance(DalamudApi.ClientState.LocalPlayer.CurrentWorld.Id, DalamudApi.ClientState.TerritoryType, (uint)instanceNumber);
         }
         catch (Exception e)
         {
@@ -41,11 +37,6 @@ internal class Player
 
         return 0;
     }
-
-    /*public uint GetCurrentTerritoryId()
-    {
-        return DalamudApi.ClientState.TerritoryType;
-    }*/
 
     public unsafe int GetCurrentInstance()
     {

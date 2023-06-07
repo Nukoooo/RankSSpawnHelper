@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 using Dalamud.Game.Text;
@@ -51,8 +52,40 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         _monsterNames ??= Plugin.Managers.Data.Monster.GetMonstersByExpansion((GameExpansion)_selectedExpansion);
     }
 
+    private void DrawAfdian()
+    {
+        if (Plugin.Configuration.HideAfDian)
+            return;
+
+        ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x005E5BFF);
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x005E5BFF);
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x005E5BFF);
+        if (ImGui.Button("爱发电 - 支持"))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo()
+                              {
+                                  UseShellExecute = true,
+                                  FileName        = "https://afdian.net/a/YuuriChito"
+                              });
+            }
+            catch(Exception ex)
+            {
+                PluginLog.Error($"{ex.Message}\n{ex.StackTrace}");
+            }
+        }
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+        ImGui.PopStyleColor(3);
+    }
+
     public override void Draw()
     {
+        DrawAfdian();
+
         ImGui.BeginTabBar("SpawnHelper主菜单");
         {
             if (ImGui.BeginTabItem("农怪计数"))
@@ -108,18 +141,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             Plugin.Configuration.Save();
         }
 
-        var trackMode = Plugin.Configuration.TrackRangeMode;
-        if (ImGui.Checkbox("范围计数", ref trackMode))
-        {
-            if (!Plugin.Managers.Socket.Connected())
-            {
-                Plugin.Configuration.TrackRangeMode = trackMode;
-                Plugin.Configuration.Save();
-            }
-            else
-                Plugin.Configuration.TrackRangeMode = false;
-        }
-
         ImGui.SameLine();
         ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
         if (ImGui.IsItemHovered())
@@ -165,7 +186,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             Plugin.Configuration.Save();
         }
 
-#if DEBUG
+#if DEBUG || DEBUG_CN
             ImGui.SetNextItemWidth(200);
             ImGui.InputText("服务器链接", ref _serverUrl, 256);
 
@@ -436,6 +457,13 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             Plugin.Configuration.Save();
         }
 
+        var hideAfdian = Plugin.Configuration.HideAfDian;
+        if (ImGui.Checkbox("隐藏爱发电按钮", ref hideAfdian))
+        {
+            Plugin.Configuration.HideAfDian = hideAfdian;
+            Plugin.Configuration.Save();
+        }
+
         ImGui.NewLine();
 
         ImGui.Text("触发失败消息颜色");
@@ -490,8 +518,8 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         ImGui.NewLine();
         var clearThreshold = Plugin.Configuration.TrackerClearThreshold;
-        ImGui.Text("在多少分钟后没更新就自动清除计数");
-#if DEBUG
+        ImGui.Text("x 分钟内没更新自动清除相关计数");
+#if DEBUG || DEBUG_CN
             if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 1f, 60f, "%.2f分"))
 #else
         if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 30f, 60f, "%.2f分"))
@@ -586,7 +614,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                          await Task.Delay(100);
                      }
 
-                     _servers = Data.GetServers();
+                     _servers = Plugin.Managers.Data.GetServers();
                  });
     }
 

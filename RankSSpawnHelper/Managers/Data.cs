@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Dalamud.Logging;
+using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
 
@@ -17,21 +18,27 @@ internal class Data
 
     private readonly Dictionary<uint, string> _npcName;
     private readonly Dictionary<uint, string> _itemName;
+    private readonly Dictionary<uint, string> _worldName;
+    private readonly Dictionary<uint, string> _territoryName;
+    private readonly ExcelSheet<World> _worldSheet;
     private readonly TextInfo _textInfo;
-
-        
+    
     public Data()
     {
-        _npcName  = DalamudApi.DataManager.GetExcelSheet<BNpcName>().ToDictionary(i => i.RowId, i=> i.Singular.RawString);
-        _itemName = DalamudApi.DataManager.GetExcelSheet<Item>().ToDictionary(i => i.RowId, i => i.Singular.RawString);
-        _textInfo  = new CultureInfo("en-US", false).TextInfo;
+        _worldSheet    = DalamudApi.DataManager.GetExcelSheet<World>();
+        _npcName       = DalamudApi.DataManager.GetExcelSheet<BNpcName>()!.ToDictionary(i => i.RowId, i=> i.Singular.RawString);
+        _itemName      = DalamudApi.DataManager.GetExcelSheet<Item>()!.ToDictionary(i => i.RowId, i => i.Singular.RawString);
+        _worldName     = _worldSheet.ToDictionary(i => i.RowId, i => i.Name.RawString);
+        _territoryName = DalamudApi.DataManager.GetExcelSheet<TerritoryType>()!.ToDictionary(i => i.RowId, i => i.PlaceName.Value.Name.RawString);
+
+        _textInfo      = new CultureInfo("en-US", false).TextInfo;
 
         Monster    = new Monster();
         Player     = new Player();
         MapTexture = new MapTexture();
     }
 
-    public static List<string> GetServers()
+    public List<string> GetServers()
     {
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
         if (dcRowId == 0)
@@ -39,14 +46,55 @@ internal class Data
             throw new IndexOutOfRangeException("aaaaaaaaaaaaaaaaaaaaaaa");
         }
 
-        var worlds = DalamudApi.DataManager.GetExcelSheet<World>()?.Where(world => world.DataCenter.Value?.RowId == dcRowId).ToList();
+        var worlds = _worldSheet.Where(world => world.DataCenter.Value?.RowId == dcRowId).ToList();
 
         return worlds?.Select(world => world.Name).Select(dummy => dummy.RawString).ToList();
+    }
+
+    public bool IsFromOtherServer(uint worldId)
+    {
+        var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
+        return dcRowId == _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
     }
 
     public string GetNpcName(uint id)
     {
         return _textInfo.ToTitleCase(_npcName[id]);
+    }
+
+    public string GetWorldName(uint id)
+    {
+        return _textInfo.ToTitleCase(_worldName[id]);
+    }
+
+    public string FormatInstance(uint world, uint territory, uint instance)
+    {
+        return instance == 0 ? $"{GetWorldName(world)}@{GetTerritoryName(territory)}" : $"{GetWorldName(world)}@{GetTerritoryName(territory)}@{instance}";
+    }
+
+    public string GetTerritoryName(uint id)
+    {
+        return _textInfo.ToTitleCase(_territoryName[id]);
+    }
+
+    public uint GetTerritoryIdByName(string name)
+    {
+        return _territoryName.Where(key => string.Equals(key.Value, name, StringComparison.CurrentCultureIgnoreCase)).Select(key => key.Key).FirstOrDefault();
+    }
+
+    public uint GetWorldIdByName(string name)
+    {
+        return _worldName.Where(key => string.Equals(key.Value, name, StringComparison.CurrentCultureIgnoreCase)).Select(key => key.Key).FirstOrDefault();
+    }
+
+    public uint GetItemIdByName(string name)
+    {
+        return _itemName.Where(key => string.Equals(key.Value, name, StringComparison.CurrentCultureIgnoreCase)).Select(key => key.Key).FirstOrDefault();
+    }
+
+    public uint GetNpcIdByName(string name)
+    {
+        return _npcName.Where(key => string.Equals(key.Value, name, StringComparison.CurrentCultureIgnoreCase)).Select(key => key.Key).FirstOrDefault();
     }
 
     public string GetItemName(uint id)
