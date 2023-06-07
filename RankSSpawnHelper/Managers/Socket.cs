@@ -34,13 +34,20 @@ internal class Socket : IDisposable
     {
         DalamudApi.ClientState.Login  += ClientState_OnLogin;
         DalamudApi.ClientState.Logout += ClientState_OnLogout;
-        if (DalamudApi.ClientState.LocalPlayer)
+
+        if (DalamudApi.ClientState.LocalPlayer != null && DalamudApi.ClientState.IsLoggedIn)
             Connect(Url);
     }
 
     private void ClientState_OnLogin(object sender, EventArgs e)
     {
-        Connect(Url);
+        Task.Run(async () =>
+                 {
+                     while (DalamudApi.ClientState.LocalPlayer == null)
+                         await Task.Delay(100);
+                     
+                     Connect(Url);
+                 });
     }
 
     private void ClientState_OnLogout(object sender, EventArgs e)
@@ -55,7 +62,6 @@ internal class Socket : IDisposable
         }
 
         Task.Run(Function);
-        // _client?.Dispose();
         _userName = string.Empty;
         PluginLog.Information("ClientState_OnLogout");
     }
@@ -80,28 +86,14 @@ internal class Socket : IDisposable
                  {
                      try
                      {
-                         if (!DalamudApi.ClientState.IsLoggedIn)
+                         if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
                          {
                              _client?.Dispose();
                              return;
                          }
 
                          _client?.Dispose();
-                         _userName = string.Empty;
-
-                         while (_userName == string.Empty)
-                         {
-                             if (!DalamudApi.ClientState.IsLoggedIn)
-                             {
-                                 _client?.Dispose();
-                                 return;
-                             }
-
-                             _userName = Plugin.Managers.Data.Player.GetLocalPlayerName();
-                             await Task.Delay(500);
-                         }
-
-                         Plugin.Managers.Data.GetServers();
+                         _userName = Plugin.Managers.Data.Player.GetLocalPlayerName();
 
                          _client = new WebsocketClient(new Uri(url), () =>
                                                                      {
@@ -175,7 +167,7 @@ internal class Socket : IDisposable
 
         var localTracker = Plugin.Features.Counter.GetLocalTrackers();
 
-        if (localTracker == null || localTracker.Count == 0 || !DalamudApi.ClientState.LocalPlayer)
+        if (!DalamudApi.ClientState.LocalPlayer || localTracker == null || localTracker.Count == 0)
             return;
 
         List<NetTracker> trackers = new();
@@ -208,8 +200,8 @@ internal class Socket : IDisposable
                                  WorldId     = worldId,
                                  TerritoryId = territoryId,
                                  InstanceId  = instanceId,
-                                 Data = data,
-                                 Time = tracker.Value.startTime
+                                 Data        = data,
+                                 Time        = tracker.Value.startTime
                              };
 
             trackers.Add(netTracker);
@@ -221,7 +213,7 @@ internal class Socket : IDisposable
                                                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                                               Trackers = trackers
+                                               Trackers    = trackers
                                            });
     }
 

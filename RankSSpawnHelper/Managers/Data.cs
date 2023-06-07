@@ -40,6 +40,8 @@ internal class Data
 
     public List<string> GetServers()
     {
+        if (DalamudApi.ClientState.LocalPlayer == null) 
+            return new List<string>();
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
         if (dcRowId == 0)
         {
@@ -49,6 +51,7 @@ internal class Data
         var worlds = _worldSheet.Where(world => world.DataCenter.Value?.RowId == dcRowId).ToList();
 
         return worlds?.Select(world => world.Name).Select(dummy => dummy.RawString).ToList();
+
     }
 
     public bool IsFromOtherServer(uint worldId)

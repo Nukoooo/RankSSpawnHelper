@@ -203,7 +203,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         ImGui.SameLine();
         ImGui.TextColored(Plugin.Managers.Socket.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Connected() ? "Connected" : "Disconnected");
 
-#if RELEASE
+#if RELEASE || RELEASE_CN
             ImGui.SameLine();
             if (ImGui.Button("重新连接"))
                 Plugin.Managers.Socket.Reconnect();
