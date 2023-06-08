@@ -12,7 +12,6 @@ using Dalamud.Logging;
 using ImGuiNET;
 using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
-using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
 
@@ -64,21 +63,23 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         {
             try
             {
-                Process.Start(new ProcessStartInfo()
+                Process.Start(new ProcessStartInfo
                               {
                                   UseShellExecute = true,
                                   FileName        = "https://afdian.net/a/YuuriChito"
                               });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 PluginLog.Error($"{ex.Message}\n{ex.StackTrace}");
             }
         }
+
         if (ImGui.IsItemHovered())
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
+
         ImGui.PopStyleColor(3);
     }
 
@@ -204,9 +205,9 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         ImGui.TextColored(Plugin.Managers.Socket.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Connected() ? "Connected" : "Disconnected");
 
 #if RELEASE || RELEASE_CN
-            ImGui.SameLine();
-            if (ImGui.Button("重新连接"))
-                Plugin.Managers.Socket.Reconnect();
+        ImGui.SameLine();
+        if (ImGui.Button("重新连接"))
+            Plugin.Managers.Socket.Reconnect();
 #endif
 
         DrawTrackerTable();

@@ -10,9 +10,9 @@ namespace RankSSpawnHelper.UI.Window;
 public class CounterWindow : Dalamud.Interface.Windowing.Window
 {
     private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.None;
-    private DateTime _nextClickTime = DateTime.Now;
-    private readonly string _startTime;
     private readonly string _clickIfFailed;
+    private readonly string _startTime;
+    private DateTime _nextClickTime = DateTime.Now;
 
     public CounterWindow() : base("农怪计数##RankSSpawnHelper1337")
     {
@@ -108,13 +108,13 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
             IsOpen = false;
             return;
         }
-        
+
         if (Plugin.Managers.Font.IsFontBuilt())
         {
             ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
             ImGui.SetWindowFontScale(0.8f);
         }
-        
+
         if (ImGui.Button("[ 寄了点我 ]##only_show_single_instance"))
         {
             if (DateTime.Now > _nextClickTime)
@@ -123,8 +123,8 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
                 {
                     Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                                        {
-                                                           Type        = "ggnore", 
-                                                           WorldId = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                                           Type        = "ggnore",
+                                                           WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                            InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                            TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                            // Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),

@@ -16,7 +16,7 @@ internal class Plugin
 
     public static bool IsChina()
     {
-        return DalamudApi.DataManager.Language == (ClientLanguage)4;;
+        return DalamudApi.DataManager.Language == (ClientLanguage)4;
     }
 
     public static void Print(string text)

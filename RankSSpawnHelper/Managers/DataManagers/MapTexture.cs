@@ -45,7 +45,7 @@ internal class MapTexture : IDisposable
                          var texture = GetTexture(path);
                          if (texture != null && texture.ImGuiHandle != nint.Zero)
                          {
-                             PluginLog.Debug($"Added mapid: {map.RowId}");
+                             PluginLog.Verbose($"Added mapid: {map.RowId}");
                              _textures[map.RowId] = new MapTextureInfo
                                                     {
                                                         texture   = texture,

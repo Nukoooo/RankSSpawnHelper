@@ -44,8 +44,10 @@ internal class Socket : IDisposable
         Task.Run(async () =>
                  {
                      while (DalamudApi.ClientState.LocalPlayer == null)
+                     {
                          await Task.Delay(100);
-                     
+                     }
+
                      Connect(Url);
                  });
     }
@@ -277,7 +279,7 @@ internal class Socket : IDisposable
                     var message = $"{instance} {(result.Failed ? "寄了" : "出货了")}. 概率: ";
                     if (result.StartPercent != null)
                         message += $"{result.StartPercent:F2}% / ";
-                    message += $"{result.StartPercent:F2}%";
+                    message += $"{result.Percent:F2}%";
 
                     Plugin.Print(message);
                     break;

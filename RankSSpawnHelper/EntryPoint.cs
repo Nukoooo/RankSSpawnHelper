@@ -5,12 +5,10 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using Dalamud.Game.Network;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using ImGuiNET;
 using RankSSpawnHelper.Attributes;
@@ -68,12 +66,15 @@ public class EntryPoint : IDalamudPlugin
                          new TextPayload("  [+] 部分功能已适配国际服(没有完全适配)\n"),
                          new TextPayload("  [+] 增加 爱发电 链接,可以在 菜单设置 -> 其他 -> 隐藏爱发电按钮 关闭 \n"),
                          new TextPayload("  [-] 服务器稍微优化了下性能\n"),
-                         new TextPayload("  [-] 尝试修复版本 1.3.0.0 里加载人物->载图会闪退的bug\n"),
+                         new TextPayload("  [-] 修复版本 1.3.0.0 里加载人物->载图会闪退的BUG\n"),
+                         new TextPayload("  [-] 修复版本 1.3.0.0/1 里 选择了不接收别的大区触发消息,但仍能接收的BUG\n"),
+                         new TextPayload("  [-] 修复版本 1.3.0.0/1 里 部分触发消息不显示概率的BUG\n"),
+                         new TextPayload("  [-] 缩短了异亚计数的范围,现在大小是秘银风暴的AOE范围 + 修复版本 1.3.0.0/1 里不显示计数的BUG\n"),
                          new UIForegroundPayload(0),
                          new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
                      });
     }
-    
+
     public string Name => "SpawnHelper";
 
     private void LoadCosturaAssembles()
@@ -207,14 +208,14 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
-        Plugin.Managers.Socket.SendMessage(new AttemptMessage()
+        Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                            {
                                                Type        = "ggnore",
                                                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                // Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
-                                               Failed      = true
+                                               Failed = true
                                            });
     }
 #endregion
@@ -231,7 +232,7 @@ public class EntryPoint : IDalamudPlugin
         Plugin.Managers.Dispose();
         Plugin.Features.Dispose();
 
-        DalamudApi.Interface.UiBuilder.Draw   -= _windowSystem.Draw;
+        DalamudApi.Interface.UiBuilder.Draw -= _windowSystem.Draw;
         _windowSystem.RemoveAllWindows();
     }
 

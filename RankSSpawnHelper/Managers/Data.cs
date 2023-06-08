@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Dalamud.Logging;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
@@ -11,27 +10,27 @@ namespace RankSSpawnHelper.Managers;
 
 internal class Data
 {
+    private readonly Dictionary<uint, string> _itemName;
+
+    private readonly Dictionary<uint, string> _npcName;
+    private readonly Dictionary<uint, string> _territoryName;
+    private readonly TextInfo _textInfo;
+    private readonly Dictionary<uint, string> _worldName;
+    private readonly ExcelSheet<World> _worldSheet;
     public MapTexture MapTexture;
 
     public Monster Monster;
     public Player Player;
 
-    private readonly Dictionary<uint, string> _npcName;
-    private readonly Dictionary<uint, string> _itemName;
-    private readonly Dictionary<uint, string> _worldName;
-    private readonly Dictionary<uint, string> _territoryName;
-    private readonly ExcelSheet<World> _worldSheet;
-    private readonly TextInfo _textInfo;
-    
     public Data()
     {
         _worldSheet    = DalamudApi.DataManager.GetExcelSheet<World>();
-        _npcName       = DalamudApi.DataManager.GetExcelSheet<BNpcName>()!.ToDictionary(i => i.RowId, i=> i.Singular.RawString);
+        _npcName       = DalamudApi.DataManager.GetExcelSheet<BNpcName>()!.ToDictionary(i => i.RowId, i => i.Singular.RawString);
         _itemName      = DalamudApi.DataManager.GetExcelSheet<Item>()!.ToDictionary(i => i.RowId, i => i.Singular.RawString);
         _worldName     = _worldSheet.ToDictionary(i => i.RowId, i => i.Name.RawString);
         _territoryName = DalamudApi.DataManager.GetExcelSheet<TerritoryType>()!.ToDictionary(i => i.RowId, i => i.PlaceName.Value.Name.RawString);
 
-        _textInfo      = new CultureInfo("en-US", false).TextInfo;
+        _textInfo = new CultureInfo("en-US", false).TextInfo;
 
         Monster    = new Monster();
         Player     = new Player();
@@ -40,7 +39,7 @@ internal class Data
 
     public List<string> GetServers()
     {
-        if (DalamudApi.ClientState.LocalPlayer == null) 
+        if (DalamudApi.ClientState.LocalPlayer == null)
             return new List<string>();
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
         if (dcRowId == 0)
@@ -51,13 +50,12 @@ internal class Data
         var worlds = _worldSheet.Where(world => world.DataCenter.Value?.RowId == dcRowId).ToList();
 
         return worlds?.Select(world => world.Name).Select(dummy => dummy.RawString).ToList();
-
     }
 
     public bool IsFromOtherServer(uint worldId)
     {
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
-        return dcRowId == _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
+        return dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
     }
 
     public string GetNpcName(uint id)

@@ -19,20 +19,20 @@ namespace RankSSpawnHelper.Features;
 internal class Counter : IDisposable
 {
     private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionsMob = new()
-                                                                                       {
-                                                                                           { 961, new Dictionary<string, uint>() }, // 鸟蛋
-                                                                                           { 959, new Dictionary<string, uint>() }, // 叹息海
-                                                                                           { 957, new Dictionary<string, uint>() }, // 萨维奈岛
-                                                                                           { 814, new Dictionary<string, uint>() }, // 棉花
-                                                                                           { 813, new Dictionary<string, uint>() }, // Lakeland
-                                                                                           { 817, new Dictionary<string, uint>() }, // 拉凯提卡大森林
-                                                                                           { 621, new Dictionary<string, uint>() }, // 湖区
-                                                                                           { 613, new Dictionary<string, uint>() }, // 红玉海
-                                                                                           { 612, new Dictionary<string, uint>() }, // 边区
-                                                                                           { 402, new Dictionary<string, uint>() }, // 魔大陆
-                                                                                           { 400, new Dictionary<string, uint>() }, // 翻云雾海
-                                                                                           { 147, new Dictionary<string, uint>() } // 北萨
-                                                                                       };
+                                                                                   {
+                                                                                       { 961, new Dictionary<string, uint>() }, // 鸟蛋
+                                                                                       { 959, new Dictionary<string, uint>() }, // 叹息海
+                                                                                       { 957, new Dictionary<string, uint>() }, // 萨维奈岛
+                                                                                       { 814, new Dictionary<string, uint>() }, // 棉花
+                                                                                       { 813, new Dictionary<string, uint>() }, // Lakeland
+                                                                                       { 817, new Dictionary<string, uint>() }, // 拉凯提卡大森林
+                                                                                       { 621, new Dictionary<string, uint>() }, // 湖区
+                                                                                       { 613, new Dictionary<string, uint>() }, // 红玉海
+                                                                                       { 612, new Dictionary<string, uint>() }, // 边区
+                                                                                       { 402, new Dictionary<string, uint>() }, // 魔大陆
+                                                                                       { 400, new Dictionary<string, uint>() }, // 翻云雾海
+                                                                                       { 147, new Dictionary<string, uint>() } // 北萨
+                                                                                   };
 
     private readonly CancellationTokenSource _eventLoopTokenSource = new();
 
@@ -215,7 +215,7 @@ internal class Counter : IDisposable
                                                    WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                    InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                    TerritoryId = territory,
-                                                   Failed = false
+                                                   Failed      = false
                                                });
             return;
         }
@@ -292,7 +292,7 @@ internal class Counter : IDisposable
             return;
 
         var name = Plugin.Managers.Data.GetItemName(itemId);
-        
+
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
     }
 
@@ -322,7 +322,7 @@ internal class Counter : IDisposable
                 return;
         }
 
-        var name = territoryType == 621 ? (Plugin.IsChina() ? "扔垃圾" : "Item") : Plugin.Managers.Data.GetItemName(itemId);
+        var name = territoryType == 621 ? Plugin.IsChina() ? "扔垃圾" : "Item" : Plugin.Managers.Data.GetItemName(itemId);
 
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
     }
@@ -461,7 +461,7 @@ internal class Counter : IDisposable
         string GetItemName(uint row)
         {
             var name = items.GetRow(row).Singular.RawString.ToLower();
-            PluginLog.Debug($"Added item name {name}");
+            PluginLog.Verbose($"Added item name {name}");
             return name;
         }
 

@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using Dalamud.Logging;
-using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
 
 namespace RankSSpawnHelper.Managers.DataManagers;
 
 internal class Player
 {
-
-    public Player()
-    {
-    }
-
     public string GetCurrentTerritory()
     {
         try
@@ -32,7 +24,7 @@ internal class Player
 
     public uint GetCurrentWorldId()
     {
-        if (DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId != null) 
+        if (DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId != null)
             return (uint)DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId;
 
         return 0;

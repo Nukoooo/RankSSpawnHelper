@@ -14,10 +14,10 @@ internal class BaseMessage
 internal class NetTracker
 {
     public Dictionary<uint, int> Data;
-    public uint WorldId;
-    public uint TerritoryId;
     public uint InstanceId;
+    public uint TerritoryId;
     public long Time;
+    public uint WorldId;
 }
 
 internal class NewConnectionMessage : BaseMessage

@@ -30,6 +30,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
     {
         try
         {
+#if RELEASE || RELEASE_CN
             if (count < 10)
             {
                 Plugin.Print(new List<Payload>
@@ -40,12 +41,12 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
                              });
                 return;
             }
-
+#endif
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
             if (!_dateTimes.ContainsKey(currentInstance))
             {
-                _dateTimes.Add(currentInstance, DateTime.Now + FromMinutes(15.0));
+                _dateTimes.Add(currentInstance, DateTime.Now + FromSeconds(15.0));
                 Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                                    {
                                                        Type = "WeeEa",
@@ -54,7 +55,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
                                                        InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                        TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                        Failed      = true,
-                                                       Names = nameList
+                                                       Names       = nameList
                                                    });
                 return;
             }
@@ -72,7 +73,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
                 return;
             }
 
-            _dateTimes[currentInstance] = DateTime.Now + FromMinutes(30.0);
+            _dateTimes[currentInstance] = DateTime.Now + FromSeconds(30.0);
             Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                                {
                                                    Type = "WeeEa",
@@ -96,10 +97,8 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
         var count2   = 0;
         var nameList = new List<string>();
 
-        var enumerator = DalamudApi.ObjectTable.Where(i =>
-                                                          i != null && i.Address != nint.Zero &&
-                                                          i is Npc &&
-                                                          i.ObjectKind == ObjectKind.Companion);
+        var enumerator = DalamudApi.ObjectTable.Where(i => i != null && i.Address != nint.Zero
+                                                                     && i.ObjectKind == ObjectKind.Companion);
 
         var localPlayerPos = DalamudApi.ClientState.LocalPlayer.Position;
 
@@ -110,15 +109,19 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
             // xzy 
             var length2D = Math.Sqrt(delta.X * delta.X + delta.Z * delta.Z);
 
-            if (length2D > 3)
+            if (length2D > 10)
                 continue;
 
+            // TODO: Get name from excel sheet
             if (obj.Name.ToString() == "小异亚")
             {
                 count++;
-
-                var owner = DalamudApi.ObjectTable.SearchById(obj.OwnerId);
-                nameList.Add(owner.Name.TextValue);
+                var owner = (PlayerCharacter)DalamudApi.ObjectTable[obj.ObjectIndex - 1];
+                if (owner != null)
+                {
+                    var name = $"{owner.Name.TextValue}@{owner.HomeWorld.GameData.Name.RawString}";
+                    nameList.Add(name);
+                }
 
                 continue;
             }
@@ -131,6 +134,9 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 
         if (ImGui.Button("[ 寄了点我 ]"))
         {
+            /*var obj = DalamudApi.ObjectTable[1];
+            if (obj.IsValid() && obj.ObjectKind == ObjectKind.Companion && obj.Name.TextValue == "小异亚")
+                nameList.Add();*/
             AttemptFail(count, nameList);
         }
 

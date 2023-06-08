@@ -140,7 +140,7 @@ internal class Monster
                                       _                       => throw new ArgumentOutOfRangeException()
                                   };
                      }
-                         
+
                      try
                      {
                          var content = Encoding.UTF8.GetString(Resource.hunt);
