@@ -63,13 +63,11 @@ public class EntryPoint : IDalamudPlugin
                      {
                          new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                          new UIForegroundPayload(35),
-                         new TextPayload("  [+] 部分功能已适配国际服(没有完全适配)\n"),
-                         new TextPayload("  [+] 增加 爱发电 链接,可以在 菜单设置 -> 其他 -> 隐藏爱发电按钮 关闭 \n"),
-                         new TextPayload("  [-] 服务器稍微优化了下性能\n"),
                          new TextPayload("  [-] 修复版本 1.3.0.0 里加载人物->载图会闪退的BUG\n"),
                          new TextPayload("  [-] 修复版本 1.3.0.0/1 里 选择了不接收别的大区触发消息,但仍能接收的BUG\n"),
                          new TextPayload("  [-] 修复版本 1.3.0.0/1 里 部分触发消息不显示概率的BUG\n"),
                          new TextPayload("  [-] 缩短了异亚计数的范围,现在大小是秘银风暴的AOE范围 + 修复版本 1.3.0.0/1 里不显示计数的BUG\n"),
+                         new TextPayload("  [-] 修复版本 1.3.0.0/1/2 里不显示 触发点位和触发概率 的BUG\n"),
                          new UIForegroundPayload(0),
                          new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
                      });

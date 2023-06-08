@@ -102,8 +102,9 @@ internal class ShowHuntMap : IDisposable
 
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
         var split           = currentInstance.Split('@');
-        if (!int.TryParse(split[2], out var instance))
-            return;
+        var instance        = 0;
+        if (split.Length == 3)
+            _ = int.TryParse(split[2], out instance);
 
         var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
         if (huntMaps == null || huntMaps.spawnPoints.Count == 0)

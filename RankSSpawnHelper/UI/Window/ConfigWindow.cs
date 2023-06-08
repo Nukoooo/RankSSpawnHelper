@@ -396,7 +396,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         }
 
         var enableAttemptMessagesFromOtherDcs = Plugin.Configuration.EnableAttemptMessagesFromOtherDcs;
-        if (ImGui.Checkbox("接受触发成功/失败消息", ref enableAttemptMessagesFromOtherDcs))
+        if (ImGui.Checkbox("接收触发成功/失败消息", ref enableAttemptMessagesFromOtherDcs))
         {
             Plugin.Configuration.EnableAttemptMessagesFromOtherDcs = enableAttemptMessagesFromOtherDcs;
             Plugin.Configuration.Save();

@@ -134,9 +134,6 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 
         if (ImGui.Button("[ 寄了点我 ]"))
         {
-            /*var obj = DalamudApi.ObjectTable[1];
-            if (obj.IsValid() && obj.ObjectKind == ObjectKind.Companion && obj.Name.TextValue == "小异亚")
-                nameList.Add();*/
             AttemptFail(count, nameList);
         }
 
