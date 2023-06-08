@@ -270,10 +270,7 @@ internal class Socket : IDisposable
                     if (DalamudApi.Condition[ConditionFlag.BoundByDuty])
                         return;
 
-                    var shouldPrint = (Plugin.Managers.Data.IsFromOtherServer(result.WorldId) && !Plugin.Configuration.ReceiveAttempMessageFromOtherDc) ||
-                                      Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
-
-                    if (!shouldPrint)
+                    if (!Plugin.Configuration.ReceiveAttempMessageFromOtherDc && Plugin.Managers.Data.IsFromOtherServer(result.WorldId))
                         return;
 
                     var message = $"{instance} {(result.Failed ? "寄了" : "出货了")}. 概率: ";

@@ -55,6 +55,9 @@ internal class Data
     public bool IsFromOtherServer(uint worldId)
     {
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
+#if DEBUG || DEBUG_CN
+        PluginLog.Debug($"Local: {DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.Name}, {_worldSheet.GetRow(worldId).DataCenter.Value.Name}, IsFromOtherDC: {dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId}");
+#endif
         return dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
     }
 
