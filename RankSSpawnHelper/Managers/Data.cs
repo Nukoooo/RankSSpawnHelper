@@ -5,6 +5,9 @@ using System.Linq;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
+#if DEBUG || DEBUG_CN
+using Dalamud.Logging;
+#endif
 
 namespace RankSSpawnHelper.Managers;
 
@@ -19,7 +22,7 @@ internal class Data
     private readonly ExcelSheet<World> _worldSheet;
     public MapTexture MapTexture;
 
-    public Monster Monster;
+    public SRank SRank;
     public Player Player;
 
     public Data()
@@ -32,7 +35,7 @@ internal class Data
 
         _textInfo = new CultureInfo("en-US", false).TextInfo;
 
-        Monster    = new Monster();
+        SRank    = new SRank();
         Player     = new Player();
         MapTexture = new MapTexture();
     }
@@ -63,12 +66,12 @@ internal class Data
 
     public string GetNpcName(uint id)
     {
-        return _textInfo.ToTitleCase(_npcName[id]);
+        return _npcName.TryGetValue(id, out var name) ? _textInfo.ToTitleCase(name) : "";
     }
 
     public string GetWorldName(uint id)
     {
-        return _textInfo.ToTitleCase(_worldName[id]);
+        return _worldName.TryGetValue(id, out var name) ? _textInfo.ToTitleCase(name) : "";
     }
 
     public string FormatInstance(uint world, uint territory, uint instance)

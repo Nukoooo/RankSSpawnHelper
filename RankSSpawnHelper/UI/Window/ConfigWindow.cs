@@ -48,7 +48,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     public override void OnOpen()
     {
         base.OnOpen();
-        _monsterNames ??= Plugin.Managers.Data.Monster.GetMonstersByExpansion((GameExpansion)_selectedExpansion);
+        _monsterNames ??= Plugin.Managers.Data.SRank.GetSRanksByExpansion((GameExpansion)_selectedExpansion);
     }
 
     private void DrawAfdian()
@@ -288,7 +288,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     {
         if (ImGui.Combo("版本", ref _selectedExpansion, _expansions.ToArray(), _expansions.Count))
         {
-            _monsterNames    = Plugin.Managers.Data.Monster.GetMonstersByExpansion((GameExpansion)_selectedExpansion);
+            _monsterNames    = Plugin.Managers.Data.SRank.GetSRanksByExpansion((GameExpansion)_selectedExpansion);
             _selectedMonster = 0;
         }
 
@@ -300,19 +300,19 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         {
             ImGui.PushFont(UiBuilder.IconFont);
             if (ImGui.Button(FontAwesomeIcon.Search.ToIconString()))
-                Plugin.Managers.Data.Monster.FetchData(_servers, _monsterNames[_selectedMonster], _selectedInstance);
+                Plugin.Managers.Data.SRank.FetchData(_servers, _monsterNames[_selectedMonster], _selectedInstance);
             ImGui.PopFont();
         }
 
-        if (Plugin.Managers.Data.Monster.GetErrorMessage() != string.Empty)
-            ImGui.TextColored(ImGuiColors.DPSRed, Plugin.Managers.Data.Monster.GetErrorMessage());
+        if (Plugin.Managers.Data.SRank.GetErrorMessage() != string.Empty)
+            ImGui.TextColored(ImGuiColors.DPSRed, Plugin.Managers.Data.SRank.GetErrorMessage());
         else
         {
-            if (Plugin.Managers.Data.Monster.GetFetchStatus() == FetchStatus.Fetching)
+            if (Plugin.Managers.Data.SRank.GetFetchStatus() == FetchStatus.Fetching)
                 ImGui.Text("正在获取数据");
-            else if (Plugin.Managers.Data.Monster.GetFetchStatus() == FetchStatus.Success)
+            else if (Plugin.Managers.Data.SRank.GetFetchStatus() == FetchStatus.Success)
             {
-                var huntStatus = Plugin.Managers.Data.Monster.GetHuntStatus();
+                var huntStatus = Plugin.Managers.Data.SRank.GetHuntStatus();
                 if (huntStatus == null || huntStatus.Count == 0)
                 {
                     ImGui.TextColored(ImGuiColors.DPSRed, "成功获取数据但无效??");
@@ -360,7 +360,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                         {
                             Task.Run(async () =>
                                      {
-                                         var huntMap = await Plugin.Managers.Data.Monster.FetchHuntMap(status.worldName, status.localizedName, status.instance);
+                                         var huntMap = await Plugin.Managers.Data.SRank.FetchHuntMap(status.worldName, status.localizedName, status.instance);
                                          if (huntMap == null || huntMap.spawnPoints.Count == 0)
                                          {
                                              PluginLog.Debug("huntMap == null || huntMap.spawnPoints.Count == 0 from QueryTab");

@@ -21,7 +21,7 @@ internal enum FetchStatus
     Success
 }
 
-internal class Monster
+internal class SRank
 {
     private const string Url = "https://tracker-api.beartoolkit.com/";
     private readonly HttpClient _httpClient = new();
@@ -30,7 +30,7 @@ internal class Monster
     private string _errorMessage = string.Empty;
     private FetchStatus _fetchStatus = FetchStatus.None;
 
-    public Monster()
+    public SRank()
     {
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
@@ -164,19 +164,24 @@ internal class Monster
                  });
     }
 
-    public List<string> GetMonstersByExpansion(GameExpansion expansion)
+    public List<string> GetSRanksByExpansion(GameExpansion expansion)
     {
         return _sRankMonsters.Where(i => expansion == i.expansion).Select(i => i.localizedName).ToList();
     }
 
-    public uint GetMonsterIdByName(string name)
+    public uint GetSRankIdByName(string name)
     {
-        return _sRankMonsters.Where(i => i.localizedName == name).Select(i => i.id).First();
+        return _sRankMonsters.Where(i => i.localizedName == name).Select(i => i.id).FirstOrDefault();
     }
 
-    public string GetMonsterNameById(uint id)
+    public string GetSRankNameById(uint id)
     {
-        return _sRankMonsters.Where(i => i.id == id).Select(i => i.localizedName).First();
+        return _sRankMonsters.Where(i => i.id == id).Select(i => i.localizedName).FirstOrDefault();
+    }
+
+    public bool IsSRank(uint id)
+    {
+        return _sRankMonsters.Any(i => i.id == id);
     }
 
     public string GetErrorMessage()

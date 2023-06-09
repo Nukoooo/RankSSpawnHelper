@@ -69,7 +69,7 @@ internal class ShowHuntMap : IDisposable
 
     public bool CanShowHuntMapWithMonsterName(string name)
     {
-        var id = Plugin.Managers.Data.Monster.GetMonsterIdByName(name);
+        var id = Plugin.Managers.Data.SRank.GetSRankIdByName(name);
         return id != 0 && _monsterTerritory.ContainsValue(id);
     }
 
@@ -81,7 +81,7 @@ internal class ShowHuntMap : IDisposable
 
     public MapTextureInfo? GeTextureWithMonsterName(string name)
     {
-        var id        = Plugin.Managers.Data.Monster.GetMonsterIdByName(name);
+        var id        = Plugin.Managers.Data.SRank.GetSRankIdByName(name);
         var territory = _monsterTerritory.Where(i => i.Value == id).Select(i => i.Key).First();
         var map       = _territoryType.GetRow(territory).Map;
         return Plugin.Managers.Data.MapTexture.GetTexture(map.Row);
@@ -106,7 +106,7 @@ internal class ShowHuntMap : IDisposable
         if (split.Length == 3)
             _ = int.TryParse(split[2], out instance);
 
-        var huntMaps = await Plugin.Managers.Data.Monster.FetchHuntMap(split[0], Plugin.Managers.Data.Monster.GetMonsterNameById(monsterId), instance);
+        var huntMaps = await Plugin.Managers.Data.SRank.FetchHuntMap(split[0], Plugin.Managers.Data.SRank.GetSRankNameById(monsterId), instance);
         if (huntMaps == null || huntMaps.spawnPoints.Count == 0)
         {
             return;

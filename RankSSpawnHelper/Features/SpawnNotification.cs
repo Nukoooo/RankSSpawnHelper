@@ -85,7 +85,7 @@ internal class SpawnNotification : IDisposable
 
                      var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
                      var split           = currentInstance.Split('@');
-                     var monsterName     = Plugin.Managers.Data.Monster.GetMonsterNameById(_monsterIdMap[territory]);
+                     var monsterName     = Plugin.Managers.Data.SRank.GetSRankNameById(_monsterIdMap[territory]);
 
                      if (_shouldNotNotify)
                      {
@@ -95,10 +95,10 @@ internal class SpawnNotification : IDisposable
 
                      if (!_huntStatus.TryGetValue(currentInstance, out var result))
                      {
-                         result = await Plugin.Managers.Data.Monster.FetchHuntStatus(split[0], monsterName, split.Length == 2 ? 0 : int.Parse(split[2]));
+                         result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2 ? 0 : int.Parse(split[2]));
                      }
 
-                     result ??= await Plugin.Managers.Data.Monster.FetchHuntStatus(split[0], monsterName, split.Length == 2 ? 0 : int.Parse(split[2]));
+                     result ??= await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2 ? 0 : int.Parse(split[2]));
 
                      _huntStatus.TryAdd(currentInstance, result);
 

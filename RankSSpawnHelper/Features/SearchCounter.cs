@@ -7,11 +7,14 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.System.Memory;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace RankSSpawnHelper.Features;
 
 internal class SearchCounter : IDisposable
 {
+    private const uint TextNodeId = 0x133769;
     private readonly List<ulong> _playerIds = new();
     private readonly nint _rdataBegin;
     private readonly nint _rdataEnd;
@@ -27,7 +30,9 @@ internal class SearchCounter : IDisposable
         PluginLog.Debug($"{DalamudApi.SigScanner.SearchBase:X}");
 
         SignatureHelper.Initialise(this);
+
         ProcessSocailListPacket.Enable();
+        SocialListDraw.Enable();
         DalamudApi.Condition.ConditionChange += Condition_ConditionChange;
     }
 
@@ -35,9 +40,15 @@ internal class SearchCounter : IDisposable
     [Signature("48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2", DetourName = nameof(Detour_ProcessSocialListPacket))]
     private Hook<ProcessSocialListPacketDelegate> ProcessSocailListPacket { get; init; } = null!;
 
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("40 53 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B D9 0F 29 74 24 ?? 0F 28 F1 74 ?? E8 ?? ?? ?? ?? C6 83", DetourName = nameof(Detour_SocialList_Draw))]
+    private Hook<SocialListAddonShow> SocialListDraw { get; init; } = null!;
+
     public void Dispose()
     {
         ProcessSocailListPacket.Dispose();
+        SocialListDraw.Dispose();
+        DalamudApi.Condition.ConditionChange -= Condition_ConditionChange;
     }
 
     private void Condition_ConditionChange(ConditionFlag flag, bool value)
@@ -112,6 +123,117 @@ internal class SearchCounter : IDisposable
         return original;
     }
 
+    private unsafe void Detour_SocialList_Draw(AtkUnitBase* unitBase)
+    {
+        SocialListDraw.Original(unitBase);
+
+        if (unitBase == null || (nint)unitBase == nint.Zero)
+            return;
+
+        if (!unitBase->IsVisible || unitBase->UldManager.NodeList == null)
+            return;
+
+        var name = Marshal.PtrToStringUTF8(new IntPtr(unitBase->Name));
+        if (name is not "SocialList")
+            return;
+
+        var numberNodeRes = unitBase->UldManager.NodeList[3];
+        if (numberNodeRes->Type != NodeType.Text)
+            return;
+
+        var numberNode = (AtkTextNode*)numberNodeRes;
+
+        // Check if the node we created exists
+        AtkTextNode* textNode = null;
+        for (var i = 0; i < unitBase->UldManager.NodeListCount; i++)
+        {
+            if (unitBase->UldManager.NodeList[i] == null) continue;
+            if (unitBase->UldManager.NodeList[i]->NodeID != TextNodeId) continue;
+            textNode = (AtkTextNode*)unitBase->UldManager.NodeList[i];
+            break;
+        }
+
+        if (_playerIds.Count == 0 && textNode != null)
+        {
+            textNode->AtkResNode.ToggleVisibility(false);
+            return;
+        }
+
+        // Create one if it doesn't exist
+        if (textNode == null)
+        {
+            var lastNode = unitBase->RootNode;
+            if (lastNode == null)
+                return;
+
+            var newTextNode = (AtkTextNode*)IMemorySpace.GetUISpace()->Malloc((ulong)sizeof(AtkTextNode), 8);
+            if (newTextNode == null)
+                return;
+
+            IMemorySpace.Memset(newTextNode, 0, (ulong)sizeof(AtkTextNode));
+            newTextNode->Ctor();
+            textNode = newTextNode;
+
+            newTextNode->AtkResNode.Type      = NodeType.Text;
+            newTextNode->AtkResNode.Flags     = numberNode->AtkResNode.Flags;
+            newTextNode->AtkResNode.DrawFlags = 0;
+            newTextNode->AtkResNode.SetPositionShort(1, 1);
+            newTextNode->AtkResNode.SetWidth(numberNodeRes->GetWidth());
+            newTextNode->AtkResNode.SetHeight(numberNodeRes->GetHeight());
+
+            newTextNode->LineSpacing       = numberNode->LineSpacing;
+            newTextNode->AlignmentFontType = (byte)AlignmentType.Right;
+            newTextNode->FontSize          = numberNode->FontSize;
+            newTextNode->TextFlags         = numberNode->TextFlags;
+            newTextNode->TextFlags2        = numberNode->TextFlags2;
+
+            newTextNode->AtkResNode.NodeID = TextNodeId;
+
+            if (lastNode->ChildNode != null)
+            {
+                lastNode = lastNode->ChildNode;
+                while (lastNode->PrevSiblingNode != null)
+                {
+                    lastNode = lastNode->PrevSiblingNode;
+                }
+
+                newTextNode->AtkResNode.NextSiblingNode = lastNode;
+                newTextNode->AtkResNode.ParentNode      = unitBase->RootNode;
+                lastNode->PrevSiblingNode               = (AtkResNode*)newTextNode;
+            }
+            else
+            {
+                lastNode->ChildNode                = (AtkResNode*)newTextNode;
+                newTextNode->AtkResNode.ParentNode = lastNode;
+            }
+
+            unitBase->UldManager.UpdateDrawNodeList();
+        }
+
+        textNode->CharSpacing      = numberNode->CharSpacing;
+        textNode->AtkResNode.Color = numberNode->AtkResNode.Color;
+        textNode->EdgeColor        = numberNode->EdgeColor;
+        textNode->TextColor        = numberNode->TextColor;
+        
+        ushort myTextWidth  = 0;
+        ushort myTextHeight = 0;
+        textNode->SetText($"在同一地图的有大概 {_playerIds.Count} 人");
+        textNode->GetTextDrawSize(&myTextWidth, &myTextHeight);
+
+        var drawPosX = numberNodeRes->X - numberNodeRes->Width;
+        var drawPosY = numberNodeRes->Y;
+
+        SetNodePosition((AtkResNode*)textNode, drawPosX, drawPosY);
+        if (!textNode->AtkResNode.IsVisible)
+            textNode->AtkResNode.ToggleVisibility(true);
+    }
+
+    private unsafe void SetNodePosition(AtkResNode* node, float x, float y)
+    {
+        node->X = x;
+        node->Y = y;
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 88, Pack = 1)]
     public struct SearchPlayerEntry
     {
@@ -138,4 +260,6 @@ internal class SearchCounter : IDisposable
     }
 
     private delegate nint ProcessSocialListPacketDelegate(nint a1, nint packetData);
+
+    private unsafe delegate void SocialListAddonShow(AtkUnitBase* a1);
 }

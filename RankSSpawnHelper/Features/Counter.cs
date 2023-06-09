@@ -48,9 +48,10 @@ internal class Counter : IDisposable
         ActorControlSelf.Enable();
         SystemLogMessage.Enable();
         InventoryTransactionDiscard.Enable();
+        ProcessSpawnNpcPacket.Enable();
         Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
 
-        DalamudApi.ChatGui.ChatMessage       += ChatGui_ChatMessage;
+        // DalamudApi.ChatGui.ChatMessage       += ChatGui_ChatMessage;
         DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
     }
 
@@ -66,13 +67,19 @@ internal class Counter : IDisposable
     [Signature("40 53 55 56 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 ?? 4C 8B 89", DetourName = nameof(Detour_InventoryTransactionDiscard))]
     private Hook<InventoryTransactionDiscardDelegate> InventoryTransactionDiscard { get; init; } = null!;
 
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 48 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 66 0F 1F 84 00 ?? ?? ?? ?? 48 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 11 48 ?? 49 83 E8 ?? 75 ?? 4C 8D 44 24",
+               DetourName = nameof(Detour_ProcessSpawnNpcPacket))]
+    private Hook<ProcessSpawnNpcDelegate> ProcessSpawnNpcPacket { get; init; } = null!;
+
     public void Dispose()
     {
+        ProcessSpawnNpcPacket.Dispose();
         ActorControlSelf.Dispose();
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
         _eventLoopTokenSource.Dispose();
-        DalamudApi.ChatGui.ChatMessage       -= ChatGui_ChatMessage;
+        // DalamudApi.ChatGui.ChatMessage       -= ChatGui_ChatMessage;
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
         GC.SuppressFinalize(this);
     }
@@ -169,7 +176,7 @@ internal class Counter : IDisposable
         }
     }
 
-    private void ChatGui_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+    /*private void ChatGui_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
     {
         // 2115 = 采集的消息类型, SystemMessage = 舍弃物品的消息类型
         if (type != XivChatType.SystemMessage)
@@ -178,7 +185,7 @@ internal class Counter : IDisposable
         }
 
         var territory = DalamudApi.ClientState.TerritoryType;
-        if (!_conditionsMob.TryGetValue(territory, out _) && territory != 960)
+        if (!_conditionsMob.ContainsKey(territory) && territory != 960)
         {
             return;
         }
@@ -221,7 +228,7 @@ internal class Counter : IDisposable
         }
 
         // 如果没tracker就不发
-        if (!_networkedTracker.ContainsKey(currentInstance) && territory != 961 && territory != 813)
+        if (!_networkedTracker.ContainsKey(currentInstance))
             return;
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
@@ -233,7 +240,7 @@ internal class Counter : IDisposable
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                Failed      = false
                                            });
-    }
+    }*/
 
     private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
     {
@@ -262,6 +269,53 @@ internal class Counter : IDisposable
         PluginLog.Information($"{target.Name} got killed by {sourceTarget.Name}");
 
         Process(target, sourceTarget, DalamudApi.ClientState.TerritoryType);
+    }
+
+    private unsafe void Detour_ProcessSpawnNpcPacket(nint a1, uint a2, nint packetData)
+    {
+        ProcessSpawnNpcPacket.Original(a1, a2, packetData);
+        if (packetData == nint.Zero)
+            return;
+        
+        var baseName = *(uint*)(packetData + 0x44);
+
+        if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
+            return;
+
+        Plugin.Print("SRank spotted.");
+
+        var territory = DalamudApi.ClientState.TerritoryType;
+
+        if (territory == 960)
+        {
+            // TODO: Get Name list, maybe do it in FrameworkUpdate?
+            Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                                               {
+                                                   Type        = "WeeEa",
+                                                   WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                                   InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                                   TerritoryId = territory,
+                                                   Failed      = false
+                                               });
+            return;
+        }
+        
+        if (!_conditionsMob.ContainsKey(territory))
+            return;
+
+        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+        if (!_networkedTracker.ContainsKey(currentInstance))
+            return;
+
+        Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                                           {
+                                               Type       = "ggnore",
+                                               WorldId    = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               InstanceId = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
+                                               Failed      = false
+                                           });
+
     }
 
     private unsafe void Detour_ProcessSystemLogMessage(nint a1, int eventId, uint logId, nint a4, byte a5)
@@ -507,4 +561,7 @@ internal class Counter : IDisposable
     private delegate void InventoryTransactionDiscardDelegate(nint a1, nint a2);
 
     private delegate void SystemLogMessageDelegate(nint a1, int a2, uint a3, nint a4, byte a5);
+
+    private delegate void ProcessSpawnNpcDelegate(nint a1, uint a2, nint packetData);
+
 }
