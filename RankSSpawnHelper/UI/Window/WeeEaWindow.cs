@@ -14,6 +14,7 @@ namespace RankSSpawnHelper.UI.Window;
 internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 {
     private readonly Dictionary<string, DateTime> _dateTimes = new();
+    private List<string> _nameList = new();
 
     public WeeEaWindow() : base("异亚计数##RankSSpawnHelper")
     {
@@ -93,6 +94,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 
     public override void Draw()
     {
+        _nameList.Clear();
         var count    = 0;
         var count2   = 0;
         var nameList = new List<string>();
@@ -129,6 +131,8 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
             count2++;
         }
 
+        _nameList = nameList;
+
         if (Plugin.Managers.Font.IsFontBuilt())
             ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
 
@@ -144,4 +148,10 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
         if (Plugin.Managers.Font.IsFontBuilt())
             ImGui.PopFont();
     }
+
+    public List<string> GetNameList()
+    {
+        return _nameList;
+    }
+    
 }

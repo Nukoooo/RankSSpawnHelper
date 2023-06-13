@@ -63,11 +63,9 @@ public class EntryPoint : IDalamudPlugin
                      {
                          new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                          new UIForegroundPayload(35),
-                         new TextPayload("  [-] 修复版本 1.3.0.0 里加载人物->载图会闪退的BUG\n"),
-                         new TextPayload("  [-] 修复版本 1.3.0.0/1/2/3 里 选择了不接收别的大区触发消息,但仍能接收的BUG\n"),
-                         new TextPayload("  [-] 修复版本 1.3.0.0/1 里 部分触发消息不显示概率的BUG\n"),
-                         new TextPayload("  [-] 缩短了异亚计数的范围,现在大小是秘银风暴的AOE范围 + 修复版本 1.3.0.0/1 里不显示计数的BUG\n"),
-                         new TextPayload("  [-] 修复版本 1.3.0.0/1/2 里不显示 触发点位和触发概率 的BUG\n"),
+                         new TextPayload("  [-] 修复版本 1.3.0.0/1/2/3/4 里在 珂露西亚岛里扔矮人棉, 翻云雾海里扔皇金矿/星极花 会被计数的BUG\n"),
+                         new TextPayload("  [+] 在玩家搜索里可以直接看当前地图有多少人了(只是提示变了而已,该怎么搜还是怎么搜)\n"),
+                         new TextPayload("  [+] 用SpawnNpc网络包来检测S怪(可能会有BUG)\n"),
                          new UIForegroundPayload(0),
                          new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
                      });

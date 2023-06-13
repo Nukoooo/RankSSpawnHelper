@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -51,7 +47,6 @@ internal class Counter : IDisposable
         ProcessSpawnNpcPacket.Enable();
         Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
 
-        // DalamudApi.ChatGui.ChatMessage       += ChatGui_ChatMessage;
         DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
     }
 
@@ -79,7 +74,6 @@ internal class Counter : IDisposable
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
         _eventLoopTokenSource.Dispose();
-        // DalamudApi.ChatGui.ChatMessage       -= ChatGui_ChatMessage;
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
         GC.SuppressFinalize(this);
     }
@@ -131,9 +125,7 @@ internal class Counter : IDisposable
         }
 
         if (!_networkedTracker.TryGetValue(instance, out var result))
-        {
             return;
-        }
 
         if (!result.counter.ContainsKey(condition))
         {
@@ -150,14 +142,10 @@ internal class Counter : IDisposable
     private void Condition_OnConditionChange(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.BetweenAreas51 || value)
-        {
             return;
-        }
 
         if (!Plugin.Configuration.TrackKillCount)
-        {
             return;
-        }
 
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
@@ -175,72 +163,6 @@ internal class Counter : IDisposable
             Plugin.Windows.CounterWindow.IsOpen = false;
         }
     }
-
-    /*private void ChatGui_ChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
-    {
-        // 2115 = 采集的消息类型, SystemMessage = 舍弃物品的消息类型
-        if (type != XivChatType.SystemMessage)
-        {
-            return;
-        }
-
-        var territory = DalamudApi.ClientState.TerritoryType;
-        if (!_conditionsMob.ContainsKey(territory) && territory != 960)
-        {
-            return;
-        }
-
-        // TODO: Find where the fuck is this net message from
-        if (message.TextValue != "感觉到了强大的恶名精英的气息……")
-            return;
-
-        // _huntStatus.Remove(currentInstance);
-
-        // Find Rank SS
-        if (DalamudApi.ObjectTable.Any(i => i.IsValid() && _ssList.Contains(i.Name.TextValue.ToLower())))
-            return;
-
-        if ((from obj in DalamudApi.ObjectTable
-             where obj.IsValid()
-             where !obj.IsDead
-             where obj.ObjectKind == ObjectKind.BattleNpc
-             select obj as BattleNpc
-             into npc
-             where npc.BattleNpcKind == BattleNpcSubKind.Enemy
-             select npc).Any(npc => _ssList.Contains(npc.Name.TextValue.ToLower())))
-        {
-            return;
-        }
-
-        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-
-        if (territory == 960)
-        {
-            Plugin.Managers.Socket.SendMessage(new AttemptMessage
-                                               {
-                                                   Type        = "WeeEa",
-                                                   WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                                                   InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                                                   TerritoryId = territory,
-                                                   Failed      = false
-                                               });
-            return;
-        }
-
-        // 如果没tracker就不发
-        if (!_networkedTracker.ContainsKey(currentInstance))
-            return;
-
-        Plugin.Managers.Socket.SendMessage(new AttemptMessage
-                                           {
-                                               Type       = "ggnore",
-                                               WorldId    = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                                               InstanceId = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                                               // Instance    = currentInstance,
-                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                               Failed      = false
-                                           });
-    }*/
 
     private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
     {
@@ -276,7 +198,7 @@ internal class Counter : IDisposable
         ProcessSpawnNpcPacket.Original(a1, a2, packetData);
         if (packetData == nint.Zero)
             return;
-        
+
         var baseName = *(uint*)(packetData + 0x44);
 
         if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
@@ -288,18 +210,18 @@ internal class Counter : IDisposable
 
         if (territory == 960)
         {
-            // TODO: Get Name list, maybe do it in FrameworkUpdate?
             Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                                {
                                                    Type        = "WeeEa",
                                                    WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
                                                    InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                    TerritoryId = territory,
-                                                   Failed      = false
+                                                   Failed      = false,
+                                                   Names       = Plugin.Windows.WeeEaWindow.GetNameList()
                                                });
             return;
         }
-        
+
         if (!_conditionsMob.ContainsKey(territory))
             return;
 
@@ -309,28 +231,25 @@ internal class Counter : IDisposable
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
                                            {
-                                               Type       = "ggnore",
-                                               WorldId    = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                                               InstanceId = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                                               Type        = "ggnore",
+                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                                                TerritoryId = DalamudApi.ClientState.TerritoryType,
                                                Failed      = false
                                            });
-
     }
 
     private unsafe void Detour_ProcessSystemLogMessage(nint a1, int eventId, uint logId, nint a4, byte a5)
     {
         SystemLogMessage.Original(a1, eventId, logId, a4, a5);
-        PluginLog.Warning($"eventID: {eventId:X}");
+        PluginLog.Warning($"eventID: {eventId:X}, logId: 0x{logId:X}");
 
         // logId = 9932 => 特殊恶名精英的手下开始了侦察活动……
 
         var isGatherMessage = logId is 1049 or 1050;
 
         if (!isGatherMessage)
-        {
             return;
-        }
 
         var itemId = *(uint*)a4;
 
@@ -355,6 +274,10 @@ internal class Counter : IDisposable
         InventoryTransactionDiscard.Original(a1, a2);
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
+
+        // filter it out, just in case..
+        if (territoryType != 813 && territoryType != 621 && territoryType != 961)
+            return;
 
         if (!_conditionsMob.TryGetValue(territoryType, out var value))
             return;
@@ -515,7 +438,6 @@ internal class Counter : IDisposable
         string GetItemName(uint row)
         {
             var name = items.GetRow(row).Singular.RawString.ToLower();
-            PluginLog.Verbose($"Added item name {name}");
             return name;
         }
 
@@ -563,5 +485,4 @@ internal class Counter : IDisposable
     private delegate void SystemLogMessageDelegate(nint a1, int a2, uint a3, nint a4, byte a5);
 
     private delegate void ProcessSpawnNpcDelegate(nint a1, uint a2, nint packetData);
-
 }
