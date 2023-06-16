@@ -341,7 +341,8 @@ internal class Counter : IDisposable
                                         },
                               lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
                               startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                              territoryId    = DalamudApi.ClientState.TerritoryType
+                              territoryId    = DalamudApi.ClientState.TerritoryType,
+                              trackerOwner = Plugin.Managers.Data.Player.GetLocalPlayerName(),
                           };
 
             _localTracker.Add(key, tracker);

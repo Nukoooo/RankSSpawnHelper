@@ -172,10 +172,15 @@ internal class Socket : IDisposable
         if (!DalamudApi.ClientState.LocalPlayer || localTracker == null || localTracker.Count == 0)
             return;
 
+        var name = Plugin.Managers.Data.Player.GetLocalPlayerName();
+
         List<NetTracker> trackers = new();
 
         foreach (var tracker in localTracker)
         {
+            if (!tracker.Value.trackerOwner.Equals(name))
+                continue;
+
             var split       = tracker.Key.Split('@');
             var worldId     = Plugin.Managers.Data.GetWorldIdByName(split[0]);
             var territoryId = Plugin.Managers.Data.GetTerritoryIdByName(split[1]);

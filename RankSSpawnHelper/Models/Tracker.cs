@@ -10,4 +10,5 @@ internal class Tracker
     public long lastUpdateTime;
     public long startTime;
     public uint territoryId;
+    public string trackerOwner;
 }
