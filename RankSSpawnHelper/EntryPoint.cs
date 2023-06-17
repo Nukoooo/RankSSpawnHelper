@@ -63,9 +63,8 @@ public class EntryPoint : IDalamudPlugin
                      {
                          new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                          new UIForegroundPayload(35),
-                         new TextPayload("  [-] 修复版本 1.3.0.0/1/2/3/4 里在 珂露西亚岛里扔矮人棉, 翻云雾海里扔皇金矿/星极花 会被计数的BUG\n"),
-                         new TextPayload("  [+] 在玩家搜索里可以直接看当前地图有多少人了(只是提示变了而已,该怎么搜还是怎么搜)\n"),
-                         new TextPayload("  [+] 用SpawnNpc网络包来检测S怪(可能会有BUG)\n"),
+                         new TextPayload("  [-] 尝试修复 在有计数后切换角色时,服务器计数会double 的BUG\n"),
+                         new TextPayload("  [-] 修复在 1.3.0.0/1/2/3/4/5 版本里, 在湖区使用任意物品(吃食物,解锁坐骑等)会算入计数的BUG\n"),
                          new UIForegroundPayload(0),
                          new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
                      });

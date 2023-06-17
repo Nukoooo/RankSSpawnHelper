@@ -8,7 +8,6 @@ using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
 
@@ -211,7 +210,7 @@ internal class Counter : IDisposable
         if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
             return;
 
-        Plugin.Print("SRank spotted.");
+        /*Plugin.Print("SRank spotted.");*/
 
         var territory = DalamudApi.ClientState.TerritoryType;
 
@@ -249,7 +248,7 @@ internal class Counter : IDisposable
     private unsafe void Detour_ProcessSystemLogMessage(nint a1, int eventId, uint logId, nint a4, byte a5)
     {
         SystemLogMessage.Original(a1, eventId, logId, a4, a5);
-        PluginLog.Warning($"eventID: {eventId:X}, logId: 0x{logId:X}");
+        PluginLog.Warning($"eventID: {eventId:X}, logId: 0x{logId}");
 
         // logId = 9932 => 特殊恶名精英的手下开始了侦察活动……
 
@@ -303,16 +302,13 @@ internal class Counter : IDisposable
         if (territoryType != 621 && !value.ContainsValue(itemId))
             goto callOrginal;
 
-
         switch (territoryType)
         {
             case 621:
                 itemId = 0;
                 break;
             case 961 when amount != 5:
-            {
                 goto callOrginal;
-            }
         }
 
         var name = territoryType == 621 ? Plugin.IsChina() ? "扔垃圾" : "Item" : Plugin.Managers.Data.GetItemName(itemId);
@@ -333,7 +329,7 @@ internal class Counter : IDisposable
         
         return UseActionHook.Original(a1, actionType, actionID, a4, a5, a6, a7);
     }*/
-    
+
     private void Process(GameObject target, GameObject source, ushort territory)
     {
         if (!_conditionsMob.ContainsKey(territory))
@@ -472,8 +468,8 @@ internal class Counter : IDisposable
             return name;
         }
 
-        _ssList.Add(GetNpcName(8915));
-        _ssList.Add(GetNpcName(10615));
+        /*_ssList.Add(GetNpcName(8915));
+        _ssList.Add(GetNpcName(10615));*/
 
         _conditionsMob[959].Add(GetNpcName(10461), 10461); // xx之物
         _conditionsMob[959].Add(GetNpcName(10462), 10462);
