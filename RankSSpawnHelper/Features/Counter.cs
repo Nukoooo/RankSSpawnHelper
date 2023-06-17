@@ -7,6 +7,8 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
 
@@ -34,7 +36,6 @@ internal class Counter : IDisposable
 
     private readonly Dictionary<string, Tracker> _localTracker = new();
     private readonly Dictionary<string, Tracker> _networkedTracker = new();
-    private readonly List<string> _ssList = new();
 
     public Counter()
     {
@@ -45,6 +46,7 @@ internal class Counter : IDisposable
         SystemLogMessage.Enable();
         InventoryTransactionDiscard.Enable();
         ProcessSpawnNpcPacket.Enable();
+        /*UseActionHook.Enable();*/
         Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
 
         DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
@@ -67,6 +69,10 @@ internal class Counter : IDisposable
                DetourName = nameof(Detour_ProcessSpawnNpcPacket))]
     private Hook<ProcessSpawnNpcDelegate> ProcessSpawnNpcPacket { get; init; } = null!;
 
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    /*[Signature("E8 ?? ?? ?? ?? EB 64 B1 01", DetourName = nameof(Detour_UseAction))]
+    private Hook<UseActionDelegate> UseActionHook { get; init; } = null!;*/
+
     public void Dispose()
     {
         ProcessSpawnNpcPacket.Dispose();
@@ -74,6 +80,7 @@ internal class Counter : IDisposable
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
         _eventLoopTokenSource.Dispose();
+        /*UseActionHook.Dispose();*/
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
         GC.SuppressFinalize(this);
     }
@@ -271,24 +278,31 @@ internal class Counter : IDisposable
 
     private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)
     {
-        InventoryTransactionDiscard.Original(a1, a2);
+        /*var slot      = *(uint*)(a2 + 0xC);
+        var slotIndex = *(uint*)(a2 + 0x10);*/
+        var amount = *(uint*)(a2 + 0x14);
+        // Use regenny or reclass to find this
+        var itemId = *(uint*)(a2 + 0x18);
+
+        if (ActionManager.Instance()->GetActionStatus(ActionType.Item, itemId) != 0)
+        {
+            PluginLog.Debug("Use item found, skipping");
+            goto callOrginal;
+        }
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
 
         // filter it out, just in case..
         if (territoryType != 813 && territoryType != 621 && territoryType != 961)
-            return;
+            goto callOrginal;
 
         if (!_conditionsMob.TryGetValue(territoryType, out var value))
-            return;
-
-        // Use regenny or reclass to find this
-        var itemId = *(uint*)(a2 + 0x18);
-        var amount = *(uint*)(a2 + 0x14);
+            goto callOrginal;
 
         // you can discard anything in The Lochs
         if (territoryType != 621 && !value.ContainsValue(itemId))
-            return;
+            goto callOrginal;
+
 
         switch (territoryType)
         {
@@ -296,14 +310,30 @@ internal class Counter : IDisposable
                 itemId = 0;
                 break;
             case 961 when amount != 5:
-                return;
+            {
+                goto callOrginal;
+            }
         }
 
         var name = territoryType == 621 ? Plugin.IsChina() ? "扔垃圾" : "Item" : Plugin.Managers.Data.GetItemName(itemId);
 
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
+
+    callOrginal:
+        InventoryTransactionDiscard.Original(a1, a2);
     }
 
+    /*private unsafe bool Detour_UseAction(nint a1, ActionType actionType, uint actionID, uint a4, uint a5, uint a6, void* a7)
+    {
+        var newActionId = actionID;
+        if (newActionId > 1_000_000)
+            newActionId -= 1_000_000;
+
+        PluginLog.Warning($"{(uint)actionType}, {newActionId:X}");
+        
+        return UseActionHook.Original(a1, actionType, actionID, a4, a5, a6, a7);
+    }*/
+    
     private void Process(GameObject target, GameObject source, ushort territory)
     {
         if (!_conditionsMob.ContainsKey(territory))
@@ -342,7 +372,7 @@ internal class Counter : IDisposable
                               lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
                               startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
                               territoryId    = DalamudApi.ClientState.TerritoryType,
-                              trackerOwner = Plugin.Managers.Data.Player.GetLocalPlayerName(),
+                              trackerOwner   = Plugin.Managers.Data.Player.GetLocalPlayerName()
                           };
 
             _localTracker.Add(key, tracker);
@@ -486,4 +516,6 @@ internal class Counter : IDisposable
     private delegate void SystemLogMessageDelegate(nint a1, int a2, uint a3, nint a4, byte a5);
 
     private delegate void ProcessSpawnNpcDelegate(nint a1, uint a2, nint packetData);
+
+    /*private unsafe delegate bool UseActionDelegate(nint a1, ActionType a2, uint actionId, uint a4, uint a5, uint a6, void* a7);*/
 }
