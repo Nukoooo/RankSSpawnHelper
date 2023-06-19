@@ -4,14 +4,14 @@ using RankSSpawnHelper.UI.Window;
 
 namespace RankSSpawnHelper.Ui;
 
-internal class Windows
+internal class Ui
 {
     public CounterWindow CounterWindow;
     public HuntMapWindow HuntMapWindow;
     public ConfigWindow PluginWindow;
     public WeeEaWindow WeeEaWindow;
 
-    public Windows(ref WindowSystem windowSystem)
+    public Ui(ref WindowSystem windowSystem)
     {
         PluginWindow  = new ConfigWindow();
         CounterWindow = new CounterWindow();

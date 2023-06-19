@@ -137,9 +137,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
             ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
 
         if (ImGui.Button("[ 寄了点我 ]"))
-        {
             AttemptFail(count, nameList);
-        }
 
         ImGui.SameLine();
 
@@ -153,5 +151,4 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
     {
         return _nameList;
     }
-    
 }

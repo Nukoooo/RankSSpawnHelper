@@ -269,13 +269,13 @@ internal class Socket : IDisposable
                     var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
                     Plugin.Features.Counter.RemoveInstance(instance);
 
-                    if (!Plugin.Configuration.EnableAttemptMessagesFromOtherDcs)
+                    if (Plugin.Configuration.AttemptMessageFromServer == AttemptMessageFromServerType.Off)
                         return;
 
                     if (DalamudApi.Condition[ConditionFlag.BoundByDuty])
                         return;
 
-                    if (!Plugin.Configuration.ReceiveAttempMessageFromOtherDc && Plugin.Managers.Data.IsFromOtherServer(result.WorldId))
+                    if (Plugin.Configuration.AttemptMessageFromServer == AttemptMessageFromServerType.CurrentDataCenter && Plugin.Managers.Data.IsFromOtherServer(result.WorldId))
                         return;
 
                     var message = $"{instance} {(result.Failed ? "寄了" : "出货了")}. 概率: ";

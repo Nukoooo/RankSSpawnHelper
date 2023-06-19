@@ -13,7 +13,6 @@ using Dalamud.Plugin;
 using ImGuiNET;
 using RankSSpawnHelper.Attributes;
 using RankSSpawnHelper.Models;
-using RankSSpawnHelper.Ui;
 
 namespace RankSSpawnHelper;
 
@@ -46,7 +45,7 @@ public class EntryPoint : IDalamudPlugin
 
         // Initialize the UI
         _windowSystem  = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
-        Plugin.Windows = new Windows(ref _windowSystem);
+        Plugin.Windows = new Ui.Ui(ref _windowSystem);
 
         DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
         DalamudApi.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
@@ -54,9 +53,9 @@ public class EntryPoint : IDalamudPlugin
         var pluginVersion = _assembly.GetName().Version.ToString();
         Plugin.PluginVersion = pluginVersion;
 #if RELEASE
-            if (Plugin.Configuration.PluginVersion == pluginVersion)
-                return;
-            Plugin.Configuration.PluginVersion = pluginVersion;
+        if (Plugin.Configuration.PluginVersion == pluginVersion)
+            return;
+        Plugin.Configuration.PluginVersion = pluginVersion;
 #endif
 
         Plugin.Print(new List<Payload>

@@ -45,6 +45,7 @@ internal class Counter : IDisposable
         SystemLogMessage.Enable();
         InventoryTransactionDiscard.Enable();
         ProcessSpawnNpcPacket.Enable();
+        ProcessOpenTreasure.Enable();
         /*UseActionHook.Enable();*/
         Task.Factory.StartNew(RemoveInactiveTracker, TaskCreationOptions.LongRunning);
 
@@ -69,6 +70,10 @@ internal class Counter : IDisposable
     private Hook<ProcessSpawnNpcDelegate> ProcessSpawnNpcPacket { get; init; } = null!;
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("40 53 48 83 EC ?? 0F B6 81 ?? ?? ?? ?? 48 8B D9 F3 0F 11 89", DetourName = nameof(Detour_ProcessOpenTreasurePacket))]
+    private Hook<ProcessOpenTreasurePacketDeleagate> ProcessOpenTreasure { get; init; } = null!;
+
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
     /*[Signature("E8 ?? ?? ?? ?? EB 64 B1 01", DetourName = nameof(Detour_UseAction))]
     private Hook<UseActionDelegate> UseActionHook { get; init; } = null!;*/
 
@@ -78,9 +83,10 @@ internal class Counter : IDisposable
         ActorControlSelf.Dispose();
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
-        _eventLoopTokenSource.Dispose();
+        ProcessOpenTreasure.Dispose();
         /*UseActionHook.Dispose();*/
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
+        _eventLoopTokenSource.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -210,7 +216,10 @@ internal class Counter : IDisposable
         if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
             return;
 
-        /*Plugin.Print("SRank spotted.");*/
+#if DEBUG || DEBUG_CN
+        Plugin.Print("SRank spotted.");
+        PluginLog.Warning("SRank spotted.");
+#endif
 
         var territory = DalamudApi.ClientState.TerritoryType;
 
@@ -248,8 +257,9 @@ internal class Counter : IDisposable
     private unsafe void Detour_ProcessSystemLogMessage(nint a1, int eventId, uint logId, nint a4, byte a5)
     {
         SystemLogMessage.Original(a1, eventId, logId, a4, a5);
-        PluginLog.Warning($"eventID: {eventId:X}, logId: 0x{logId}");
-
+#if DEBUG || DEBUG_CN
+        PluginLog.Warning($"eventID: 0x{eventId:X}, logId: {logId}");
+#endif
         // logId = 9932 => 特殊恶名精英的手下开始了侦察活动……
 
         var isGatherMessage = logId is 1049 or 1050;
@@ -277,17 +287,14 @@ internal class Counter : IDisposable
 
     private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)
     {
-        /*var slot      = *(uint*)(a2 + 0xC);
-        var slotIndex = *(uint*)(a2 + 0x10);*/
-        var amount = *(uint*)(a2 + 0x14);
-        // Use regenny or reclass to find this
-        var itemId = *(uint*)(a2 + 0x18);
+        /*
+        var slot      = *(uint*)(a2 + 0xC);
+        var slotIndex = *(uint*)(a2 + 0x10);
+        */
 
-        if (ActionManager.Instance()->GetActionStatus(ActionType.Item, itemId) != 0)
-        {
-            PluginLog.Debug("Use item found, skipping");
-            goto callOrginal;
-        }
+        // Use regenny or reclass to find this
+        var amount = *(uint*)(a2 + 0x14);
+        var itemId = *(uint*)(a2 + 0x18);
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
 
@@ -305,6 +312,12 @@ internal class Counter : IDisposable
         switch (territoryType)
         {
             case 621:
+                if (!DalamudApi.Condition[ConditionFlag.Mounted] && ActionManager.Instance()->GetActionStatus(ActionType.Item, itemId) != 0)
+                {
+                    PluginLog.Debug("Found using an item, skipping");
+                    goto callOrginal;
+                }
+
                 itemId = 0;
                 break;
             case 961 when amount != 5:
@@ -317,6 +330,13 @@ internal class Counter : IDisposable
 
     callOrginal:
         InventoryTransactionDiscard.Original(a1, a2);
+    }
+
+    private void Detour_ProcessOpenTreasurePacket(nint a1, float a2, float a3, float a4)
+    {
+        PluginLog.Warning($"[OpenTreasurePacket] a1: 0x{a1:X}, a2: {a2} a3: {a3} a4: {a4}");
+
+        ProcessOpenTreasure.Original(a1, a2, a3, a4);
     }
 
     /*private unsafe bool Detour_UseAction(nint a1, ActionType actionType, uint actionID, uint a4, uint a5, uint a6, void* a7)
@@ -512,6 +532,8 @@ internal class Counter : IDisposable
     private delegate void SystemLogMessageDelegate(nint a1, int a2, uint a3, nint a4, byte a5);
 
     private delegate void ProcessSpawnNpcDelegate(nint a1, uint a2, nint packetData);
+
+    private delegate void ProcessOpenTreasurePacketDeleagate(nint a1, float a2, float a3, float a4);
 
     /*private unsafe delegate bool UseActionDelegate(nint a1, ActionType a2, uint actionId, uint a4, uint a5, uint a6, void* a7);*/
 }

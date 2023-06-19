@@ -16,16 +16,19 @@ public enum AttemptMessageType
     Detailed
 }
 
+public enum AttemptMessageFromServerType
+{
+    Off,
+    CurrentDataCenter,
+    All
+}
+
 public class Configuration : IPluginConfiguration
 {
-    public int Version { get; set; }
+    public bool HideAfDian = false;
 
-    public void Save()
-    {
-        DalamudApi.Interface.SavePluginConfig(this);
-    }
+    public bool PlayerSearchTip = true;
 
-#region Saved configuration values
     // 农怪计数
     public bool TrackKillCount { get; set; } = true;
 
@@ -53,12 +56,14 @@ public class Configuration : IPluginConfiguration
     public uint HighlightColor { get; set; } = 71;
 
     public AttemptMessageType AttemptMessage { get; set; } = AttemptMessageType.Detailed;
+    public AttemptMessageFromServerType AttemptMessageFromServer { get; set; } = AttemptMessageFromServerType.CurrentDataCenter;
+    public bool ShowAttemptMessageInDungeons { get; set; } = true;
 
-    public bool EnableAttemptMessagesFromOtherDcs = false;
-    public bool ReceiveAttempMessageFromOtherDc = false;
+    public string PluginVersion { get; set; } = "";
+    public int Version { get; set; }
 
-    public bool PlayerSearchTip = true;
-
-    public bool HideAfDian = false;
-#endregion
+    public void Save()
+    {
+        DalamudApi.Interface.SavePluginConfig(this);
+    }
 }

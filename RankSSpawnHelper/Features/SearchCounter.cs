@@ -214,7 +214,7 @@ internal class SearchCounter : IDisposable
         textNode->AtkResNode.Color = numberNode->AtkResNode.Color;
         textNode->EdgeColor        = numberNode->EdgeColor;
         textNode->TextColor        = numberNode->TextColor;
-        
+
         ushort myTextWidth  = 0;
         ushort myTextHeight = 0;
         textNode->SetText($"在同一地图的有大概 {_playerIds.Count} 人");

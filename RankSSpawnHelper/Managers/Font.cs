@@ -11,19 +11,15 @@ internal class Font : IDisposable
 
     public Font()
     {
-        if (!Plugin.IsChina())
-            return;
         DalamudApi.Interface.UiBuilder.BuildFonts += UiBuilder_OnBuildFonts;
         DalamudApi.Interface.UiBuilder.RebuildFonts();
     }
 
     public ImFontPtr NotoSan24 { get; private set; }
+    public ImFontPtr NotoSan18 { get; private set; }
 
     public void Dispose()
     {
-        if (!Plugin.IsChina())
-            return;
-
         DalamudApi.Interface.UiBuilder.BuildFonts -= UiBuilder_OnBuildFonts;
     }
 
@@ -31,18 +27,20 @@ internal class Font : IDisposable
     {
         // DalamudApi.Interface.DalamudAssetDirectory;
         // var windowsFolder  = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System));
-        var fontName = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes", "NotoSansCJKsc-Medium.otf");
+        var fontName = Plugin.IsChina() ? "NotoSansCJKsc-Medium.otf" : "NotoSansCJKjp-Medium.otf";
+        var fontPath = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes", fontName);
 
-        if (!File.Exists(fontName))
+        if (!File.Exists(fontPath))
         {
-            PluginLog.Error($"找不到字体 \"NotoSansCJKsc-Medium.otf\". 尝试搜寻的路径: {fontName}");
+            PluginLog.Error($"Cannot find font \"{fontName}\". fontPath: {fontPath}");
             return;
         }
 
         ImFontConfigPtr fontConfig = ImGuiNative.ImFontConfig_ImFontConfig();
         fontConfig.FontDataOwnedByAtlas = false;
         fontConfig.PixelSnapH           = true;
-        NotoSan24                       = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontName, 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
+        NotoSan24                       = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPath, 24, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
+        NotoSan18                       = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPath, 18, fontConfig, ImGui.GetIO().Fonts.GetGlyphRangesChineseFull());
 
         _fontBuilt = true;
         fontConfig.Destroy();

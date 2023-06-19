@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Logging;
@@ -14,6 +11,7 @@ using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
+using RankSSpawnHelper.Ui.Widgets;
 
 namespace RankSSpawnHelper.Ui.Window;
 
@@ -21,11 +19,14 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 {
     private const ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
     private readonly string[] _attemptMessageDisplayType = { "不显示", "简单", "详细" };
+    private readonly string[] _attemptMessageFromServerType = { "关闭", "本大区", "本大区+其他大区" };
 
     private readonly List<ColorInfo> _colorInfos = new();
     private readonly List<string> _expansions = new() { "2.0", "3.0", "4.0", "5.0", "6.0" };
 
     private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
+
+    private readonly string[] _tabNames = { "计数", "查询S怪", "其他", "关于" };
     private ColorPickerType _colorPickerType = ColorPickerType.Failed;
 
     private TextureWrap _image;
@@ -33,16 +34,21 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private int _selectedExpansion;
     private int _selectedInstance;
     private int _selectedMonster;
+    private int _selectedTab;
 
     private List<string> _servers;
 
     private string _serverUrl = string.Empty;
     private bool _showColorPicker;
 
-    public ConfigWindow() : base("菜单设置##ranksspawnhelper1337")
+    public ConfigWindow() : base("SpawnHelper")
     {
         Initialize();
-        Flags = ImGuiWindowFlags.AlwaysAutoResize;
+        SizeConstraints = new WindowSizeConstraints
+                          {
+                              MinimumSize = new Vector2(500, 400),
+                              MaximumSize = new Vector2(2000, 2000)
+                          };
     }
 
     public override void OnOpen()
@@ -85,31 +91,64 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
     public override void Draw()
     {
+        if (Plugin.Managers.Font.IsFontBuilt() && !Plugin.IsChina())
+        {
+            ImGui.PushFont(Plugin.Managers.Font.NotoSan18);
+        }
+
         DrawAfdian();
 
-        ImGui.BeginTabBar("SpawnHelper主菜单");
+        ImGui.BeginGroup();
+
+        ImGui.BeginChild("Child1##SpawnHelper", new Vector2(100, 0), true);
+
+        for (var i = 0; i < _tabNames.Length; i++)
         {
-            if (ImGui.BeginTabItem("农怪计数"))
+            if (ImGui.Selectable(_tabNames[i] + "##SpawnHelper", i == _selectedTab))
             {
+                _selectedTab = i;
+            }
+        }
+
+        /*
+        ImGui.Selectable("Selectable1");
+        ImGui.Selectable("Selectable2");
+        ImGui.Selectable("Selectable3");
+        */
+
+        ImGui.EndChild();
+
+        ImGui.SameLine();
+
+        ImGui.BeginChild("Child2##SpawnHelper", new Vector2(-1, -1), true);
+
+        switch (_selectedTab)
+        {
+            case 0:
                 DrawCounterTab();
-                ImGui.EndTabItem();
-            }
-
-            if (_servers != null)
-            {
-                if (ImGui.BeginTabItem("S怪状态查询"))
-                {
-                    DrawQueryTab();
-                    ImGui.EndTabItem();
-                }
-            }
-
-            if (ImGui.BeginTabItem("其他"))
-            {
+                break;
+            case 1:
+                DrawQueryTab();
+                break;
+            case 2:
                 DrawMiscTab();
-                ImGui.EndTabItem();
-            }
+                break;
+            case 3:
+                ImGui.Text("Slugma balls");
+                break;
+        }
 
+        ImGui.EndChild();
+
+        ImGui.EndGroup();
+
+        if (Plugin.Managers.Font.IsFontBuilt() && !Plugin.IsChina())
+        {
+            ImGui.PopFont();
+        }
+
+        /*ImGui.BeginTabBar("SpawnHelper主菜单");
+        {
             if (ImGui.BeginTabItem("关于"))
             {
                 ImGui.Text("在使用本插件的联网功能时,将会收集以下信息:\n" +
@@ -124,7 +163,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 ImGui.EndTabItem();
             }
         }
-        ImGui.EndTabBar();
+        ImGui.EndTabBar();*/
     }
 
     public override void PostDraw()
@@ -143,63 +182,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         }
 
         ImGui.SameLine();
-        ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("在联网计数时会暂时关闭\n");
-
-        ImGui.SameLine();
-        var showCurrentInstance = Plugin.Configuration.TrackerShowCurrentInstance;
-        if (ImGui.Checkbox("只显示当前区域", ref showCurrentInstance))
-        {
-            Plugin.Configuration.TrackerShowCurrentInstance = showCurrentInstance;
-            Plugin.Windows.CounterWindow.IsOpen             = Plugin.Features.Counter.GetLocalTrackers().ContainsKey(Plugin.Managers.Data.Player.GetCurrentTerritory());
-            Plugin.Configuration.Save();
-        }
-
-        var noTitle = Plugin.Configuration.TrackerWindowNoTitle;
-        if (ImGui.Checkbox("窗口无标题", ref noTitle))
-        {
-            Plugin.Configuration.TrackerWindowNoTitle = noTitle;
-            Plugin.Configuration.Save();
-        }
-
-        ImGui.SameLine();
-        var noBackground = Plugin.Configuration.TrackerWindowNoBackground;
-        if (ImGui.Checkbox("窗口无背景", ref noBackground))
-        {
-            Plugin.Configuration.TrackerWindowNoBackground = noBackground;
-            Plugin.Configuration.Save();
-        }
-
-        ImGui.SameLine();
-        var autoResize = Plugin.Configuration.TrackerAutoResize;
-        if (ImGui.Checkbox("窗口自动调整大小", ref autoResize))
-        {
-            Plugin.Configuration.TrackerAutoResize = autoResize;
-            Plugin.Configuration.Save();
-        }
-
-        ImGui.SetNextItemWidth(90);
-        var attemptMessageType = (int)Plugin.Configuration.AttemptMessage;
-        if (ImGui.Combo("触发消息显示", ref attemptMessageType, _attemptMessageDisplayType, _attemptMessageDisplayType.Length))
-        {
-            Plugin.Configuration.AttemptMessage = (AttemptMessageType)attemptMessageType;
-            Plugin.Configuration.Save();
-        }
-
-#if DEBUG || DEBUG_CN
-            ImGui.SetNextItemWidth(200);
-            ImGui.InputText("服务器链接", ref _serverUrl, 256);
-
-            if (ImGui.Button("连接")) Plugin.Managers.Socket.Connect(_serverUrl);
-            ImGui.SameLine();
-            if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Connect("ws://124.220.161.157:8000");
-            ImGui.SameLine();
-            if (ImGui.Button("断开连接")) Plugin.Managers.Socket.Disconnect();
-
-            ImGui.SameLine();
-#endif
-
         ImGui.Text("连接状态:");
         ImGui.SameLine();
         ImGui.TextColored(Plugin.Managers.Socket.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Connected() ? "Connected" : "Disconnected");
@@ -208,6 +190,77 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         ImGui.SameLine();
         if (ImGui.Button("重新连接"))
             Plugin.Managers.Socket.Reconnect();
+#endif
+
+        Widget.BeginFramedGroup("计数窗口");
+        {
+            var noTitle = Plugin.Configuration.TrackerWindowNoTitle;
+            if (ImGui.Checkbox("无标题", ref noTitle))
+            {
+                Plugin.Configuration.TrackerWindowNoTitle = noTitle;
+                Plugin.Configuration.Save();
+            }
+
+            ImGui.SameLine();
+            var noBackground = Plugin.Configuration.TrackerWindowNoBackground;
+            if (ImGui.Checkbox("无背景", ref noBackground))
+            {
+                Plugin.Configuration.TrackerWindowNoBackground = noBackground;
+                Plugin.Configuration.Save();
+            }
+
+            ImGui.SameLine();
+            var autoResize = Plugin.Configuration.TrackerAutoResize;
+            if (ImGui.Checkbox("自动调整大小", ref autoResize))
+            {
+                Plugin.Configuration.TrackerAutoResize = autoResize;
+                Plugin.Configuration.Save();
+            }
+        }
+        Widget.EndFramedGroup();
+
+        Widget.BeginFramedGroup("其他");
+        {
+            var showCurrentInstance = Plugin.Configuration.TrackerShowCurrentInstance;
+            if (ImGui.Checkbox("只显示当前区域", ref showCurrentInstance))
+            {
+                Plugin.Configuration.TrackerShowCurrentInstance = showCurrentInstance;
+                Plugin.Windows.CounterWindow.IsOpen             = Plugin.Features.Counter.GetLocalTrackers().ContainsKey(Plugin.Managers.Data.Player.GetCurrentTerritory());
+                Plugin.Configuration.Save();
+            }
+
+            var clearThreshold = Plugin.Configuration.TrackerClearThreshold;
+            ImGui.Text("x 分钟内没更新自动清除相关计数");
+            ImGui.SetNextItemWidth(178);
+#if DEBUG || DEBUG_CN
+            if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 1f, 60f, "%.2f分钟"))
+#else
+            if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 30f, 60f, "%.2f分钟"))
+#endif
+            {
+                Plugin.Configuration.TrackerClearThreshold = clearThreshold;
+                Plugin.Configuration.Save();
+            }
+
+            var weeEaCounter = Plugin.Configuration.WeeEaCounter;
+            if (ImGui.Checkbox("小异亚计数", ref weeEaCounter))
+            {
+                Plugin.Configuration.WeeEaCounter = weeEaCounter;
+                Plugin.Windows.WeeEaWindow.IsOpen = weeEaCounter && DalamudApi.ClientState.TerritoryType == 960;
+                Plugin.Configuration.Save();
+            }
+        }
+        Widget.EndFramedGroup();
+
+#if DEBUG || DEBUG_CN
+        ImGui.SetNextItemWidth(200);
+        ImGui.InputText("服务器链接", ref _serverUrl, 256);
+
+        if (ImGui.Button("连接")) Plugin.Managers.Socket.Connect(_serverUrl);
+        ImGui.SameLine();
+        if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Connect("ws://124.220.161.157:8000");
+        ImGui.SameLine();
+        if (ImGui.Button("断开连接")) Plugin.Managers.Socket.Disconnect();
 #endif
 
         DrawTrackerTable();
@@ -241,10 +294,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 ImGui.TableNextColumn();
 
                 var displayText = mainKey.Replace("@", " ");
-                if (!displayText.EndsWith('0'))
-                    displayText += "线";
-                else
-                    displayText = displayText[..^2];
 
                 ImGui.SetNextItemWidth(ImGui.CalcTextSize(displayText).X);
                 ImGui.Text(displayText);
@@ -352,26 +401,25 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                         }
                     }
 
-                    if (canShowHuntMap)
+                    if (!canShowHuntMap)
+                        continue;
+                    ImGui.SameLine();
+
+                    if (ImGui.Button($"查看触发点##{status.worldName}"))
                     {
-                        ImGui.SameLine();
-
-                        if (ImGui.Button($"查看触发点##{status.worldName}"))
-                        {
-                            Task.Run(async () =>
+                        Task.Run(async () =>
+                                 {
+                                     var huntMap = await Plugin.Managers.Data.SRank.FetchHuntMap(status.worldName, status.localizedName, status.instance);
+                                     if (huntMap == null || huntMap.spawnPoints.Count == 0)
                                      {
-                                         var huntMap = await Plugin.Managers.Data.SRank.FetchHuntMap(status.worldName, status.localizedName, status.instance);
-                                         if (huntMap == null || huntMap.spawnPoints.Count == 0)
-                                         {
-                                             PluginLog.Debug("huntMap == null || huntMap.spawnPoints.Count == 0 from QueryTab");
-                                             return;
-                                         }
+                                         PluginLog.Debug("huntMap == null || huntMap.spawnPoints.Count == 0 from QueryTab");
+                                         return;
+                                     }
 
-                                         var texture = Plugin.Features.ShowHuntMap.GeTextureWithMonsterName(status.localizedName);
-                                         Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMap.spawnPoints, currentInstance);
-                                         Plugin.Windows.HuntMapWindow.IsOpen = true;
-                                     });
-                        }
+                                     var texture = Plugin.Features.ShowHuntMap.GeTextureWithMonsterName(status.localizedName);
+                                     Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMap.spawnPoints, currentInstance);
+                                     Plugin.Windows.HuntMapWindow.IsOpen = true;
+                                 });
                     }
                 }
             }
@@ -380,155 +428,161 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
     private void DrawMiscTab()
     {
-        var weeEaCounter = Plugin.Configuration.WeeEaCounter;
-        if (ImGui.Checkbox("小异亚计数", ref weeEaCounter))
+        Widget.BeginFramedGroup("消息提示");
         {
-            Plugin.Configuration.WeeEaCounter = weeEaCounter;
-            Plugin.Windows.WeeEaWindow.IsOpen = weeEaCounter && DalamudApi.ClientState.TerritoryType == 960;
-            Plugin.Configuration.Save();
-        }
-
-        var showInstance = Plugin.Configuration.ShowInstance;
-        if (ImGui.Checkbox("在基本情报栏显示几线", ref showInstance))
-        {
-            Plugin.Configuration.ShowInstance = showInstance;
-            Plugin.Configuration.Save();
-        }
-
-        var enableAttemptMessagesFromOtherDcs = Plugin.Configuration.EnableAttemptMessagesFromOtherDcs;
-        if (ImGui.Checkbox("接收触发成功/失败消息", ref enableAttemptMessagesFromOtherDcs))
-        {
-            Plugin.Configuration.EnableAttemptMessagesFromOtherDcs = enableAttemptMessagesFromOtherDcs;
-            Plugin.Configuration.Save();
-        }
-
-        if (enableAttemptMessagesFromOtherDcs)
-        {
-            ImGui.SameLine();
-            var receiveMessageFromOtherDc = Plugin.Configuration.ReceiveAttempMessageFromOtherDc;
-            if (ImGui.Checkbox("接收其他大区的触发消息", ref receiveMessageFromOtherDc))
+            ImGui.Text("触发概率提醒");
+            var spawnNotificationType = (int)Plugin.Configuration.SpawnNotificationType;
+            for (var i = 0; i < _spawnNotificationType.Length; i++)
             {
-                Plugin.Configuration.ReceiveAttempMessageFromOtherDc = receiveMessageFromOtherDc;
+                if (ImGui.RadioButton(_spawnNotificationType[i] + "##_spawnNotificationType", ref spawnNotificationType, i))
+                {
+                    Plugin.Configuration.SpawnNotificationType = (SpawnNotificationType)spawnNotificationType;
+                    Plugin.Configuration.Save();
+                }
+
+                if (i == _spawnNotificationType.Length - 1)
+                    break;
+                ImGui.SameLine();
+            }
+
+            if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.Full)
+            {
+                ImGui.SameLine();
+                var coolDownNotificationSound = Plugin.Configuration.CoolDownNotificationSound;
+                if (ImGui.Checkbox("不在触发期时播放提示音", ref coolDownNotificationSound))
+                {
+                    Plugin.Configuration.CoolDownNotificationSound = coolDownNotificationSound;
+                    Plugin.Configuration.Save();
+                }
+            }
+
+            ImGui.Text("接收来自服务器的触发消息");
+            var attemptMessageFromServer = (int)Plugin.Configuration.AttemptMessageFromServer;
+            for (var i = 0; i < _attemptMessageFromServerType.Length; i++)
+            {
+                if (ImGui.RadioButton(_attemptMessageFromServerType[i] + "##_attemptMessageFromServerType", ref attemptMessageFromServer, i))
+                {
+                    Plugin.Configuration.AttemptMessageFromServer = (AttemptMessageFromServerType)attemptMessageFromServer;
+                    Plugin.Configuration.Save();
+                }
+
+                if (i == _attemptMessageFromServerType.Length - 1)
+                    break;
+                ImGui.SameLine();
+            }
+
+            if (Plugin.Configuration.AttemptMessageFromServer != AttemptMessageFromServerType.Off)
+            {
+                ImGui.SameLine();
+                var showMessageInDungenos = Plugin.Configuration.ShowAttemptMessageInDungeons;
+                if (ImGui.Checkbox("在副本里显示消息", ref showMessageInDungenos))
+                {
+                    Plugin.Configuration.ShowAttemptMessageInDungeons = showMessageInDungenos;
+                    Plugin.Configuration.Save();
+                }
+            }
+
+        }
+        Widget.EndFramedGroup();
+
+        Widget.BeginFramedGroup("触发消息");
+        {
+            var attemptMessageType = (int)Plugin.Configuration.AttemptMessage;
+            for (var i = 0; i < _attemptMessageDisplayType.Length; i++)
+            {
+                if (ImGui.RadioButton(_attemptMessageDisplayType[i], ref attemptMessageType, i))
+                {
+                    Plugin.Configuration.AttemptMessage = (AttemptMessageType)attemptMessageType;
+                    Plugin.Configuration.Save();
+                }
+
+                if (i == _attemptMessageDisplayType.Length - 1)
+                    break;
+                ImGui.SameLine();
+            }
+
+            ImGui.BeginGroup();
+            {
+                ImGui.Text("失败消息颜色");
+                ImGui.SameLine();
+                if (ImGui.ColorButton("##触发失败", GetColor(Plugin.Configuration.FailedMessageColor)))
+                {
+                    _showColorPicker = true;
+                    _colorPickerType = ColorPickerType.Failed;
+                }
+
+                ImGui.Text("成功消息颜色");
+                ImGui.SameLine();
+                if (ImGui.ColorButton("##触发成功", GetColor(Plugin.Configuration.SpawnedMessageColor)))
+                {
+                    _showColorPicker = true;
+                    _colorPickerType = ColorPickerType.Spawned;
+                }
+
+                ImGui.Text("    关键词颜色");
+                ImGui.SameLine();
+                if (ImGui.ColorButton("##高亮", GetColor(Plugin.Configuration.HighlightColor)))
+                {
+                    _showColorPicker = true;
+                    _colorPickerType = ColorPickerType.Highlighted;
+                }
+
+                ImGui.EndGroup();
+            }
+            ImGui.SameLine();
+
+            ImGui.BeginGroup();
+            {
+                ImGui.TextColored(GetColor(Plugin.Configuration.FailedMessageColor), "不好啦，寄啦，救命啊");
+                ImGui.TextColored(GetColor(Plugin.Configuration.SpawnedMessageColor), "太好啦，出货啦");
+                ImGui.TextColored(GetColor(Plugin.Configuration.HighlightColor), "关键词，你为什么偷着乐");
+            }
+            ImGui.EndGroup();
+        }
+        Widget.EndFramedGroup();
+        /*ImGui.SameLine();*/
+        Widget.BeginFramedGroup("其他");
+        {
+            var showInstance = Plugin.Configuration.ShowInstance;
+            if (ImGui.Checkbox("在基本情报栏显示几线", ref showInstance))
+            {
+                Plugin.Configuration.ShowInstance = showInstance;
+                Plugin.Configuration.Save();
+            }
+
+            var autoShowHuntMap = Plugin.Configuration.AutoShowHuntMap;
+            if (ImGui.Checkbox("自动获取点位列表", ref autoShowHuntMap))
+            {
+                Plugin.Configuration.AutoShowHuntMap = autoShowHuntMap;
+                Plugin.Configuration.Save();
+            }
+
+            if (Plugin.Configuration.AutoShowHuntMap && Plugin.Configuration.SpawnNotificationType > 0)
+            {
+                ImGui.SameLine();
+                var onlyFetchInDuration = Plugin.Configuration.OnlyFetchInDuration;
+                if (ImGui.Checkbox("只在触发期内获取", ref onlyFetchInDuration))
+                {
+                    Plugin.Configuration.OnlyFetchInDuration = onlyFetchInDuration;
+                    Plugin.Configuration.Save();
+                }
+            }
+
+            var playerSearchTip = Plugin.Configuration.PlayerSearchTip;
+            if (ImGui.Checkbox("显示玩家搜索提示", ref playerSearchTip))
+            {
+                Plugin.Configuration.PlayerSearchTip = playerSearchTip;
+                Plugin.Configuration.Save();
+            }
+
+            var hideAfdian = Plugin.Configuration.HideAfDian;
+            if (ImGui.Checkbox("隐藏爱发电按钮", ref hideAfdian))
+            {
+                Plugin.Configuration.HideAfDian = hideAfdian;
                 Plugin.Configuration.Save();
             }
         }
-
-        ImGui.SetNextItemWidth(100);
-        // Fuck C#
-        var spawnNotificationType = (int)Plugin.Configuration.SpawnNotificationType;
-        if (ImGui.Combo("触发概率提示", ref spawnNotificationType, _spawnNotificationType, _spawnNotificationType.Length))
-        {
-            Plugin.Configuration.SpawnNotificationType = (SpawnNotificationType)spawnNotificationType;
-            Plugin.Configuration.Save();
-        }
-
-        if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.Full)
-        {
-            ImGui.SameLine();
-            var coolDownNotificationSound = Plugin.Configuration.CoolDownNotificationSound;
-            if (ImGui.Checkbox("不在触发期时播放提示音", ref coolDownNotificationSound))
-            {
-                Plugin.Configuration.CoolDownNotificationSound = coolDownNotificationSound;
-                Plugin.Configuration.Save();
-            }
-        }
-
-        var autoShowHuntMap = Plugin.Configuration.AutoShowHuntMap;
-        if (ImGui.Checkbox("自动获取点位列表", ref autoShowHuntMap))
-        {
-            Plugin.Configuration.AutoShowHuntMap = autoShowHuntMap;
-            Plugin.Configuration.Save();
-        }
-
-        if (Plugin.Configuration.AutoShowHuntMap && Plugin.Configuration.SpawnNotificationType > 0)
-        {
-            ImGui.SameLine();
-            var onlyFetchInDuration = Plugin.Configuration.OnlyFetchInDuration;
-            if (ImGui.Checkbox("只在触发期内获取", ref onlyFetchInDuration))
-            {
-                Plugin.Configuration.OnlyFetchInDuration = onlyFetchInDuration;
-                Plugin.Configuration.Save();
-            }
-        }
-
-        var playerSearchTip = Plugin.Configuration.PlayerSearchTip;
-        if (ImGui.Checkbox("显示玩家搜索提示", ref playerSearchTip))
-        {
-            Plugin.Configuration.PlayerSearchTip = playerSearchTip;
-            Plugin.Configuration.Save();
-        }
-
-        var hideAfdian = Plugin.Configuration.HideAfDian;
-        if (ImGui.Checkbox("隐藏爱发电按钮", ref hideAfdian))
-        {
-            Plugin.Configuration.HideAfDian = hideAfdian;
-            Plugin.Configuration.Save();
-        }
-
-        ImGui.NewLine();
-
-        ImGui.Text("触发失败消息颜色");
-        ImGui.SameLine();
-        if (ImGui.ColorButton("##触发失败", GetColor(Plugin.Configuration.FailedMessageColor)))
-        {
-            _showColorPicker = true;
-            _colorPickerType = ColorPickerType.Failed;
-        }
-
-        ImGui.Text("触发成功消息颜色");
-        ImGui.SameLine();
-        if (ImGui.ColorButton("##触发成功", GetColor(Plugin.Configuration.SpawnedMessageColor)))
-        {
-            _showColorPicker = true;
-            _colorPickerType = ColorPickerType.Spawned;
-        }
-
-        ImGui.Text("关键词颜色");
-        ImGui.SameLine();
-        if (ImGui.ColorButton("##高亮", GetColor(Plugin.Configuration.HighlightColor)))
-        {
-            _showColorPicker = true;
-            _colorPickerType = ColorPickerType.Highlighted;
-        }
-
-        ImGui.SameLine();
-        if (ImGui.Button("预览"))
-        {
-            DalamudApi.ChatGui.PrintChat(new XivChatEntry
-                                         {
-                                             Message = new SeString(new List<Payload>
-                                                                    {
-                                                                        new UIForegroundPayload((ushort)Plugin.Configuration.FailedMessageColor),
-                                                                        new TextPayload("Something came in the mail today... "),
-                                                                        new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                                                        new TextPayload("deez nuts! "),
-                                                                        new UIForegroundPayload(0),
-                                                                        new TextPayload("Ha! Got’em.\n"),
-                                                                        new UIForegroundPayload((ushort)Plugin.Configuration.SpawnedMessageColor),
-                                                                        new TextPayload("Something came in the mail today... "),
-                                                                        new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                                                        new TextPayload("deez nuts! "),
-                                                                        new UIForegroundPayload(0),
-                                                                        new TextPayload("Ha! Got’em."),
-                                                                        new UIForegroundPayload(0)
-                                                                    }),
-                                             Type = XivChatType.Debug
-                                         });
-        }
-
-
-        ImGui.NewLine();
-        var clearThreshold = Plugin.Configuration.TrackerClearThreshold;
-        ImGui.Text("x 分钟内没更新自动清除相关计数");
-#if DEBUG || DEBUG_CN
-            if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 1f, 60f, "%.2f分"))
-#else
-        if (ImGui.SliderFloat("##在多少分钟后没更新就自动清除计数", ref clearThreshold, 30f, 60f, "%.2f分"))
-#endif
-        {
-            Plugin.Configuration.TrackerClearThreshold = clearThreshold;
-            Plugin.Configuration.Save();
-        }
+        Widget.EndFramedGroup();
     }
 
     private void DrawColorPicker()

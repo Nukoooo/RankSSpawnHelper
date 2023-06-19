@@ -21,9 +21,9 @@ internal class Data
     private readonly Dictionary<uint, string> _worldName;
     private readonly ExcelSheet<World> _worldSheet;
     public MapTexture MapTexture;
+    public Player Player;
 
     public SRank SRank;
-    public Player Player;
 
     public Data()
     {
@@ -35,7 +35,7 @@ internal class Data
 
         _textInfo = new CultureInfo("en-US", false).TextInfo;
 
-        SRank    = new SRank();
+        SRank      = new SRank();
         Player     = new Player();
         MapTexture = new MapTexture();
     }
