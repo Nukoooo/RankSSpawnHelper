@@ -17,7 +17,7 @@ namespace RankSSpawnHelper.Features;
 internal class SearchCounter : IDisposable
 {
     private const uint TextNodeId = 0x133769;
-    private readonly List<ulong> _playerIds = new();
+    private readonly List<long> _playerIds = new();
     private readonly nint _rdataBegin;
     private readonly nint _rdataEnd;
     private int _searchCount;
@@ -26,10 +26,10 @@ internal class SearchCounter : IDisposable
     {
         _rdataBegin = DalamudApi.SigScanner.RDataSectionBase;
         _rdataEnd   = DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize;
-        PluginLog.Debug($".data begin: {DalamudApi.SigScanner.DataSectionBase:X}, end: {DalamudApi.SigScanner.DataSectionBase + DalamudApi.SigScanner.DataSectionSize:X}, offset: {DalamudApi.SigScanner.DataSectionOffset}");
+        /*PluginLog.Debug($".data begin: {DalamudApi.SigScanner.DataSectionBase:X}, end: {DalamudApi.SigScanner.DataSectionBase + DalamudApi.SigScanner.DataSectionSize:X}, offset: {DalamudApi.SigScanner.DataSectionOffset}");
         PluginLog.Debug($".rdata begin: {DalamudApi.SigScanner.RDataSectionBase:X}, end: {DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize:X}, offset: {DalamudApi.SigScanner.RDataSectionOffset}");
         PluginLog.Debug($".text begin: {DalamudApi.SigScanner.TextSectionBase:X}, end: {DalamudApi.SigScanner.TextSectionBase + DalamudApi.SigScanner.TextSectionSize:X}, offset: {DalamudApi.SigScanner.TextSectionOffset}");
-        PluginLog.Debug($"{DalamudApi.SigScanner.SearchBase:X}");
+        PluginLog.Debug($"{DalamudApi.SigScanner.SearchBase:X}");*/
 
         SignatureHelper.Initialise(this);
 
@@ -39,11 +39,13 @@ internal class SearchCounter : IDisposable
     }
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2", DetourName = nameof(Detour_ProcessSocialListPacket))]
+    [Signature("48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2",
+               DetourName = nameof(Detour_ProcessSocialListPacket))]
     private Hook<ProcessSocialListPacketDelegate> ProcessSocailListPacket { get; init; } = null!;
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("40 53 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B D9 0F 29 74 24 ?? 0F 28 F1 74 ?? E8 ?? ?? ?? ?? C6 83", DetourName = nameof(Detour_SocialList_Draw))]
+    [Signature("40 53 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B D9 0F 29 74 24 ?? 0F 28 F1 74 ?? E8 ?? ?? ?? ?? C6 83",
+               DetourName = nameof(Detour_SocialList_Draw))]
     private Hook<SocialListAddonShow> SocialListDraw { get; init; } = null!;
 
     public void Dispose()
@@ -71,27 +73,33 @@ internal class SearchCounter : IDisposable
         if (socialListStruct.ListType != 4) // we only need results from player search
             return original;
 
-        var uiModule   = (UIModule*)(DalamudApi.GameGui.GetUIModule());
+        var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
         var infoModule = uiModule->GetInfoModule();
-        infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
+        var proxy      = (InfoProxySearch*)infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
 
         var currentTerritoryId = DalamudApi.ClientState.TerritoryType;
 
-        foreach (var playerEntry in socialListStruct.entries)
+        for (var i = 0u; i < proxy->InfoProxyCommonList.DataSize; i++)
         {
-            if (playerEntry.territoryType != currentTerritoryId)
-                continue;
-            if (_playerIds.Contains(playerEntry.Id))
+            var entry = proxy->InfoProxyCommonList.GetEntry(i);
+            if (entry == null)
             {
-                PluginLog.Debug($"Found ID {playerEntry.Id:X} in player list, ignoring");
-                continue;
+                PluginLog.Debug($"Valid size {i}");
+                break;
             }
 
-            _playerIds.Add(playerEntry.Id);
-            PluginLog.Debug($"TerritoryId: {playerEntry.territoryType} | PlayerUniqueId: {playerEntry.Id:X}");
-        }
+            // when a player isn't in the same map as localplayer is, then just break
+            // the info proxy is location-base order, the players in the same map as localplayer is,
+            // they will be shown first
+            if (currentTerritoryId != entry->Location)
+                break;
 
-        PluginLog.Information($"{original:X} | {packetData:X}");
+            if (_playerIds.Contains(entry->ContentId))
+                continue;
+
+            _playerIds.Add(entry->ContentId);
+            PluginLog.Debug($"{Marshal.PtrToStringUTF8((IntPtr)entry->Name)} / content_id: {entry->ContentId}");
+        }
 
         // sometimes original would be at .rdata section
         // so we are gonna skip that
@@ -100,30 +108,30 @@ internal class SearchCounter : IDisposable
 
         _searchCount++;
         Plugin.Print(new List<Payload>
-                     {
-                         new TextPayload("在经过 "),
-                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                         new TextPayload($"{_searchCount} "),
-                         new UIForegroundPayload(0),
-                         new TextPayload("次搜索后, 和你在同一张图里大约有 "),
-                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                         new TextPayload($"{_playerIds.Count} "),
-                         new UIForegroundPayload(0),
-                         new TextPayload("人.")
-                     });
+        {
+            new TextPayload("在经过 "),
+            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+            new TextPayload($"{_searchCount} "),
+            new UIForegroundPayload(0),
+            new TextPayload("次搜索后, 和你在同一张图里大约有 "),
+            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+            new TextPayload($"{_playerIds.Count} "),
+            new UIForegroundPayload(0),
+            new TextPayload("人.")
+        });
 
         if (Plugin.Configuration.PlayerSearchTip)
         {
             Plugin.Print(new List<Payload>
-                         {
-                             new TextPayload("对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " +
-                                             "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" +
-                                             "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" +
-                                             "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" +
-                                             "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
-                             new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                             new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
-                         });
+            {
+                new TextPayload("对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " +
+                                "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" +
+                                "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" +
+                                "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" +
+                                "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
+                new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
+            });
         }
 
         return original;
@@ -139,6 +147,8 @@ internal class SearchCounter : IDisposable
         if (!unitBase->IsVisible || unitBase->UldManager.NodeList == null)
             return;
 
+        // for whatever reason, this function is also called in other addon..
+        // probably some kind of inherited addon
         var name = Marshal.PtrToStringUTF8(new IntPtr(unitBase->Name));
         if (name is not "SocialList")
             return;
@@ -243,11 +253,9 @@ internal class SearchCounter : IDisposable
     [StructLayout(LayoutKind.Explicit, Size = 88, Pack = 1)]
     public struct SearchPlayerEntry
     {
-        [FieldOffset(0x0)]
-        public ulong Id;
+        [FieldOffset(0x0)] public ulong Id;
 
-        [FieldOffset(0x14)]
-        public uint territoryType;
+        [FieldOffset(0x14)] public uint territoryType;
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 896)]
