@@ -107,18 +107,6 @@ internal class SearchCounter : IDisposable
             return original;
 
         _searchCount++;
-        Plugin.Print(new List<Payload>
-        {
-            new TextPayload("在经过 "),
-            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-            new TextPayload($"{_searchCount} "),
-            new UIForegroundPayload(0),
-            new TextPayload("次搜索后, 和你在同一张图里大约有 "),
-            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-            new TextPayload($"{_playerIds.Count} "),
-            new UIForegroundPayload(0),
-            new TextPayload("人.")
-        });
 
         if (Plugin.Configuration.PlayerSearchTip)
         {
@@ -133,6 +121,23 @@ internal class SearchCounter : IDisposable
                 new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
             });
         }
+
+        if (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off or PlayerSearchDispalyType.UiOnly)
+            return original;
+
+        Plugin.Print(new List<Payload>
+        {
+            new TextPayload("在经过 "),
+            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+            new TextPayload($"{_searchCount} "),
+            new UIForegroundPayload(0),
+            new TextPayload("次搜索后, 和你在同一张图里大约有 "),
+            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+            new TextPayload($"{_playerIds.Count} "),
+            new UIForegroundPayload(0),
+            new TextPayload("人.")
+        });
+
 
         return original;
     }
@@ -169,7 +174,7 @@ internal class SearchCounter : IDisposable
             break;
         }
 
-        if (_playerIds.Count == 0 && textNode != null)
+        if ((_playerIds.Count == 0 || (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off or PlayerSearchDispalyType.ChatOnly) && textNode != null))
         {
             textNode->AtkResNode.ToggleVisibility(false);
             return;

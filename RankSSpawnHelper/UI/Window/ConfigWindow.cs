@@ -20,13 +20,13 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private const ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
     private readonly string[] _attemptMessageDisplayType = { "不显示", "简单", "详细" };
     private readonly string[] _attemptMessageFromServerType = { "关闭", "本大区", "本大区+其他大区" };
+    private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
+    private readonly string[] _tabNames = { "计数", "查询S怪", "其他", "关于" };
+    private readonly string[] _expansions = { "2.0", "3.0", "4.0", "5.0", "6.0" };
+    private readonly string[] _playerSearchDisplayType = { "关闭", "聊天框", "游戏界面", "都开" };
 
     private readonly List<ColorInfo> _colorInfos = new();
-    private readonly List<string> _expansions = new() { "2.0", "3.0", "4.0", "5.0", "6.0" };
 
-    private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
-
-    private readonly string[] _tabNames = { "计数", "查询S怪", "其他", "关于" };
     private ColorPickerType _colorPickerType = ColorPickerType.Failed;
 
     private TextureWrap _image;
@@ -146,24 +146,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         {
             ImGui.PopFont();
         }
-
-        /*ImGui.BeginTabBar("SpawnHelper主菜单");
-        {
-            if (ImGui.BeginTabItem("关于"))
-            {
-                ImGui.Text("在使用本插件的联网功能时,将会收集以下信息:\n" +
-                           "    - 游戏ID以及所在的服务器, 如 Deez Nuts@Siren\n" +
-                           "    - 当前所在区域, 如: 海猫茶屋@叹息海@0\n" +
-                           "    - 计数的数量&名字, 如: 矮人棉: 50, 彷徨之物: 12\n" +
-                           "    - 开始计数的时间戳, 如: 1667166428\n");
-
-                if (_image != null)
-                    ImGui.Image(_image.ImGuiHandle, new Vector2(_image.Width, _image.Height) / 1.5f);
-
-                ImGui.EndTabItem();
-            }
-        }
-        ImGui.EndTabBar();*/
     }
 
     public override void PostDraw()
@@ -335,7 +317,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
     private void DrawQueryTab()
     {
-        if (ImGui.Combo("版本", ref _selectedExpansion, _expansions.ToArray(), _expansions.Count))
+        if (ImGui.Combo("版本", ref _selectedExpansion, _expansions, _expansions.Length))
         {
             _monsterNames    = Plugin.Managers.Data.SRank.GetSRanksByExpansion((GameExpansion)_selectedExpansion);
             _selectedMonster = 0;
@@ -542,37 +524,33 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         Widget.EndFramedGroup();
 
         ImGui.SameLine();
+        Widget.BeginFramedGroup("服务器重启时间");
 
-
-        if (DalamudApi.ClientState.LocalPlayer != null)
+        var timestamp = Plugin.Managers.Data.GetServerRestartTimeRaw();
+        if (timestamp > 0)
         {
-            Widget.BeginFramedGroup("服务器重启时间");
+            ImGui.Text("时间戳:");
+            ImGui.SameLine();
+            ImGui.TextColored(ImGuiColors.ParsedGreen, $"{timestamp}");
+            var datetime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime.ToLocalTime();
+            ImGui.TextColored(ImGuiColors.ParsedGreen, $"{datetime.ToShortDateString()} {datetime.ToShortTimeString()}");
 
-            var timestamp = Plugin.Managers.Data.GetServerRestartTimeRaw();
-            if (timestamp > 0)
+            if (ImGui.Button("复制"))
             {
-                ImGui.Text("时间戳:");
-                ImGui.SameLine();
-                ImGui.TextColored(ImGuiColors.ParsedGreen, $"{timestamp}");
-                var datetime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime.ToLocalTime();
-                ImGui.TextColored(ImGuiColors.ParsedGreen, $"{datetime.ToShortDateString()} {datetime.ToShortTimeString()}");
-
-                if (ImGui.Button("复制"))
-                {
-                    ImGui.SetClipboardText($"{DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData.DataCenter.Value.Name.RawString}的重启时间: {datetime.ToShortDateString()} {datetime.ToShortTimeString()} / 时间戳: {timestamp} / 时区: {TimeZoneInfo.Local.BaseUtcOffset.TotalHours}");
-                }
+                ImGui.SetClipboardText(DalamudApi.ClientState.LocalPlayer != null
+                                           ? $"{DalamudApi.ClientState.LocalPlayer!.CurrentWorld.GameData!.DataCenter.Value!.Name.RawString}的重启时间: {datetime.ToShortDateString()} {datetime.ToShortTimeString()} / 时间戳: {timestamp} / 时区: {TimeZoneInfo.Local.BaseUtcOffset.TotalHours}"
+                                           : $"重启时间: {datetime.ToShortDateString()} {datetime.ToShortTimeString()} / 时间戳: {timestamp} / 时区: {TimeZoneInfo.Local.BaseUtcOffset.TotalHours}");
             }
-            else
-            {
-                ImGui.Text("没有获取到重启时间");
-                ImGui.Text("如何获取:");
-                ImGui.Text("打开队员招募即可.\n如果已打开,点有招募的分类");
-            }
-
-            Widget.EndFramedGroup();
+        }
+        else
+        {
+            ImGui.Text("没有获取到重启时间");
+            ImGui.Text("如何获取:");
+            ImGui.Text("打开队员招募即可.\n如果已打开,点有招募的分类");
         }
 
-        /*ImGui.SameLine();*/
+        Widget.EndFramedGroup();
+
         Widget.BeginFramedGroup("其他");
         {
             var showInstance = Plugin.Configuration.ShowInstance;
@@ -600,21 +578,37 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 }
             }
 
-            var playerSearchTip = Plugin.Configuration.PlayerSearchTip;
-            if (ImGui.Checkbox("显示玩家搜索提示", ref playerSearchTip))
-            {
-                Plugin.Configuration.PlayerSearchTip = playerSearchTip;
-                Plugin.Configuration.Save();
-            }
-
             var hideAfdian = Plugin.Configuration.HideAfDian;
             if (ImGui.Checkbox("隐藏爱发电按钮", ref hideAfdian))
             {
                 Plugin.Configuration.HideAfDian = hideAfdian;
                 Plugin.Configuration.Save();
             }
+
+            ImGui.Text("玩家搜索显示类型");
+            var playerSearchDispalyType = (int)Plugin.Configuration.PlayerSearchDispalyType;
+            for (var i = 0; i < _playerSearchDisplayType.Length; i++)
+            {
+                if (ImGui.RadioButton(_playerSearchDisplayType[i] + "##__playerSearchDisplayType", ref playerSearchDispalyType, i))
+                {
+                    Plugin.Configuration.PlayerSearchDispalyType = (PlayerSearchDispalyType)playerSearchDispalyType;
+                    Plugin.Configuration.Save();
+                }
+
+                if (i == _playerSearchDisplayType.Length - 1)
+                    break;
+                ImGui.SameLine();
+            }
+            
+            var playerSearchTip = Plugin.Configuration.PlayerSearchTip;
+            if (ImGui.Checkbox("显示玩家搜索提示", ref playerSearchTip))
+            {
+                Plugin.Configuration.PlayerSearchTip = playerSearchTip;
+                Plugin.Configuration.Save();
+            }
         }
         Widget.EndFramedGroup();
+
     }
 
     private void DrawColorPicker()

@@ -23,6 +23,14 @@ public enum AttemptMessageFromServerType
     All
 }
 
+public enum PlayerSearchDispalyType
+{
+    Off,
+    ChatOnly,
+    UiOnly,
+    Both
+}
+
 public class Configuration : IPluginConfiguration
 {
     public bool HideAfDian = false;
@@ -56,9 +64,13 @@ public class Configuration : IPluginConfiguration
     public uint HighlightColor { get; set; } = 71;
 
     public AttemptMessageType AttemptMessage { get; set; } = AttemptMessageType.Detailed;
-    public AttemptMessageFromServerType AttemptMessageFromServer { get; set; } = AttemptMessageFromServerType.CurrentDataCenter;
-    public bool ShowAttemptMessageInDungeons { get; set; } = true;
 
+    public AttemptMessageFromServerType AttemptMessageFromServer { get; set; } = AttemptMessageFromServerType.CurrentDataCenter;
+
+    public bool ShowAttemptMessageInDungeons { get; set; } = true;
+    public PlayerSearchDispalyType PlayerSearchDispalyType { get; set; } = PlayerSearchDispalyType.Both;
+
+    // ReSharper disable once UnusedMember.Global
     public string PluginVersion { get; set; } = "";
     public int Version { get; set; }
 
