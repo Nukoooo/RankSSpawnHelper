@@ -6,6 +6,7 @@ using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.Dtr;
+using Dalamud.Game.Gui.PartyFinder;
 using Dalamud.Game.Network;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -42,4 +43,5 @@ internal class DalamudApi
 
     [PluginService] internal static DtrBar DtrBar { get; private set; } = null!;
     [PluginService] internal static GameNetwork GameNetwork { get; private set; } = null!;
+    [PluginService] internal static PartyFinderGui PartyFinderGui { get; private set; } = null!;
 }

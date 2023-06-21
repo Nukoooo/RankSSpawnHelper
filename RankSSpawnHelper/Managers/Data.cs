@@ -11,7 +11,7 @@ using Dalamud.Logging;
 
 namespace RankSSpawnHelper.Managers;
 
-internal class Data
+internal class Data : IDisposable
 {
     private readonly Dictionary<uint, string> _itemName;
 
@@ -22,6 +22,8 @@ internal class Data
     private readonly ExcelSheet<World> _worldSheet;
     public MapTexture MapTexture;
     public Player Player;
+
+    private long _serverRestartTime;
 
     public SRank SRank;
 
@@ -38,6 +40,18 @@ internal class Data
         SRank      = new SRank();
         Player     = new Player();
         MapTexture = new MapTexture();
+
+        DalamudApi.PartyFinderGui.ReceiveListing += PartyFinderGui_ReceiveListing;
+    }
+
+    public void Dispose()
+    {
+        DalamudApi.PartyFinderGui.ReceiveListing -= PartyFinderGui_ReceiveListing;
+    }
+
+    private void PartyFinderGui_ReceiveListing(Dalamud.Game.Gui.PartyFinder.Types.PartyFinderListing listing, Dalamud.Game.Gui.PartyFinder.Types.PartyFinderListingEventArgs args)
+    {
+        _serverRestartTime = listing.LastPatchHotfixTimestamp;
     }
 
     public List<string> GetServers()
@@ -107,5 +121,10 @@ internal class Data
     public string GetItemName(uint id)
     {
         return _textInfo.ToTitleCase(_itemName[id]);
+    }
+
+    public long GetServerRestartTimeRaw()
+    {
+        return _serverRestartTime;
     }
 }

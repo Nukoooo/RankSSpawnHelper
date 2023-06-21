@@ -533,13 +533,45 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
             ImGui.BeginGroup();
             {
-                ImGui.TextColored(GetColor(Plugin.Configuration.FailedMessageColor), "不好啦，寄啦，救命啊");
-                ImGui.TextColored(GetColor(Plugin.Configuration.SpawnedMessageColor), "太好啦，出货啦");
-                ImGui.TextColored(GetColor(Plugin.Configuration.HighlightColor), "关键词，你为什么偷着乐");
+                ImGui.TextColored(GetColor(Plugin.Configuration.FailedMessageColor), "寄啦，救命啊");
+                ImGui.TextColored(GetColor(Plugin.Configuration.SpawnedMessageColor), "出货啦");
+                ImGui.TextColored(GetColor(Plugin.Configuration.HighlightColor), "你为什么偷着乐");
             }
             ImGui.EndGroup();
         }
         Widget.EndFramedGroup();
+
+        ImGui.SameLine();
+
+
+        if (DalamudApi.ClientState.LocalPlayer != null)
+        {
+            Widget.BeginFramedGroup("服务器重启时间");
+
+            var timestamp = Plugin.Managers.Data.GetServerRestartTimeRaw();
+            if (timestamp > 0)
+            {
+                ImGui.Text("时间戳:");
+                ImGui.SameLine();
+                ImGui.TextColored(ImGuiColors.ParsedGreen, $"{timestamp}");
+                var datetime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime.ToLocalTime();
+                ImGui.TextColored(ImGuiColors.ParsedGreen, $"{datetime.ToShortDateString()} {datetime.ToShortTimeString()}");
+
+                if (ImGui.Button("复制"))
+                {
+                    ImGui.SetClipboardText($"{DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData.DataCenter.Value.Name.RawString}的重启时间: {datetime.ToShortDateString()} {datetime.ToShortTimeString()} / 时间戳: {timestamp} / 时区: {TimeZoneInfo.Local.BaseUtcOffset.TotalHours}");
+                }
+            }
+            else
+            {
+                ImGui.Text("没有获取到重启时间");
+                ImGui.Text("如何获取:");
+                ImGui.Text("打开队员招募即可.\n如果已打开,点有招募的分类");
+            }
+
+            Widget.EndFramedGroup();
+        }
+
         /*ImGui.SameLine();*/
         Widget.BeginFramedGroup("其他");
         {

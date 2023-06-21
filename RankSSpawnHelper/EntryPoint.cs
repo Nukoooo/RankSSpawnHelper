@@ -21,6 +21,10 @@ public class EntryPoint : IDalamudPlugin
     private readonly Assembly _assembly;
     private readonly PluginCommandManager<EntryPoint> _commandManager;
     private readonly AssemblyLoadContext _context;
+
+#if DEBUG || DEBUG_CN
+    private readonly DebugThingy _debug;
+#endif
     private readonly WindowSystem _windowSystem;
 
     public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
@@ -34,8 +38,13 @@ public class EntryPoint : IDalamudPlugin
         _assembly = Assembly.GetExecutingAssembly();
         _context  = AssemblyLoadContext.GetLoadContext(_assembly);
         DalamudApi.Interface.Inject(this, Array.Empty<object>());
-
         LoadCosturaAssembles();
+
+
+#if DEBUG || DEBUG_CN
+        _debug = new DebugThingy();
+#endif
+
 
         // Get or create a configuration object
         Plugin.Configuration = (Configuration)pi.GetPluginConfig() ?? pi.Create<Configuration>();
@@ -59,15 +68,16 @@ public class EntryPoint : IDalamudPlugin
 #endif
 
         Plugin.Print(new List<Payload>
-                     {
-                         new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
-                         new UIForegroundPayload(35),
-                         new TextPayload("  [-] 尝试修复 在有计数后切换角色时,服务器计数会double 的BUG\n"),
-                         new TextPayload("  [-] 修复在 1.3.0.0/1/2/3/4/5 版本里, 在湖区使用任意物品(吃食物,解锁坐骑等)会算入计数的BUG\n"),
-                         new UIForegroundPayload(0),
-                         new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
-                     });
+        {
+            new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
+            new UIForegroundPayload(35),
+            new TextPayload("  [-] 尝试修复 在有计数后切换角色时,服务器计数会double 的BUG\n"),
+            new TextPayload("  [-] 修复在 1.3.0.0/1/2/3/4/5 版本里, 在湖区使用任意物品(吃食物,解锁坐骑等)会算入计数的BUG\n"),
+            new UIForegroundPayload(0),
+            new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
+        });
     }
+
 
     public string Name => "SpawnHelper";
 
@@ -78,8 +88,9 @@ public class EntryPoint : IDalamudPlugin
                              where name.StartsWith("costura.") && name.EndsWith(".dll.compressed")
                              select name)
         {
-            using var deflateStream = new DeflateStream(_assembly.GetManifestResourceStream(text), CompressionMode.Decompress, false);
-            using var memoryStream  = new MemoryStream();
+            using var deflateStream =
+                new DeflateStream(_assembly.GetManifestResourceStream(text), CompressionMode.Decompress, false);
+            using var memoryStream = new MemoryStream();
 
             int num;
             while ((num = deflateStream.Read(span)) != 0)
@@ -94,7 +105,8 @@ public class EntryPoint : IDalamudPlugin
         }
     }
 
-#region Commands initialization
+    #region Commands initialization
+
     [Command("/shelper")]
     [HelpMessage("打开或关闭设置菜单")]
     public void ToggleConfigUi(string command, string args)
@@ -145,11 +157,11 @@ public class EntryPoint : IDalamudPlugin
             default:
             {
                 Plugin.Print(new List<Payload>
-                             {
-                                 new UIForegroundPayload(518),
-                                 new TextPayload($"使用方法: {cmd} [cur/all]. 比如清除当前计数: {cmd} cur"),
-                                 new UIForegroundPayload(0)
-                             });
+                {
+                    new UIForegroundPayload(518),
+                    new TextPayload($"使用方法: {cmd} [cur/all]. 比如清除当前计数: {cmd} cur"),
+                    new UIForegroundPayload(0)
+                });
                 return;
             }
         }
@@ -192,29 +204,31 @@ public class EntryPoint : IDalamudPlugin
             }
 
             Plugin.Print(new List<Payload>
-                         {
-                             new UIForegroundPayload(518),
-                             new TextPayload(message + "PS:消息已复制到剪贴板"),
-                             new UIForegroundPayload(0)
-                         });
+            {
+                new UIForegroundPayload(518),
+                new TextPayload(message + "PS:消息已复制到剪贴板"),
+                new UIForegroundPayload(0)
+            });
 
             ImGui.SetClipboardText(message);
             return;
         }
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
-                                           {
-                                               Type        = "ggnore",
-                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                               // Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
-                                               Failed = true
-                                           });
+        {
+            Type        = "ggnore",
+            WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+            InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+            TerritoryId = DalamudApi.ClientState.TerritoryType,
+            // Instance    = Plugin.Managers.Data.Player.GetCurrentTerritory(),
+            Failed = true
+        });
     }
-#endregion
 
-#region IDisposable Support
+    #endregion
+
+    #region IDisposable Support
+
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
@@ -226,6 +240,10 @@ public class EntryPoint : IDalamudPlugin
         Plugin.Managers.Dispose();
         Plugin.Features.Dispose();
 
+#if DEBUG || DEBUG_CN
+        _debug.Dispose();
+#endif
+
         DalamudApi.Interface.UiBuilder.Draw -= _windowSystem.Draw;
         _windowSystem.RemoveAllWindows();
     }
@@ -235,5 +253,6 @@ public class EntryPoint : IDalamudPlugin
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-#endregion
+
+    #endregion
 }

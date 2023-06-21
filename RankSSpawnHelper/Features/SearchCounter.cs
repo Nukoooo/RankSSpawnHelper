@@ -8,6 +8,8 @@ using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace RankSSpawnHelper.Features;
@@ -62,12 +64,16 @@ internal class SearchCounter : IDisposable
         _searchCount = 0;
     }
 
-    private nint Detour_ProcessSocialListPacket(nint a1, nint packetData)
+    private unsafe nint Detour_ProcessSocialListPacket(nint a1, nint packetData)
     {
         var original         = ProcessSocailListPacket.Original(a1, packetData);
         var socialListStruct = Marshal.PtrToStructure<SocialList>(packetData);
         if (socialListStruct.ListType != 4) // we only need results from player search
             return original;
+
+        var uiModule   = (UIModule*)(DalamudApi.GameGui.GetUIModule());
+        var infoModule = uiModule->GetInfoModule();
+        infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
 
         var currentTerritoryId = DalamudApi.ClientState.TerritoryType;
 
