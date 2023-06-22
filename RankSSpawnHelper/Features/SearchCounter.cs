@@ -43,7 +43,7 @@ internal class SearchCounter : IDisposable
         if (!DalamudApi.SigScanner.TryScanText("FF 50 ?? 80 7E ?? ?? 75 ?? 48 8B 07", out var idxAddress))
             throw new InvalidDataException("Failed to get InfoProxy Update Index");
 
-        var idx = *(byte*)(idxAddress + 2);
+        var idx = *(byte*)(idxAddress + 2) / nint.Size;
 
         InfoProxyPlayerSearchUpdate =
             Hook<InfoProxyPlayerSearchUpdateDelegate>.FromAddress((nint)proxy->vtbl[idx], Detour_InfoProxyPlayerSearchUpdate);
