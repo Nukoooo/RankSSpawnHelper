@@ -23,7 +23,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
     private readonly string[] _tabNames = { "计数", "查询S怪", "其他", "关于" };
     private readonly string[] _expansions = { "2.0", "3.0", "4.0", "5.0", "6.0" };
-    private readonly string[] _playerSearchDisplayType = { "关闭", "聊天框", "游戏界面", "都开" };
+    private readonly string[] _playerSearchDisplayType = { "关闭", "聊天框", "游戏界面", "都显示" };
 
     private readonly List<ColorInfo> _colorInfos = new();
 

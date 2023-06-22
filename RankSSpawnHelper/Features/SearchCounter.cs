@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -22,7 +24,7 @@ internal class SearchCounter : IDisposable
     private readonly nint _rdataEnd;
     private int _searchCount;
 
-    public SearchCounter()
+    public unsafe SearchCounter()
     {
         _rdataBegin = DalamudApi.SigScanner.RDataSectionBase;
         _rdataEnd   = DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize;
@@ -33,24 +35,35 @@ internal class SearchCounter : IDisposable
 
         SignatureHelper.Initialise(this);
 
-        ProcessSocailListPacket.Enable();
+
+        var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
+        var infoModule = uiModule->GetInfoModule();
+        var proxy      = infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
+        
+        if (!DalamudApi.SigScanner.TryScanText("FF 50 ?? 80 7E ?? ?? 75 ?? 48 8B 07", out var idxAddress))
+            throw new InvalidDataException("Failed to get InfoProxy Update Index");
+
+        var idx = *(byte*)(idxAddress + 2);
+
+        InfoProxyPlayerSearchUpdate =
+            Hook<InfoProxyPlayerSearchUpdateDelegate>.FromAddress((nint)proxy->vtbl[idx], Detour_InfoProxyPlayerSearchUpdate);
+
+        InfoProxyPlayerSearchUpdate.Enable();
         SocialListDraw.Enable();
         DalamudApi.Condition.ConditionChange += Condition_ConditionChange;
     }
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("48 89 5C 24 ?? 56 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B F2",
-               DetourName = nameof(Detour_ProcessSocialListPacket))]
-    private Hook<ProcessSocialListPacketDelegate> ProcessSocailListPacket { get; init; } = null!;
+    private Hook<InfoProxyPlayerSearchUpdateDelegate> InfoProxyPlayerSearchUpdate { get; init;  } = null!;
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
     [Signature("40 53 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B D9 0F 29 74 24 ?? 0F 28 F1 74 ?? E8 ?? ?? ?? ?? C6 83",
                DetourName = nameof(Detour_SocialList_Draw))]
-    private Hook<SocialListAddonShow> SocialListDraw { get; init; } = null!;
+    private Hook<SocialListAddonShowDelegate> SocialListDraw { get; init; } = null!;
 
     public void Dispose()
     {
-        ProcessSocailListPacket.Dispose();
+        InfoProxyPlayerSearchUpdate.Dispose();
         SocialListDraw.Dispose();
         DalamudApi.Condition.ConditionChange -= Condition_ConditionChange;
     }
@@ -66,17 +79,10 @@ internal class SearchCounter : IDisposable
         _searchCount = 0;
     }
 
-    private unsafe nint Detour_ProcessSocialListPacket(nint a1, nint packetData)
+    private unsafe nint Detour_InfoProxyPlayerSearchUpdate(InfoProxySearch* proxy, nint packetData)
     {
-        var original         = ProcessSocailListPacket.Original(a1, packetData);
-        var socialListStruct = Marshal.PtrToStructure<SocialList>(packetData);
-        if (socialListStruct.ListType != 4) // we only need results from player search
-            return original;
-
-        var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
-        var infoModule = uiModule->GetInfoModule();
-        var proxy      = (InfoProxySearch*)infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
-
+        var original = InfoProxyPlayerSearchUpdate.Original(proxy, packetData);
+        
         var currentTerritoryId = DalamudApi.ClientState.TerritoryType;
 
         for (var i = 0u; i < proxy->InfoProxyCommonList.DataSize; i++)
@@ -101,9 +107,7 @@ internal class SearchCounter : IDisposable
             PluginLog.Debug($"{Marshal.PtrToStringUTF8((IntPtr)entry->Name)} / content_id: {entry->ContentId}");
         }
 
-        // sometimes original would be at .rdata section
-        // so we are gonna skip that
-        if (original == 1 || (original >= (nint?)_rdataBegin && original <= (nint?)_rdataEnd))
+        if (original == 1)
             return original;
 
         _searchCount++;
@@ -122,7 +126,8 @@ internal class SearchCounter : IDisposable
             });
         }
 
-        if (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off or PlayerSearchDispalyType.UiOnly)
+        if (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
+                                                            or PlayerSearchDispalyType.UiOnly)
             return original;
 
         Plugin.Print(new List<Payload>
@@ -174,7 +179,9 @@ internal class SearchCounter : IDisposable
             break;
         }
 
-        if ((_playerIds.Count == 0 || (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off or PlayerSearchDispalyType.ChatOnly) && textNode != null))
+        if (_playerIds.Count == 0 ||
+            (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
+                                                             or PlayerSearchDispalyType.ChatOnly && textNode != null))
         {
             textNode->AtkResNode.ToggleVisibility(false);
             return;
@@ -254,31 +261,8 @@ internal class SearchCounter : IDisposable
         node->X = x;
         node->Y = y;
     }
+    
+    private unsafe delegate nint InfoProxyPlayerSearchUpdateDelegate(InfoProxySearch* a1, nint packetData);
 
-    [StructLayout(LayoutKind.Explicit, Size = 88, Pack = 1)]
-    public struct SearchPlayerEntry
-    {
-        [FieldOffset(0x0)] public ulong Id;
-
-        [FieldOffset(0x14)] public uint territoryType;
-    }
-
-    [StructLayout(LayoutKind.Sequential, Size = 896)]
-    public struct SocialList
-    {
-        public ulong CommunityID; // 0
-        public ushort NextIndex; // 8
-        public ushort Index; // 10
-        public byte ListType; // 12
-        public byte RequestKey; // 13
-        public byte RequestParam; // 14
-        public byte __padding1; // 15
-
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
-        public SearchPlayerEntry[] entries;
-    }
-
-    private delegate nint ProcessSocialListPacketDelegate(nint a1, nint packetData);
-
-    private unsafe delegate void SocialListAddonShow(AtkUnitBase* a1);
+    private unsafe delegate void SocialListAddonShowDelegate(AtkUnitBase* a1);
 }
