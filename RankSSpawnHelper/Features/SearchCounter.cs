@@ -20,21 +20,11 @@ internal class SearchCounter : IDisposable
 {
     private const uint TextNodeId = 0x133769;
     private readonly List<long> _playerIds = new();
-    private readonly nint _rdataBegin;
-    private readonly nint _rdataEnd;
     private int _searchCount;
 
     public unsafe SearchCounter()
     {
-        _rdataBegin = DalamudApi.SigScanner.RDataSectionBase;
-        _rdataEnd   = DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize;
-        /*PluginLog.Debug($".data begin: {DalamudApi.SigScanner.DataSectionBase:X}, end: {DalamudApi.SigScanner.DataSectionBase + DalamudApi.SigScanner.DataSectionSize:X}, offset: {DalamudApi.SigScanner.DataSectionOffset}");
-        PluginLog.Debug($".rdata begin: {DalamudApi.SigScanner.RDataSectionBase:X}, end: {DalamudApi.SigScanner.RDataSectionBase + DalamudApi.SigScanner.RDataSectionSize:X}, offset: {DalamudApi.SigScanner.RDataSectionOffset}");
-        PluginLog.Debug($".text begin: {DalamudApi.SigScanner.TextSectionBase:X}, end: {DalamudApi.SigScanner.TextSectionBase + DalamudApi.SigScanner.TextSectionSize:X}, offset: {DalamudApi.SigScanner.TextSectionOffset}");
-        PluginLog.Debug($"{DalamudApi.SigScanner.SearchBase:X}");*/
-
         SignatureHelper.Initialise(this);
-
 
         var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
         var infoModule = uiModule->GetInfoModule();
@@ -256,7 +246,7 @@ internal class SearchCounter : IDisposable
             textNode->AtkResNode.ToggleVisibility(true);
     }
 
-    private unsafe void SetNodePosition(AtkResNode* node, float x, float y)
+    private static unsafe void SetNodePosition(AtkResNode* node, float x, float y)
     {
         node->X = x;
         node->Y = y;
