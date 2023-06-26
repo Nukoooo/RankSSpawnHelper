@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -18,9 +16,9 @@ namespace RankSSpawnHelper.Features;
 
 internal class SearchCounter : IDisposable
 {
-    private const uint TextNodeId = 0x133769;
+    private const    uint       TextNodeId = 0x133769;
     private readonly List<long> _playerIds = new();
-    private int _searchCount;
+    private          int        _searchCount;
 
     public unsafe SearchCounter()
     {
@@ -29,26 +27,18 @@ internal class SearchCounter : IDisposable
         var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
         var infoModule = uiModule->GetInfoModule();
         var proxy      = infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
-        
-        if (!DalamudApi.SigScanner.TryScanText("FF 50 ?? 80 7E ?? ?? 75 ?? 48 8B 07", out var idxAddress))
-            throw new InvalidDataException("Failed to get InfoProxy Update Index");
 
-        var idx = *(byte*)(idxAddress + 2) / nint.Size;
-
-        InfoProxyPlayerSearchUpdate =
-            Hook<InfoProxyPlayerSearchUpdateDelegate>.FromAddress((nint)proxy->vtbl[idx], Detour_InfoProxyPlayerSearchUpdate);
+        InfoProxyPlayerSearchUpdate = Hook<InfoProxyPlayerSearchUpdateDelegate>.FromAddress
+                ((nint)proxy->vtbl[12], Detour_InfoProxyPlayerSearchUpdate);
 
         InfoProxyPlayerSearchUpdate.Enable();
         SocialListDraw.Enable();
         DalamudApi.Condition.ConditionChange += Condition_ConditionChange;
     }
 
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    private Hook<InfoProxyPlayerSearchUpdateDelegate> InfoProxyPlayerSearchUpdate { get; init;  } = null!;
+    private Hook<InfoProxyPlayerSearchUpdateDelegate> InfoProxyPlayerSearchUpdate { get; init; } = null!;
 
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("40 53 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B D9 0F 29 74 24 ?? 0F 28 F1 74 ?? E8 ?? ?? ?? ?? C6 83",
-               DetourName = nameof(Detour_SocialList_Draw))]
+    [Signature("40 53 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B D9 0F 29 74 24 ?? 0F 28 F1 74 ?? E8 ?? ?? ?? ?? C6 83", DetourName = nameof(Detour_SocialList_Draw))]
     private Hook<SocialListAddonShowDelegate> SocialListDraw { get; init; } = null!;
 
     public void Dispose()
@@ -61,9 +51,7 @@ internal class SearchCounter : IDisposable
     private void Condition_ConditionChange(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.BetweenAreas51 || value)
-        {
             return;
-        }
 
         _playerIds.Clear();
         _searchCount = 0;
@@ -72,7 +60,7 @@ internal class SearchCounter : IDisposable
     private unsafe nint Detour_InfoProxyPlayerSearchUpdate(InfoProxySearch* proxy, nint packetData)
     {
         var original = InfoProxyPlayerSearchUpdate.Original(proxy, packetData);
-        
+
         var currentTerritoryId = DalamudApi.ClientState.TerritoryType;
 
         for (var i = 0u; i < proxy->InfoProxyCommonList.DataSize; i++)
@@ -104,34 +92,33 @@ internal class SearchCounter : IDisposable
 
         if (Plugin.Configuration.PlayerSearchTip)
         {
-            Plugin.Print(new List<Payload>
-            {
-                new TextPayload("对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " +
-                                "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" +
-                                "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" +
-                                "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" +
-                                "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
-                new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
-            });
+            Plugin.Print(
+                         new List<Payload>
+                         {
+                                 new TextPayload(
+                                                 "对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " + "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" + "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" + "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" + "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
+                                 new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                                 new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
+                         });
         }
 
         if (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
-                                                            or PlayerSearchDispalyType.UiOnly)
+                                                         or PlayerSearchDispalyType.UiOnly)
             return original;
 
-        Plugin.Print(new List<Payload>
-        {
-            new TextPayload("在经过 "),
-            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-            new TextPayload($"{_searchCount} "),
-            new UIForegroundPayload(0),
-            new TextPayload("次搜索后, 和你在同一张图里大约有 "),
-            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-            new TextPayload($"{_playerIds.Count} "),
-            new UIForegroundPayload(0),
-            new TextPayload("人.")
-        });
+        Plugin.Print(
+                     new List<Payload>
+                     {
+                             new TextPayload("在经过 "),
+                             new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                             new TextPayload($"{_searchCount} "),
+                             new UIForegroundPayload(0),
+                             new TextPayload("次搜索后, 和你在同一张图里大约有 "),
+                             new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                             new TextPayload($"{_playerIds.Count} "),
+                             new UIForegroundPayload(0),
+                             new TextPayload("人.")
+                     });
 
 
         return original;
@@ -163,15 +150,18 @@ internal class SearchCounter : IDisposable
         AtkTextNode* textNode = null;
         for (var i = 0; i < unitBase->UldManager.NodeListCount; i++)
         {
-            if (unitBase->UldManager.NodeList[i] == null) continue;
-            if (unitBase->UldManager.NodeList[i]->NodeID != TextNodeId) continue;
+            if (unitBase->UldManager.NodeList[i] == null)
+                continue;
+            if (unitBase->UldManager.NodeList[i]->NodeID != TextNodeId)
+                continue;
+
             textNode = (AtkTextNode*)unitBase->UldManager.NodeList[i];
             break;
         }
 
-        if (_playerIds.Count == 0 ||
-            (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
-                                                             or PlayerSearchDispalyType.ChatOnly && textNode != null))
+        if ((_playerIds.Count == 0 || Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
+                                                                                   or PlayerSearchDispalyType.ChatOnly)
+         && textNode != null)
         {
             textNode->AtkResNode.ToggleVisibility(false);
             return;
@@ -211,9 +201,7 @@ internal class SearchCounter : IDisposable
             {
                 lastNode = lastNode->ChildNode;
                 while (lastNode->PrevSiblingNode != null)
-                {
                     lastNode = lastNode->PrevSiblingNode;
-                }
 
                 newTextNode->AtkResNode.NextSiblingNode = lastNode;
                 newTextNode->AtkResNode.ParentNode      = unitBase->RootNode;
@@ -251,7 +239,7 @@ internal class SearchCounter : IDisposable
         node->X = x;
         node->Y = y;
     }
-    
+
     private unsafe delegate nint InfoProxyPlayerSearchUpdateDelegate(InfoProxySearch* a1, nint packetData);
 
     private unsafe delegate void SocialListAddonShowDelegate(AtkUnitBase* a1);

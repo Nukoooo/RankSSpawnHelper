@@ -15,21 +15,21 @@ internal partial class Counter : IDisposable
 {
     private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionsMob = new()
     {
-        { 961, new Dictionary<string, uint>() }, // 鸟蛋
-        { 959, new Dictionary<string, uint>() }, // 叹息海
-        { 957, new Dictionary<string, uint>() }, // 萨维奈岛
-        { 814, new Dictionary<string, uint>() }, // 棉花
-        { 813, new Dictionary<string, uint>() }, // Lakeland
-        { 817, new Dictionary<string, uint>() }, // 拉凯提卡大森林
-        { 621, new Dictionary<string, uint>() }, // 湖区
-        { 613, new Dictionary<string, uint>() }, // 红玉海
-        { 612, new Dictionary<string, uint>() }, // 边区
-        { 402, new Dictionary<string, uint>() }, // 魔大陆
-        { 400, new Dictionary<string, uint>() }, // 翻云雾海
-        { 147, new Dictionary<string, uint>() } // 北萨
+            { 961, new Dictionary<string, uint>() }, // 鸟蛋
+            { 959, new Dictionary<string, uint>() }, // 叹息海
+            { 957, new Dictionary<string, uint>() }, // 萨维奈岛
+            { 814, new Dictionary<string, uint>() }, // 棉花
+            { 813, new Dictionary<string, uint>() }, // Lakeland
+            { 817, new Dictionary<string, uint>() }, // 拉凯提卡大森林
+            { 621, new Dictionary<string, uint>() }, // 湖区
+            { 613, new Dictionary<string, uint>() }, // 红玉海
+            { 612, new Dictionary<string, uint>() }, // 边区
+            { 402, new Dictionary<string, uint>() }, // 魔大陆
+            { 400, new Dictionary<string, uint>() }, // 翻云雾海
+            { 147, new Dictionary<string, uint>() }  // 北萨
     };
 
-    private readonly Dictionary<string, Tracker> _localTracker = new();
+    private readonly Dictionary<string, Tracker> _localTracker     = new();
     private readonly Dictionary<string, Tracker> _networkedTracker = new();
 
     private readonly Stopwatch _timer = new();
@@ -51,8 +51,7 @@ internal partial class Counter : IDisposable
     }
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 48 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 66 0F 1F 84 00 ?? ?? ?? ?? 48 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 11 48 ?? 49 83 E8 ?? 75 ?? 4C 8D 44 24",
-               DetourName = nameof(Detour_ProcessSpawnNpcPacket))]
+    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 48 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 66 0F 1F 84 00 ?? ?? ?? ?? 48 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 11 48 ?? 49 83 E8 ?? 75 ?? 4C 8D 44 24", DetourName = nameof(Detour_ProcessSpawnNpcPacket))]
     private Hook<ProcessSpawnNpcDelegate> ProcessSpawnNpcPacket { get; init; } = null!;
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
@@ -87,11 +86,7 @@ internal partial class Counter : IDisposable
         {
             var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.lastUpdateTime);
             if (delta.TotalMinutes <= Plugin.Configuration.TrackerClearThreshold)
-            {
                 continue;
-            }
-
-            PluginLog.Debug($"Removing track {v}. delta: {delta}");
 
             _networkedTracker.Remove(k);
             _localTracker.Remove(k);
@@ -131,14 +126,15 @@ internal partial class Counter : IDisposable
         {
             _networkedTracker.Add(instance, new Tracker
             {
-                startTime      = time,
-                lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                counter = new Dictionary<string, int>
-                {
-                    { condition, value }
-                },
-                territoryId = territoryId
+                    startTime      = time,
+                    lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    counter = new Dictionary<string, int>
+                    {
+                            { condition, value }
+                    },
+                    territoryId = territoryId
             });
+
             PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
             Plugin.Windows.CounterWindow.IsOpen = true;
             return;
@@ -171,11 +167,11 @@ internal partial class Counter : IDisposable
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
         {
-            Type        = "ChangeArea",
-            WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-            InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-            TerritoryId = DalamudApi.ClientState.TerritoryType
-            // Instance    = currentInstance,
+                Type        = "ChangeArea",
+                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                TerritoryId = DalamudApi.ClientState.TerritoryType
+                // Instance    = currentInstance,
         });
 
         if (!Plugin.Configuration.TrackerShowCurrentInstance || _localTracker.ContainsKey(currentInstance))
@@ -206,12 +202,12 @@ internal partial class Counter : IDisposable
         {
             Plugin.Managers.Socket.SendMessage(new AttemptMessage
             {
-                Type        = "WeeEa",
-                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                TerritoryId = territory,
-                Failed      = false,
-                Names       = Plugin.Windows.WeeEaWindow.GetNameList()
+                    Type        = "WeeEa",
+                    WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                    InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                    TerritoryId = territory,
+                    Failed      = false,
+                    Names       = Plugin.Windows.WeeEaWindow.GetNameList()
             });
             return;
         }
@@ -225,11 +221,11 @@ internal partial class Counter : IDisposable
 
         Plugin.Managers.Socket.SendMessage(new AttemptMessage
         {
-            Type        = "ggnore",
-            WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-            InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-            TerritoryId = DalamudApi.ClientState.TerritoryType,
-            Failed      = false
+                Type        = "ggnore",
+                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                TerritoryId = DalamudApi.ClientState.TerritoryType,
+                Failed      = false
         });
     }
 
@@ -250,14 +246,14 @@ internal partial class Counter : IDisposable
         {
             var tracker = new Tracker
             {
-                counter = new Dictionary<string, int>
-                {
-                    { targetName, 1 }
-                },
-                lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                territoryId    = DalamudApi.ClientState.TerritoryType,
-                trackerOwner   = Plugin.Managers.Data.Player.GetLocalPlayerName()
+                    counter = new Dictionary<string, int>
+                    {
+                            { targetName, 1 }
+                    },
+                    lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    territoryId    = DalamudApi.ClientState.TerritoryType,
+                    trackerOwner   = Plugin.Managers.Data.Player.GetLocalPlayerName()
             };
 
             _localTracker.Add(key, tracker);
@@ -287,16 +283,18 @@ internal partial class Counter : IDisposable
 
         Plugin.Managers.Socket.SendMessage(new CounterMessage
         {
-            Type        = "AddData",
-            WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-            InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-            TerritoryId = DalamudApi.ClientState.TerritoryType,
-            StartTime = !GetLocalTrackers().TryGetValue(key, out var currentTracker)
-                            ? DateTimeOffset.Now.ToUnixTimeSeconds()
-                            : currentTracker.startTime,
-            Data = new Dictionary<uint, int>
-                { { targetId, 1 } },
-            IsItem = isItem
+                Type        = "AddData",
+                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                TerritoryId = DalamudApi.ClientState.TerritoryType,
+                StartTime = !GetLocalTrackers().TryGetValue(key, out var currentTracker)
+                                    ? DateTimeOffset.Now.ToUnixTimeSeconds()
+                                    : currentTracker.startTime,
+                Data = new Dictionary<uint, int>
+                {
+                        { targetId, 1 }
+                },
+                IsItem = isItem
         });
     }
 
@@ -316,9 +314,6 @@ internal partial class Counter : IDisposable
             var name = items.GetRow(row).Singular.RawString.ToLower();
             return name;
         }
-
-        /*_ssList.Add(GetNpcName(8915));
-        _ssList.Add(GetNpcName(10615));*/
 
         _conditionsMob[959].Add(GetNpcName(10461), 10461); // xx之物
         _conditionsMob[959].Add(GetNpcName(10462), 10462);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Dalamud.Game.Gui.PartyFinder.Types;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
@@ -17,13 +18,13 @@ internal class Data : IDisposable
 
     private readonly Dictionary<uint, string> _npcName;
     private readonly Dictionary<uint, string> _territoryName;
-    private readonly TextInfo _textInfo;
+    private readonly TextInfo                 _textInfo;
     private readonly Dictionary<uint, string> _worldName;
-    private readonly ExcelSheet<World> _worldSheet;
-    public MapTexture MapTexture;
-    public Player Player;
+    private readonly ExcelSheet<World>        _worldSheet;
 
-    private long _serverRestartTime;
+    private long       _serverRestartTime;
+    public  MapTexture MapTexture;
+    public  Player     Player;
 
     public SRank SRank;
 
@@ -49,7 +50,7 @@ internal class Data : IDisposable
         DalamudApi.PartyFinderGui.ReceiveListing -= PartyFinderGui_ReceiveListing;
     }
 
-    private void PartyFinderGui_ReceiveListing(Dalamud.Game.Gui.PartyFinder.Types.PartyFinderListing listing, Dalamud.Game.Gui.PartyFinder.Types.PartyFinderListingEventArgs args)
+    private void PartyFinderGui_ReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
     {
         _serverRestartTime = listing.LastPatchHotfixTimestamp;
     }
@@ -58,6 +59,7 @@ internal class Data : IDisposable
     {
         if (DalamudApi.ClientState.LocalPlayer == null)
             return new List<string>();
+
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
         if (dcRowId == 0)
         {

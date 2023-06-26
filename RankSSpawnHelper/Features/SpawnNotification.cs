@@ -16,25 +16,25 @@ internal class SpawnNotification : IDisposable
     private readonly Dictionary<string, HuntStatus> _huntStatus = new();
 
     private readonly Dictionary<ushort, uint> _monsterIdMap = new()
-                                                              {
-                                                                  { 960, 10622 }, // 狭缝
-                                                                  { 959, 10620 }, // 沉思之物
-                                                                  { 958, 10619 }, // 阿姆斯特朗
-                                                                  { 957, 10618 }, // 颇胝迦
-                                                                  { 956, 10617 }, // 布弗鲁
-                                                                  { 814, 8910 }, // 得到宽恕的炫学
-                                                                  { 815, 8900 }, // 多智兽
-                                                                  { 816, 8653 }, // 阿格拉俄珀
-                                                                  { 817, 8890 }, // 伊休妲
-                                                                  { 621, 5989 }, // 盐和光
-                                                                  { 614, 5985 }, // 伽马
-                                                                  { 613, 5984 }, // 巨大鳐
-                                                                  { 612, 5987 }, // 优昙婆罗花
-                                                                  { 402, 4380 }, // 卢克洛塔
-                                                                  { 400, 4377 }, // 刚德瑞瓦
-                                                                  { 397, 4374 }, // 凯撒贝希摩斯
-                                                                  { 147, 2961 } // 蚓螈巨虫
-                                                              };
+    {
+            { 960, 10622 }, // 狭缝
+            { 959, 10620 }, // 沉思之物
+            { 958, 10619 }, // 阿姆斯特朗
+            { 957, 10618 }, // 颇胝迦
+            { 956, 10617 }, // 布弗鲁
+            { 814, 8910 },  // 得到宽恕的炫学
+            { 815, 8900 },  // 多智兽
+            { 816, 8653 },  // 阿格拉俄珀
+            { 817, 8890 },  // 伊休妲
+            { 621, 5989 },  // 盐和光
+            { 614, 5985 },  // 伽马
+            { 613, 5984 },  // 巨大鳐
+            { 612, 5987 },  // 优昙婆罗花
+            { 402, 4380 },  // 卢克洛塔
+            { 400, 4377 },  // 刚德瑞瓦
+            { 397, 4374 },  // 凯撒贝希摩斯
+            { 147, 2961 }   // 蚓螈巨虫
+    };
 
     private bool _shouldNotNotify;
 
@@ -69,12 +69,11 @@ internal class SpawnNotification : IDisposable
         if (flag != ConditionFlag.BetweenAreas51 || value)
             return;
 
-        Task.Run(async () =>
+        Task.Run(
+                 async () =>
                  {
                      if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.Off)
-                     {
                          return;
-                     }
 
                      var territory = DalamudApi.ClientState.TerritoryType;
 
@@ -95,26 +94,32 @@ internal class SpawnNotification : IDisposable
 
                      if (!_huntStatus.TryGetValue(currentInstance, out var result))
                      {
-                         result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2 ? 0 : int.Parse(split[2]));
+                         result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
+                                                                                                                  ? 0
+                                                                                                                  : int.Parse(split[2]));
                      }
 
-                     result ??= await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2 ? 0 : int.Parse(split[2]));
+                     result ??= await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
+                                                                                                                ? 0
+                                                                                                                : int.Parse(split[2]));
 
                      _huntStatus.TryAdd(currentInstance, result);
 
                      var payloads = new List<Payload>
-                                    {
-                                        new UIForegroundPayload(1),
-                                        new TextPayload($"{currentInstance} - {monsterName}:")
-                                    };
+                     {
+                             new UIForegroundPayload(1),
+                             new TextPayload($"{currentInstance} - {monsterName}:")
+                     };
 
                      var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() > result.expectMinTime;
                      if (isSpawnable)
                      {
                          payloads.Add(new TextPayload("\n当前可触发概率: "));
                          payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
-                         payloads.Add(new
-                                          TextPayload($"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
+                         payloads.Add(
+                                      new
+                                              TextPayload(
+                                                          $"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
                          payloads.Add(new UIForegroundPayload(0));
                      }
                      else

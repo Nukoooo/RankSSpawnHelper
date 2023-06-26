@@ -10,8 +10,7 @@ namespace RankSSpawnHelper.Features;
 internal partial class Counter : IDisposable
 {
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("40 53 55 56 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 ?? 4C 8B 89",
-               DetourName = nameof(Detour_InventoryTransactionDiscard))]
+    [Signature("40 53 55 56 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 ?? 4C 8B 89", DetourName = nameof(Detour_InventoryTransactionDiscard))]
     private Hook<InventoryTransactionDiscardDelegate> InventoryTransactionDiscard { get; init; } = null!;
 
     private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)

@@ -100,9 +100,12 @@ internal class Socket : IDisposable
                          _client = new WebsocketClient(new Uri(url), () =>
                                                                      {
                                                                          var client = new ClientWebSocket
-                                                                                      {
-                                                                                          Options = { KeepAliveInterval = TimeSpan.FromSeconds(40) }
-                                                                                      };
+                                                                         {
+                                                                                 Options =
+                                                                                 {
+                                                                                         KeepAliveInterval = TimeSpan.FromSeconds(40)
+                                                                                 }
+                                                                         };
                                                                          client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
                                                                          client.Options.SetRequestHeader("server-version", ServerVersion);
                                                                          client.Options.SetRequestHeader("user-type", "Dalamud");
@@ -110,10 +113,10 @@ internal class Socket : IDisposable
                                                                          client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
                                                                          return client;
                                                                      })
-                                   {
-                                       ReconnectTimeout      = TimeSpan.FromSeconds(120),
-                                       ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
-                                   };
+                         {
+                                 ReconnectTimeout      = TimeSpan.FromSeconds(120),
+                                 ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
+                         };
                          _client.ReconnectionHappened.Subscribe(OnReconntion);
                          _client.MessageReceived.Subscribe(OnMessageReceived);
                          _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
@@ -203,25 +206,25 @@ internal class Socket : IDisposable
             }
 
             var netTracker = new NetTracker
-                             {
-                                 WorldId     = worldId,
-                                 TerritoryId = territoryId,
-                                 InstanceId  = instanceId,
-                                 Data        = data,
-                                 Time        = tracker.Value.startTime
-                             };
+            {
+                    WorldId     = worldId,
+                    TerritoryId = territoryId,
+                    InstanceId  = instanceId,
+                    Data        = data,
+                    Time        = tracker.Value.startTime
+            };
 
             trackers.Add(netTracker);
         }
 
         Plugin.Managers.Socket.SendMessage(new NewConnectionMessage
-                                           {
-                                               Type        = "NewConnection",
-                                               WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                                               TerritoryId = DalamudApi.ClientState.TerritoryType,
-                                               InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                                               Trackers    = trackers
-                                           });
+        {
+                Type        = "NewConnection",
+                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                TerritoryId = DalamudApi.ClientState.TerritoryType,
+                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                Trackers    = trackers
+        });
     }
 
     private void OnMessageReceived(ResponseMessage args)
@@ -256,11 +259,11 @@ internal class Socket : IDisposable
                 {
                     var message = result.Message;
                     Plugin.Print(new List<Payload>
-                                 {
-                                     new UIForegroundPayload(518),
-                                     new TextPayload($"Error: {message}"),
-                                     new UIForegroundPayload(0)
-                                 });
+                    {
+                            new UIForegroundPayload(518),
+                            new TextPayload($"Error: {message}"),
+                            new UIForegroundPayload(0)
+                    });
 
                     break;
                 }
@@ -292,8 +295,11 @@ internal class Socket : IDisposable
 
                     foreach (var (key, value) in result.Counter)
                     {
-                        var isItem  = result.TerritoryId is 814 or 400 or 961 or 813;
-                        var keyName = isItem ? Plugin.Managers.Data.GetItemName(key) : result.TerritoryId == 621 ? Plugin.IsChina() ? "扔垃圾" : "Item" : Plugin.Managers.Data.GetNpcName(key);
+                        var isItem = result.TerritoryId is 814 or 400 or 961 or 813;
+                        var keyName = isItem                    ? Plugin.Managers.Data.GetItemName(key) :
+                                      result.TerritoryId == 621 ? Plugin.IsChina()
+                                                                          ? "扔垃圾"
+                                                                          : "Item" : Plugin.Managers.Data.GetNpcName(key);
                         Plugin.Features.Counter.UpdateNetworkedTracker(instance, keyName, value, result.Time, result.TerritoryId);
                     }
 
@@ -308,16 +314,20 @@ internal class Socket : IDisposable
 
                     var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
 
-                    var color = (ushort)(result.Failed ? Plugin.Configuration.FailedMessageColor : Plugin.Configuration.SpawnedMessageColor);
-                    var message = (result.Failed ? $"不好啦！ {instance}寄啦！\n寄时: " : $"太好啦！{instance}出货啦！\n出时: ") +
+                    var color = (ushort)(result.Failed
+                                                 ? Plugin.Configuration.FailedMessageColor
+                                                 : Plugin.Configuration.SpawnedMessageColor);
+                    var message = (result.Failed
+                                           ? $"不好啦！ {instance}寄啦！\n寄时: "
+                                           : $"太好啦！{instance}出货啦！\n出时: ") +
                                   $"{localTime.ToShortDateString()}/{localTime.ToShortTimeString()}\n计数总数: {result.Total}\n计数详情:\n";
 
                     var payloads = new List<Payload>
-                                   {
-                                       new UIForegroundPayload(color),
-                                       new TextPayload(message),
-                                       new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor)
-                                   };
+                    {
+                            new UIForegroundPayload(color),
+                            new TextPayload(message),
+                            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor)
+                    };
 
                     var isItem = result.TerritoryId is 814 or 400 or 961 or 813;
 
@@ -327,7 +337,9 @@ internal class Socket : IDisposable
                         if (isItem)
                             name = Plugin.Managers.Data.GetItemName(k);
                         else if (result.TerritoryId == 621)
-                            name = Plugin.IsChina() ? "扔垃圾" : "Item";
+                            name = Plugin.IsChina()
+                                           ? "扔垃圾"
+                                           : "Item";
                         else
                             name = Plugin.Managers.Data.GetNpcName(k);
 
@@ -347,13 +359,16 @@ internal class Socket : IDisposable
                         payloads.Add(new TextPayload($"    {userCounter.UserName}: {userCounter.TotalCount}\n"));
                         if (userCounter.Counter == null)
                             continue;
+
                         foreach (var (k, v) in userCounter.Counter)
                         {
                             string name;
                             if (isItem)
                                 name = Plugin.Managers.Data.GetItemName(k);
                             else if (result.TerritoryId == 621)
-                                name = Plugin.IsChina() ? "扔垃圾" : "Item";
+                                name = Plugin.IsChina()
+                                               ? "扔垃圾"
+                                               : "Item";
                             else
                                 name = Plugin.Managers.Data.GetNpcName(k);
 
@@ -421,15 +436,15 @@ internal class Socket : IDisposable
                     var time     = DateTimeOffset.FromUnixTimeSeconds(result.Time).ToLocalTime();
                     var instance = Plugin.Managers.Data.FormatInstance(result.WorldId, result.TerritoryId, result.InstanceId);
                     Plugin.Print(new List<Payload>
-                                 {
-                                     new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                     new TextPayload($"{instance}"),
-                                     new UIForegroundPayload(0),
-                                     new TextPayload("上一次尝试触发的时间: "),
-                                     new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                     new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
-                                     new UIForegroundPayload(0)
-                                 });
+                    {
+                            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                            new TextPayload($"{instance}"),
+                            new UIForegroundPayload(0),
+                            new TextPayload("上一次尝试触发的时间: "),
+                            new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                            new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
+                            new UIForegroundPayload(0)
+                    });
                     return;
                 }
             }

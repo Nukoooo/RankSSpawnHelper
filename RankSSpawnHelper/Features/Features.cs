@@ -4,10 +4,10 @@ namespace RankSSpawnHelper.Features;
 
 internal class Features : IDisposable
 {
-    public Counter Counter;
-    public SearchCounter SearchCounter;
-    public ShowHuntMap ShowHuntMap;
-    public ShowInstance ShowInstance;
+    public Counter           Counter;
+    public SearchCounter     SearchCounter;
+    public ShowHuntMap       ShowHuntMap;
+    public ShowInstance      ShowInstance;
     public SpawnNotification SpawnNotification;
 
     public Features()

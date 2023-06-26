@@ -146,6 +146,9 @@ internal class SRank
                          var content = Encoding.UTF8.GetString(Resource.hunt);
                          var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
 
+                         {
+                         }
+
                          foreach (var (key, value) in json)
                          {
                              if (!value.TryGetValue(region, out var name))
