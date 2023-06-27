@@ -152,6 +152,8 @@ internal class Socket : IDisposable
 #else
     public async void Reconnect()
     {
+        if (_client == null)
+            return;
         await _client.Reconnect();
     }
 #endif

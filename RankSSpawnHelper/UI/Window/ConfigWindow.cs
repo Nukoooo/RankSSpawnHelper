@@ -17,38 +17,38 @@ namespace RankSSpawnHelper.Ui.Window;
 
 public class ConfigWindow : Dalamud.Interface.Windowing.Window
 {
-    private const ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
-    private readonly string[] _attemptMessageDisplayType = { "不显示", "简单", "详细" };
-    private readonly string[] _attemptMessageFromServerType = { "关闭", "本大区", "本大区+其他大区" };
-    private readonly string[] _spawnNotificationType = { "关闭", "只在可触发时", "一直" };
-    private readonly string[] _tabNames = { "计数", "查询S怪", "其他", "关于" };
-    private readonly string[] _expansions = { "2.0", "3.0", "4.0", "5.0", "6.0" };
-    private readonly string[] _playerSearchDisplayType = { "关闭", "聊天框", "游戏界面", "都显示" };
+    private const    ImGuiTableFlags TableFlags                    = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
+    private readonly string[]        _attemptMessageDisplayType    = { "不显示", "简单", "详细" };
+    private readonly string[]        _attemptMessageFromServerType = { "关闭", "本大区", "本大区+其他大区" };
 
-    private readonly List<ColorInfo> _colorInfos = new();
+    private readonly List<ColorInfo> _colorInfos              = new();
+    private readonly string[]        _expansions              = { "2.0", "3.0", "4.0", "5.0", "6.0" };
+    private readonly string[]        _playerSearchDisplayType = { "关闭", "聊天框", "游戏界面", "都显示" };
+    private readonly string[]        _spawnNotificationType   = { "关闭", "只在可触发时", "一直" };
+    private readonly string[]        _tabNames                = { "计数", "查询S怪", "其他", "关于" };
 
     private ColorPickerType _colorPickerType = ColorPickerType.Failed;
 
-    private TextureWrap _image;
+    private TextureWrap  _image;
     private List<string> _monsterNames;
-    private int _selectedExpansion;
-    private int _selectedInstance;
-    private int _selectedMonster;
-    private int _selectedTab;
+    private int          _selectedExpansion;
+    private int          _selectedInstance;
+    private int          _selectedMonster;
+    private int          _selectedTab;
 
     private List<string> _servers;
 
     private string _serverUrl = string.Empty;
-    private bool _showColorPicker;
+    private bool   _showColorPicker;
 
     public ConfigWindow() : base("SpawnHelper")
     {
         Initialize();
         SizeConstraints = new WindowSizeConstraints
-                          {
-                              MinimumSize = new Vector2(500, 400),
-                              MaximumSize = new Vector2(2000, 2000)
-                          };
+        {
+            MinimumSize = new Vector2(500, 400),
+            MaximumSize = new Vector2(2000, 2000)
+        };
     }
 
     public override void OnOpen()
@@ -70,10 +70,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             try
             {
                 Process.Start(new ProcessStartInfo
-                              {
-                                  UseShellExecute = true,
-                                  FileName        = "https://afdian.net/a/YuuriChito"
-                              });
+                {
+                    UseShellExecute = true,
+                    FileName        = "https://afdian.net/a/YuuriChito"
+                });
             }
             catch (Exception ex)
             {
@@ -110,12 +110,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             }
         }
 
-        /*
-        ImGui.Selectable("Selectable1");
-        ImGui.Selectable("Selectable2");
-        ImGui.Selectable("Selectable3");
-        */
-
         ImGui.EndChild();
 
         ImGui.SameLine();
@@ -134,7 +128,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 DrawMiscTab();
                 break;
             case 3:
-                ImGui.Text("Slugma balls");
+                DrawAboutTab();
                 break;
         }
 
@@ -385,6 +379,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                     if (!canShowHuntMap)
                         continue;
+
                     ImGui.SameLine();
 
                     if (ImGui.Button($"查看触发点##{status.worldName}"))
@@ -424,6 +419,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                 if (i == _spawnNotificationType.Length - 1)
                     break;
+
                 ImGui.SameLine();
             }
 
@@ -450,6 +446,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                 if (i == _attemptMessageFromServerType.Length - 1)
                     break;
+
                 ImGui.SameLine();
             }
 
@@ -463,7 +460,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                     Plugin.Configuration.Save();
                 }
             }
-
         }
         Widget.EndFramedGroup();
 
@@ -480,6 +476,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                 if (i == _attemptMessageDisplayType.Length - 1)
                     break;
+
                 ImGui.SameLine();
             }
 
@@ -597,9 +594,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                 if (i == _playerSearchDisplayType.Length - 1)
                     break;
+
                 ImGui.SameLine();
             }
-            
+
             var playerSearchTip = Plugin.Configuration.PlayerSearchTip;
             if (ImGui.Checkbox("显示玩家搜索提示", ref playerSearchTip))
             {
@@ -608,7 +606,15 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             }
         }
         Widget.EndFramedGroup();
+    }
 
+    private void DrawAboutTab()
+    {
+        ImGui.Text("在使用本插件的联网功能时,将会收集以下信息:\n" +
+                   "    - 游戏ID以及所属服务器, 如 Deez Nuts@Siren\n" +
+                   "    - 当前所在区域, 如: 海猫茶屋@叹息海@0\n" +
+                   "    - 计数的数量&名字, 如: 矮人棉: 50, 彷徨之物: 12\n" +
+                   "    - 开始计数的时间戳, 如: 1667166428\n");
     }
 
     private void DrawColorPicker()
@@ -627,6 +633,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                    };
 
         if (!ImGui.Begin(type + "选个颜色呗", ref _showColorPicker, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize)) return;
+
         ImGui.Columns(10, "##colorcolumns", false);
 
         foreach (var info in _colorInfos)
@@ -679,10 +686,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             if (result == null)
             {
                 _colorInfos.Add(new ColorInfo
-                                {
-                                    RowId = color.RowId,
-                                    Color = color.UIForeground
-                                });
+                {
+                    RowId = color.RowId,
+                    Color = color.UIForeground
+                });
             }
         }
 
