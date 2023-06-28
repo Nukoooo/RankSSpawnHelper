@@ -23,12 +23,12 @@ internal enum FetchStatus
 
 internal class SRank
 {
-    private const string Url = "https://tracker-api.beartoolkit.com/";
-    private readonly HttpClient _httpClient = new();
-    private readonly List<HuntStatus> _lastHuntStatus = new();
-    private readonly List<SRankMonster> _sRankMonsters = new();
-    private string _errorMessage = string.Empty;
-    private FetchStatus _fetchStatus = FetchStatus.None;
+    private const    string             Url             = "https://tracker-api.beartoolkit.com/";
+    private readonly HttpClient         _httpClient     = new();
+    private readonly List<HuntStatus>   _lastHuntStatus = new();
+    private readonly List<SRankMonster> _sRankMonsters  = new();
+    private          string             _errorMessage   = string.Empty;
+    private          FetchStatus        _fetchStatus    = FetchStatus.None;
 
     public SRank()
     {
@@ -45,11 +45,11 @@ internal class SRank
             for (uint i = 2953; i < 2970; i++)
             {
                 var item = new SRankMonster
-                           {
-                               expansion     = GameExpansion.ARealmReborn,
-                               localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                               id            = i
-                           };
+                {
+                    expansion     = GameExpansion.ARealmReborn,
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                    id            = i
+                };
                 _sRankMonsters.Add(item);
             }
         }
@@ -60,11 +60,11 @@ internal class SRank
                 if (i == 4379) continue;
 
                 var item = new SRankMonster
-                           {
-                               expansion     = GameExpansion.Heavensward,
-                               localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                               id            = i
-                           };
+                {
+                    expansion     = GameExpansion.Heavensward,
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                    id            = i
+                };
                 _sRankMonsters.Add(item);
             }
         }
@@ -73,31 +73,31 @@ internal class SRank
             for (uint i = 5984; i < 5990; i++)
             {
                 var item = new SRankMonster
-                           {
-                               expansion     = GameExpansion.Stormblood,
-                               localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                               id            = i
-                           };
+                {
+                    expansion     = GameExpansion.Stormblood,
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                    id            = i
+                };
                 _sRankMonsters.Add(item);
             }
         }
 
         {
             var aglaope = new SRankMonster
-                          {
-                              expansion     = GameExpansion.Shadowbringers,
-                              localizedName = bNpcNames.GetRow(8653).Singular.RawString,
-                              id            = 8653
-                          };
+            {
+                expansion     = GameExpansion.Shadowbringers,
+                localizedName = bNpcNames.GetRow(8653).Singular.RawString,
+                id            = 8653
+            };
             _sRankMonsters.Add(aglaope); // 阿格拉俄珀
             for (uint i = 8890; i < 8915; i += 5)
             {
                 var item = new SRankMonster
-                           {
-                               expansion     = GameExpansion.Shadowbringers,
-                               localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                               id            = i
-                           };
+                {
+                    expansion     = GameExpansion.Shadowbringers,
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                    id            = i
+                };
                 _sRankMonsters.Add(item);
             }
         }
@@ -106,11 +106,11 @@ internal class SRank
             for (uint i = 10617; i < 10623; i++)
             {
                 var item = new SRankMonster
-                           {
-                               expansion     = GameExpansion.Endwalker,
-                               localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                               id            = i
-                           };
+                {
+                    expansion     = GameExpansion.Endwalker,
+                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                    id            = i
+                };
 
                 _sRankMonsters.Add(item);
             }
@@ -146,8 +146,7 @@ internal class SRank
                          var content = Encoding.UTF8.GetString(Resource.hunt);
                          var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
 
-                         {
-                         }
+                         { }
 
                          foreach (var (key, value) in json)
                          {
@@ -222,14 +221,14 @@ internal class SRank
                      _lastHuntStatus.Clear();
 
                      foreach (var body in servers.Select(server => new Dictionary<string, string>
-                                                                   {
-                                                                       {
-                                                                           "HuntName",
-                                                                           _sRankMonsters.Find(i => i.localizedName == monsterName).keyName +
-                                                                           (instance == 0 ? string.Empty : $" {instance}")
-                                                                       },
-                                                                       { "WorldName", server }
-                                                                   }))
+                              {
+                                  {
+                                      "HuntName",
+                                      _sRankMonsters.Find(i => i.localizedName == monsterName).keyName +
+                                      (instance == 0 ? string.Empty : $" {instance}")
+                                  },
+                                  { "WorldName", server }
+                              }))
                      {
                          var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
 
@@ -273,10 +272,10 @@ internal class SRank
             return null;
 
         var body = new Dictionary<string, string>
-                   {
-                       { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
-                       { "WorldName", server }
-                   };
+        {
+            { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
+            { "WorldName", server }
+        };
 
         var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
 
@@ -311,24 +310,24 @@ internal class SRank
 
     public async Task<HuntMap> FetchHuntMap(string server, string monster, int instance)
     {
-        if (_fetchStatus == FetchStatus.Fetching)
-            return null;
-
-        var body = new Dictionary<string, string>
-                   {
-                       { "HuntName", _sRankMonsters.Find(i => i.localizedName == monster).keyName + (instance == 0 ? string.Empty : $" {instance}") },
-                       { "WorldName", server }
-                   };
-
-        var response = await _httpClient.PostAsync(Url + "public/huntmap", new FormUrlEncodedContent(body));
-
-        if (response.StatusCode != HttpStatusCode.OK)
-        {
-            return null;
-        }
-
         try
         {
+            if (_fetchStatus == FetchStatus.Fetching)
+                return null;
+
+            var body = new Dictionary<string, string>
+            {
+                { "HuntName", _sRankMonsters.Find(i => i.localizedName == monster).keyName + (instance == 0 ? string.Empty : $" {instance}") },
+                { "WorldName", server }
+            };
+
+            var response = await _httpClient.PostAsync(Url + "public/huntmap", new FormUrlEncodedContent(body));
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return null;
+            }
+
             var content = await response.Content.ReadAsStringAsync();
             var huntMap = JsonConvert.DeserializeObject<HuntMap>(content);
 

@@ -165,7 +165,7 @@ internal partial class Counter : IDisposable
 
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
-        Plugin.Managers.Socket.SendMessage(new AttemptMessage
+        Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
         {
                 Type        = "ChangeArea",
                 WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
@@ -200,7 +200,7 @@ internal partial class Counter : IDisposable
 
         if (territory == 960)
         {
-            Plugin.Managers.Socket.SendMessage(new AttemptMessage
+            Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
             {
                     Type        = "WeeEa",
                     WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
@@ -219,7 +219,7 @@ internal partial class Counter : IDisposable
         if (!_networkedTracker.ContainsKey(currentInstance))
             return;
 
-        Plugin.Managers.Socket.SendMessage(new AttemptMessage
+        Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
         {
                 Type        = "ggnore",
                 WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
@@ -281,7 +281,7 @@ internal partial class Counter : IDisposable
 
         Plugin.Windows.CounterWindow.IsOpen = true;
 
-        Plugin.Managers.Socket.SendMessage(new CounterMessage
+        Plugin.Managers.Socket.Main.SendMessage(new CounterMessage
         {
                 Type        = "AddData",
                 WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),

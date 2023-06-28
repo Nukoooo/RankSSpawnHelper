@@ -42,7 +42,7 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
 
         var networkTracker = Plugin.Features.Counter.GetNetworkedTrackers();
         var localTracker   = Plugin.Features.Counter.GetLocalTrackers();
-        var actualTracker  = Plugin.Managers.Socket.Connected() ? networkTracker : localTracker;
+        var actualTracker  = Plugin.Managers.Socket.Main.Connected() ? networkTracker : localTracker;
 
         if (actualTracker.Count == 0)
         {
@@ -60,7 +60,7 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
         var networkTracker = Plugin.Features.Counter.GetNetworkedTrackers();
         var localTracker   = Plugin.Features.Counter.GetLocalTrackers();
 
-        var connected = Plugin.Managers.Socket.Connected();
+        var connected = Plugin.Managers.Socket.Main.Connected();
 
         var actualTracker = connected ? networkTracker : localTracker;
         if (actualTracker == null)
@@ -119,9 +119,9 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
         {
             if (DateTime.Now > _nextClickTime)
             {
-                if (Plugin.Managers.Socket.Connected())
+                if (Plugin.Managers.Socket.Main.Connected())
                 {
-                    Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                    Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
                                                        {
                                                            Type        = "ggnore",
                                                            WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),

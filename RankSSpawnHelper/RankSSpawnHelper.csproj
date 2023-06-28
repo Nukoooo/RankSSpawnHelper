@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
-		<Version>1.3.1.0</Version>
+		<Version>1.3.1.1</Version>
 		<Configurations>Debug;Release;Debug_CN;Release_CN</Configurations>
 	</PropertyGroup>
 
@@ -29,6 +29,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="DalamudPackager" Version="2.1.11" />
+		<PackageReference Include="SocketIOClient.Newtonsoft.Json" Version="3.0.7" />
 		<PackageReference Include="Websocket.Client" Version="4.6.1" />
 	</ItemGroup>
 

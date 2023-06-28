@@ -28,8 +28,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private readonly string[]        _tabNames                = { "计数", "查询S怪", "其他", "关于" };
 
     private ColorPickerType _colorPickerType = ColorPickerType.Failed;
-
-    private TextureWrap  _image;
+    
     private List<string> _monsterNames;
     private int          _selectedExpansion;
     private int          _selectedInstance;
@@ -160,12 +159,12 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         ImGui.SameLine();
         ImGui.Text("连接状态:");
         ImGui.SameLine();
-        ImGui.TextColored(Plugin.Managers.Socket.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Connected() ? "Connected" : "Disconnected");
+        ImGui.TextColored(Plugin.Managers.Socket.Main.Connected() ? ImGuiColors.ParsedGreen : ImGuiColors.DalamudRed, Plugin.Managers.Socket.Main.Connected() ? "Connected" : "Disconnected");
 
 #if RELEASE || RELEASE_CN
         ImGui.SameLine();
         if (ImGui.Button("重新连接"))
-            Plugin.Managers.Socket.Reconnect();
+            Plugin.Managers.Socket.Main.Reconnect();
 #endif
 
         Widget.BeginFramedGroup("计数窗口");
@@ -692,9 +691,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 });
             }
         }
-
-        Task.Run(async () => { _image = await DalamudApi.Interface.UiBuilder.LoadImageAsync(Resource.a); });
-
+        
         Task.Run(async () =>
                  {
                      while (DalamudApi.ClientState.LocalPlayer == null)

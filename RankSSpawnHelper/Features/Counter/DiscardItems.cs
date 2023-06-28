@@ -40,7 +40,7 @@ internal partial class Counter : IDisposable
         switch (territoryType)
         {
             case 621:
-                if (!DalamudApi.Condition[ConditionFlag.Mounted] &&
+                if (!(DalamudApi.Condition[ConditionFlag.Mounted] || DalamudApi.Condition[ConditionFlag.Mounted2]) &&
                     ActionManager.Instance()->GetActionStatus(ActionType.Item, itemId) != 0)
                 {
                     PluginLog.Debug("Found using an item, skipping");

@@ -17,16 +17,16 @@ internal class ShowHuntMap : IDisposable
 {
     private readonly Dictionary<uint, uint> _monsterTerritory = new()
     {
-            { 956, 10617 }, // 布弗鲁
-            { 815, 8900 },  // 多智兽
-            { 958, 10619 }, // 阿姆斯特朗
-            { 816, 8653 },  // 阿格拉俄珀
-            { 960, 10622 }, // 狭缝
-            { 614, 5985 },  // 伽马
-            { 397, 4374 },  // 凯撒贝希摩斯
-            { 622, 5986 },  // 兀鲁忽乃朝鲁
-            { 139, 2966 },  // 南迪
-            { 180, 2967 }   // 牛头黑神
+        { 956, 10617 }, // 布弗鲁
+        { 815, 8900 },  // 多智兽
+        { 958, 10619 }, // 阿姆斯特朗
+        { 816, 8653 },  // 阿格拉俄珀
+        { 960, 10622 }, // 狭缝
+        { 614, 5985 },  // 伽马
+        { 397, 4374 },  // 凯撒贝希摩斯
+        { 622, 5986 },  // 兀鲁忽乃朝鲁
+        { 139, 2966 },  // 南迪
+        { 180, 2967 }   // 牛头黑神
     };
 
     private readonly ExcelSheet<TerritoryType> _territoryType;
@@ -90,11 +90,11 @@ internal class ShowHuntMap : IDisposable
     }
 
     private void ChatGui_OnChatMessage(
-            XivChatType  type,
-            uint         senderid,
-            ref SeString sender,
-            ref SeString message,
-            ref bool     ishandled)
+        XivChatType  type,
+        uint         senderid,
+        ref SeString sender,
+        ref SeString message,
+        ref bool     ishandled)
     {
         if (type is not XivChatType.SystemMessage || message.TextValue != "感觉到了强大的恶名精英的气息……")
             return;
@@ -125,7 +125,7 @@ internal class ShowHuntMap : IDisposable
 
         var payloads = new List<Payload>
         {
-                new TextPayload($"{currentInstance} 的当前可触发点位:")
+            new TextPayload($"{currentInstance} 的当前可触发点位:")
         };
 
         if (huntMaps.spawnPoints.Count > 5)
@@ -162,13 +162,13 @@ internal class ShowHuntMap : IDisposable
         Plugin.Print(payloads);
     }
 
-    private async void Condition_OnConditionChange(ConditionFlag flag, bool value)
+    private void Condition_OnConditionChange(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.BetweenAreas51 || value)
             return;
 
         if (!Plugin.Configuration.AutoShowHuntMap ||
-            Plugin.Configuration.AutoShowHuntMap && Plugin.Configuration.OnlyFetchInDuration)
+            (Plugin.Configuration.AutoShowHuntMap && Plugin.Configuration.OnlyFetchInDuration))
             return;
 
         if (!_shouldRequest)
@@ -177,6 +177,6 @@ internal class ShowHuntMap : IDisposable
             return;
         }
 
-        await DalamudApi.Framework.RunOnFrameworkThread(FetchAndPrint);
+        Task.Run(FetchAndPrint);
     }
 }

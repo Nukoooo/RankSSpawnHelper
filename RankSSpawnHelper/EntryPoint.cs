@@ -18,9 +18,9 @@ namespace RankSSpawnHelper;
 
 public class EntryPoint : IDalamudPlugin
 {
-    private readonly Assembly _assembly;
+    private readonly Assembly                         _assembly;
     private readonly PluginCommandManager<EntryPoint> _commandManager;
-    private readonly AssemblyLoadContext _context;
+    private readonly AssemblyLoadContext              _context;
 
 #if DEBUG || DEBUG_CN
     private readonly DebugThingy _debug;
@@ -71,12 +71,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 尝试修复 在有计数后切换角色时,服务器计数会double 的BUG\n"),
-            new TextPayload("  [-] 尝试修复 玩家搜索在搜索时会有人数提示 的BUG\n"),
-            new TextPayload("  [-] 修复在 1.3.0.0/1/2/3/4/5 版本里, 在湖区使用任意物品(吃食物,解锁坐骑等)会算入计数的BUG\n"),
-            new TextPayload("  [+] 现在可以选玩家搜索的显示方式了(只显示聊天框/游戏界面/都显示)\n"),
-            new TextPayload("  [+] 在菜单里增加了显示服务器重启时间\n"),
-            new TextPayload("  [+] 重新规划了大部分UI布局(谢谢你,Ottermandias)\n"),
+            new TextPayload("  [-] 尝试修复 HttpClient::HandleFailure 的问题\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
         });
@@ -188,7 +183,7 @@ public class EntryPoint : IDalamudPlugin
 
     private static void AttempFailed_Internal(string cmd, string args)
     {
-        if (!Plugin.Managers.Socket.Connected())
+        if (!Plugin.Managers.Socket.Main.Connected())
         {
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
             if (!Plugin.Features.Counter.GetLocalTrackers().TryGetValue(currentInstance, out var tracker))
@@ -218,7 +213,7 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
-        Plugin.Managers.Socket.SendMessage(new AttemptMessage
+        Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
         {
             Type        = "ggnore",
             WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),

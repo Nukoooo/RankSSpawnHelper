@@ -48,7 +48,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
             if (!_dateTimes.ContainsKey(currentInstance))
             {
                 _dateTimes.Add(currentInstance, DateTime.Now + FromSeconds(15.0));
-                Plugin.Managers.Socket.SendMessage(new AttemptMessage
+                Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
                                                    {
                                                        Type = "WeeEa",
                                                        // Instance    = currentInstance,
@@ -75,7 +75,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
             }
 
             _dateTimes[currentInstance] = DateTime.Now + FromSeconds(30.0);
-            Plugin.Managers.Socket.SendMessage(new AttemptMessage
+            Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
                                                {
                                                    Type = "WeeEa",
                                                    // Instance    = currentInstance,
