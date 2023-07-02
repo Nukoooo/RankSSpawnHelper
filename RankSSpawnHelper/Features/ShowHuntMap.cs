@@ -176,7 +176,7 @@ internal class ShowHuntMap : IDisposable
             _shouldRequest = true;
             return;
         }
-
+        
         Task.Run(FetchAndPrint);
     }
 }

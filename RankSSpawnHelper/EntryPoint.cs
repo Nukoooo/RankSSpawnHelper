@@ -71,7 +71,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 尝试修复 HttpClient::HandleFailure 的问题\n"),
+            new TextPayload("  [-] 尝试修复获取点位会导致游戏崩溃的BUG\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
         });
