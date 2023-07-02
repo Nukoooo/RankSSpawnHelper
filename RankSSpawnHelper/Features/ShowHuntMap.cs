@@ -162,7 +162,7 @@ internal class ShowHuntMap : IDisposable
         Plugin.Print(payloads);
     }
 
-    private async void Condition_OnConditionChange(ConditionFlag flag, bool value)
+    private void Condition_OnConditionChange(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.BetweenAreas51 || value)
             return;
@@ -176,7 +176,7 @@ internal class ShowHuntMap : IDisposable
             _shouldRequest = true;
             return;
         }
-
-        await DalamudApi.Framework.RunOnFrameworkThread(FetchAndPrint);
+        
+        Task.Run(FetchAndPrint);
     }
 }
