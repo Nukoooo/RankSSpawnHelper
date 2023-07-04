@@ -95,7 +95,7 @@ internal class Main : IDisposable
                          }
 
                          _client?.Dispose();
-                         _userName = Plugin.Managers.Data.Player.GetLocalPlayerName();
+                         _userName = DataManagers.Player.GetLocalPlayerName();
 
                          _client = new WebsocketClient(new Uri(url), () =>
                                                                      {
@@ -178,7 +178,7 @@ internal class Main : IDisposable
         if (!DalamudApi.ClientState.LocalPlayer || localTracker == null || localTracker.Count == 0)
             return;
 
-        var name = Plugin.Managers.Data.Player.GetLocalPlayerName();
+        var name = DataManagers.Player.GetLocalPlayerName();
 
         List<NetTracker> trackers = new();
 

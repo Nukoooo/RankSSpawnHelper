@@ -253,7 +253,7 @@ internal partial class Counter : IDisposable
                     lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
                     startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
                     territoryId    = DalamudApi.ClientState.TerritoryType,
-                    trackerOwner   = Plugin.Managers.Data.Player.GetLocalPlayerName()
+                    trackerOwner   = Managers.DataManagers.Player.GetLocalPlayerName()
             };
 
             _localTracker.Add(key, tracker);

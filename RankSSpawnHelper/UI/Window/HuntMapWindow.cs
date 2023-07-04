@@ -73,4 +73,9 @@ internal class HuntMapWindow : Dalamud.Interface.Windowing.Window
         _currentMapInstance = currentMapInstance;
         _selectedSpawnPoint = string.Empty;
     }
+
+    public void UpdateSpawnPoints(List<SpawnPoints> spawnPoints)
+    {
+        _spawnPoints = spawnPoints;
+    }
 }

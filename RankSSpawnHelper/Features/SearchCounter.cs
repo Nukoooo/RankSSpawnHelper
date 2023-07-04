@@ -67,10 +67,7 @@ internal class SearchCounter : IDisposable
         {
             var entry = proxy->InfoProxyCommonList.GetEntry(i);
             if (entry == null)
-            {
-                PluginLog.Debug($"Valid size {i}");
                 break;
-            }
 
             // when a player isn't in the same map as localplayer is, then just break
             // the info proxy is location-base order, the players in the same map as localplayer is,

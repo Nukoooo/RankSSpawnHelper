@@ -11,8 +11,8 @@ internal class Managers : IDisposable
     public Managers()
     {
         Data   = new Data();
-        Socket = new Socket();
         Font   = new Font();
+        Socket = new Socket();
     }
 
     public void Dispose()

@@ -231,11 +231,11 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         ImGui.SetNextItemWidth(200);
         ImGui.InputText("服务器链接", ref _serverUrl, 256);
 
-        if (ImGui.Button("连接")) Plugin.Managers.Socket.Connect(_serverUrl);
+        if (ImGui.Button("连接")) Plugin.Managers.Socket.Main.Connect(_serverUrl);
         ImGui.SameLine();
-        if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Connect("ws://124.220.161.157:8000");
+        if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Main.Connect("ws://124.220.161.157:8000");
         ImGui.SameLine();
-        if (ImGui.Button("断开连接")) Plugin.Managers.Socket.Disconnect();
+        if (ImGui.Button("断开连接")) Plugin.Managers.Socket.Main.Disconnect();
 #endif
 
         DrawTrackerTable();

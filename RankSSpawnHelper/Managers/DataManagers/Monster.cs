@@ -181,6 +181,11 @@ internal class SRank
         return _sRankMonsters.Where(i => i.id == id).Select(i => i.localizedName).FirstOrDefault();
     }
 
+    public string GetSRankKeyNameById(uint id)
+    {
+        return _sRankMonsters.Where(i => i.id == id).Select(i => i.keyName).FirstOrDefault();
+    }
+
     public bool IsSRank(uint id)
     {
         return _sRankMonsters.Any(i => i.id == id);

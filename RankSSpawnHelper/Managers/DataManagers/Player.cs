@@ -22,6 +22,11 @@ internal class Player
         }
     }
 
+    public string GetCurrentWorldName()
+    {
+        return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.Name != null ? DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.Name.RawString : "";
+    }
+
     public uint GetCurrentWorldId()
     {
         if (DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId != null)
@@ -35,7 +40,7 @@ internal class Player
         return UIState.Instance()->AreaInstance.Instance;
     }
 
-    public string GetLocalPlayerName()
+    public static string GetLocalPlayerName()
     {
         return DalamudApi.ClientState.LocalPlayer == null ? string.Empty : $"{DalamudApi.ClientState.LocalPlayer.Name}@{DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.Name}";
     }

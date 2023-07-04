@@ -40,17 +40,13 @@ public class EntryPoint : IDalamudPlugin
         DalamudApi.Interface.Inject(this, Array.Empty<object>());
         LoadCosturaAssembles();
 
-
 #if DEBUG || DEBUG_CN
         _debug = new DebugThingy();
 #endif
 
-
-        // Get or create a configuration object
+        Plugin.Managers      = new Managers.Managers();
         Plugin.Configuration = (Configuration)pi.GetPluginConfig() ?? pi.Create<Configuration>();
-
-        Plugin.Features = new Features.Features();
-        Plugin.Managers = new Managers.Managers();
+        Plugin.Features      = new Features.Features();
 
         // Initialize the UI
         _windowSystem  = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);

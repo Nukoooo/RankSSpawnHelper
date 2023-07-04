@@ -7,6 +7,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
@@ -28,6 +29,8 @@ internal class ShowHuntMap : IDisposable
         { 139, 2966 },  // 南迪
         { 180, 2967 }   // 牛头黑神
     };
+
+    private readonly Dictionary<string, List<SpawnPoints>> _spawnPoints = new();
 
     private readonly ExcelSheet<TerritoryType> _territoryType;
     private          bool                      _shouldRequest = true;
@@ -89,6 +92,54 @@ internal class ShowHuntMap : IDisposable
         return Plugin.Managers.Data.MapTexture.GetTexture(map.Row);
     }
 
+    public void AddSpawnPoints(string worldName, string huntName, List<SpawnPoints> spawnPoints)
+    {
+        if (!_spawnPoints.TryAdd($"{worldName}@{huntName}", spawnPoints))
+            return;
+
+        // check if we can print / show
+        var currentTerritory = DalamudApi.ClientState.TerritoryType;
+        if (!_monsterTerritory.TryGetValue(currentTerritory, out var monsterId))
+            return;
+
+        var currentWorldName = Plugin.Managers.Data.Player.GetCurrentWorldName();
+        if (currentWorldName != worldName)
+            return;
+
+        var currentHuntName = Plugin.Managers.Data.SRank.GetSRankKeyNameById(monsterId);
+        if (currentHuntName != huntName)
+            return;
+
+        PrintOrShowSpawnPoints(spawnPoints);
+    }
+
+    public void RemoveSpawnPoint(string worldName, string huntName, string spawnPointKey)
+    {
+        if (!_spawnPoints.TryGetValue($"{worldName}@{huntName}", out var points))
+            return;
+
+        var point = points.Find(i => i.key == spawnPointKey);
+        if (point == null)
+            return;
+
+        points.Remove(point);
+        // check if we can print / show
+        var currentTerritory = DalamudApi.ClientState.TerritoryType;
+        if (!_monsterTerritory.TryGetValue(currentTerritory, out var monsterId))
+            return;
+
+        var currentWorldName = Plugin.Managers.Data.Player.GetCurrentWorldName();
+        if (currentWorldName != worldName)
+            return;
+
+        var currentHuntName = Plugin.Managers.Data.SRank.GetSRankKeyNameById(monsterId);
+        if (currentHuntName != huntName)
+            return;
+
+        PrintOrShowSpawnPoints(points);
+        Plugin.Windows.HuntMapWindow.UpdateSpawnPoints(points);
+    }
+
     private void ChatGui_OnChatMessage(
         XivChatType  type,
         uint         senderid,
@@ -102,7 +153,7 @@ internal class ShowHuntMap : IDisposable
         _shouldRequest = false;
     }
 
-    public async Task FetchAndPrint()
+    public void FetchAndPrint()
     {
         var currentTerritory = DalamudApi.ClientState.TerritoryType;
         if (!_monsterTerritory.TryGetValue(currentTerritory, out var monsterId))
@@ -113,53 +164,19 @@ internal class ShowHuntMap : IDisposable
         var instance        = 0;
         if (split.Length == 3)
             _ = int.TryParse(split[2], out instance);
+        
+        var huntName = Plugin.Managers.Data.SRank.GetSRankKeyNameById(monsterId);
+        if (instance != 0)
+            huntName += $" {instance}";
 
-        var huntMaps = await Plugin.Managers.Data.SRank.FetchHuntMap(
-                                                                     split[0],
-                                                                     Plugin.Managers.Data.SRank.GetSRankNameById(
-                                                                                                                 monsterId), instance);
-        if (huntMaps == null || huntMaps.spawnPoints.Count == 0)
+        // send if we dont have it
+        if (!_spawnPoints.TryGetValue($"{split[0]}@{huntName}", out var points))
         {
+            Plugin.Managers.Socket.TrackerApi.SendHuntmapRequest(split[0], huntName);
             return;
         }
 
-        var payloads = new List<Payload>
-        {
-            new TextPayload($"{currentInstance} 的当前可触发点位:")
-        };
-
-        if (huntMaps.spawnPoints.Count > 5)
-        {
-            payloads.Add(new TextPayload("\n因为点位超过5个所以将会用界面显示."));
-            Plugin.Print(payloads);
-
-            var texture = GeTexture(currentTerritory);
-            Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMaps.spawnPoints, currentInstance);
-            Plugin.Windows.HuntMapWindow.IsOpen = true;
-
-            return;
-        }
-
-        var mapId = _territoryType.GetRow(currentTerritory)!.Map.Row;
-
-        foreach (var spawnPoint in huntMaps.spawnPoints)
-        {
-            payloads.Add(new TextPayload("\n"));
-            payloads.Add(new UIForegroundPayload(0x0225));
-            payloads.Add(new UIGlowPayload(0x0226));
-            payloads.Add(new MapLinkPayload(currentTerritory, mapId, spawnPoint.x, spawnPoint.y));
-            payloads.Add(new UIForegroundPayload(500));
-            payloads.Add(new UIGlowPayload(501));
-            payloads.Add(new TextPayload($"{(char)SeIconChar.LinkMarker}"));
-            payloads.Add(new UIForegroundPayload(0));
-            payloads.Add(new UIGlowPayload(0));
-            payloads.Add(
-                         new TextPayload(
-                                         $"{spawnPoint.key.Replace("SpawnPoint", "")} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
-            payloads.Add(RawPayload.LinkTerminator);
-        }
-
-        Plugin.Print(payloads);
+        PrintOrShowSpawnPoints(points);
     }
 
     private void Condition_OnConditionChange(ConditionFlag flag, bool value)
@@ -178,5 +195,53 @@ internal class ShowHuntMap : IDisposable
         }
         
         Task.Run(FetchAndPrint);
+    }
+
+    private void PrintOrShowSpawnPoints(List<SpawnPoints> points)
+    {
+        var currentTerritory = DalamudApi.ClientState.TerritoryType;
+        var currentInstance  = Plugin.Managers.Data.Player.GetCurrentTerritory();
+       
+        if (points == null || points.Count == 0)
+        {
+            PluginLog.Error($"null: {points == null}, == 0: {points.Count == 0}");
+            return;
+        }
+
+        PluginLog.Debug($"{points.Count}");
+
+        if (points.Count > 5)
+        {
+            var texture = GeTexture(currentTerritory);
+            Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, points, currentInstance);
+            Plugin.Windows.HuntMapWindow.IsOpen = true;
+            return;
+        }
+
+        var payloads = new List<Payload>
+        {
+            new TextPayload($"{currentInstance} 的当前可触发点位:")
+        };
+
+        var mapId = _territoryType.GetRow(currentTerritory)!.Map.Row;
+
+        foreach (var spawnPoint in points)
+        {
+            payloads.Add(new TextPayload("\n"));
+            payloads.Add(new UIForegroundPayload(0x0225));
+            payloads.Add(new UIGlowPayload(0x0226));
+            payloads.Add(new MapLinkPayload(currentTerritory, mapId, spawnPoint.x, spawnPoint.y));
+            payloads.Add(new UIForegroundPayload(500));
+            payloads.Add(new UIGlowPayload(501));
+            payloads.Add(new TextPayload($"{(char)SeIconChar.LinkMarker}"));
+            payloads.Add(new UIForegroundPayload(0));
+            payloads.Add(new UIGlowPayload(0));
+            payloads.Add(
+                         new TextPayload(
+                                         $"{spawnPoint.key.Replace("SpawnPoint", "")} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
+            payloads.Add(RawPayload.LinkTerminator);
+        }
+
+        Plugin.Print(payloads);
     }
 }

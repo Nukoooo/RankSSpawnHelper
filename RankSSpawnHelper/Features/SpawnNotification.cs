@@ -150,7 +150,7 @@ internal class SpawnNotification : IDisposable
 
                      Plugin.Print(payloads);
                      if (isSpawnable && Plugin.Configuration.OnlyFetchInDuration)
-                         await Plugin.Features.ShowHuntMap.FetchAndPrint();
+                         Plugin.Features.ShowHuntMap.FetchAndPrint();
                  });
     }
 }

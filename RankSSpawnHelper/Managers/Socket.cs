@@ -1,46 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Logging;
-using ImGuiNET;
-using Newtonsoft.Json;
-using RankSSpawnHelper.Models;
-using Websocket.Client;
-using Websocket.Client.Models;
+using RankSSpawnHelper.Managers.Sockets;
 
 namespace RankSSpawnHelper.Managers;
 
 internal class Socket : IDisposable
 {
-    public Sockets.Main Main;
+    public Main       Main;
+    public TrackerApi TrackerApi;
 
     public Socket()
     {
-        Main                          =  new Sockets.Main();
+        Main                          =  new Main();
+        TrackerApi                    =  new TrackerApi();
         DalamudApi.ClientState.Login  += ClientState_OnLogin;
         DalamudApi.ClientState.Logout += ClientState_OnLogout;
+    }
+
+    public void Dispose()
+    {
+        Main.Dispose();
+        TrackerApi.Dispose();
+
+        DalamudApi.ClientState.Login  -= ClientState_OnLogin;
+        DalamudApi.ClientState.Logout -= ClientState_OnLogout;
     }
 
     private void ClientState_OnLogin(object sender, EventArgs e)
     {
     }
 
-    private void ClientState_OnLogout(object sender, EventArgs e)
-    {
-
-    }
-
-    public void Dispose()
-    {
-        Main.Dispose();
-
-        DalamudApi.ClientState.Login  -= ClientState_OnLogin;
-        DalamudApi.ClientState.Logout -= ClientState_OnLogout;
-    }
+    private void ClientState_OnLogout(object sender, EventArgs e) { }
 }
