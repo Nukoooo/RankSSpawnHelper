@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.Logging;
 using Newtonsoft.Json;
@@ -11,12 +11,54 @@ namespace RankSSpawnHelper.Managers.Sockets;
 
 internal class TrackerApi : IDisposable
 {
-    private readonly SocketIO      _huntUpdateclient;
     private readonly Queue<string> _requestQueue = new();
-    private readonly SocketIO      _route;
+    private          SocketIO      _huntUpdateclient;
+    private          SocketIO      _route;
 
     public TrackerApi()
     {
+        DalamudApi.ClientState.Login += Client_OnLogin;
+
+        BindEvent();
+
+        Task.Run(async () =>
+                 {
+                     if (DalamudApi.ClientState.LocalPlayer == null)
+                         return;
+
+                     await _route.ConnectAsync();
+                     await _huntUpdateclient.ConnectAsync();
+                 });
+    }
+
+    public void Dispose()
+    {
+        _huntUpdateclient.OnConnected -= Client_OnConnected;
+        _route.OnConnected            -= Client_OnConnected;
+        DalamudApi.ClientState.Login  -= Client_OnLogin;
+
+        _huntUpdateclient?.Dispose();
+        _route?.Dispose();
+    }
+
+    private void Client_OnLogin(object sender, EventArgs e)
+    {
+        Task.Run(async () =>
+                 {
+                     if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
+                     {
+                         await Task.Delay(100);
+                     }
+
+                     OnLogin();
+                 });
+    }
+
+    private async void Connect()
+    {
+        _huntUpdateclient?.Dispose();
+        _route?.Dispose();
+
         _huntUpdateclient = new SocketIO("https://tracker-api.beartoolkit.com/HuntUpdate", new SocketIOOptions
         {
             Path = "/socket"
@@ -30,54 +72,32 @@ internal class TrackerApi : IDisposable
         _huntUpdateclient.OnConnected += Client_OnConnected;
         _route.OnConnected            += Client_OnConnected;
 
-        DalamudApi.ClientState.Login += Client_OnLogin;
-
-        BindEvent();
-
-        Task.Run(async () =>
-                 {
-                     if (DalamudApi.ClientState.LocalPlayer == null)
-                         return;
-
-                     await _route.ConnectAsync();
-                     // await _huntUpdateclient.ConnectAsync();
-                 });
+        await _route.ConnectAsync();
+        await _huntUpdateclient.ConnectAsync();
     }
 
-    private void Client_OnLogin(object sender, EventArgs e)
-    {
-        Task.Run(OnLogin);
-    }
-
-    public void Dispose()
-    {
-        _huntUpdateclient.OnConnected -= Client_OnConnected;
-        _route.OnConnected            -= Client_OnConnected;
-        DalamudApi.ClientState.Login  -= Client_OnLogin;
-
-        _huntUpdateclient?.Dispose();
-        _route?.Dispose();
-    }
-    
     private async void OnLogin()
     {
         // Do nothing if connected, we only need to initialize once
-        if (!_huntUpdateclient.Connected)
+        if (_huntUpdateclient is { Connected: false })
             await _huntUpdateclient.ConnectAsync();
 
-        if (!_route.Connected)
+        if (_route is { Connected: false })
             await _route.ConnectAsync();
     }
 
     public async void SendHuntmapRequest(string worldName, string huntName)
     {
+        if (_route is { Connected: false })
+            return;
+
         _requestQueue.Enqueue($"{worldName}@{huntName}");
         await _route.EmitAsync("Huntmap", $"{{\"HuntName\": \"{huntName}\", \"WorldName\": \"{worldName}\"}}");
     }
 
     private async void Client_OnConnected(object sender, EventArgs e)
     {
-        while (DalamudApi.ClientState.LocalPlayer == null)
+        while (DalamudApi.ClientState.LocalPlayer == null || DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData == null)
             await Task.Delay(100);
 
         // tell the server what datacenter we are in
@@ -97,41 +117,54 @@ internal class TrackerApi : IDisposable
         _huntUpdateclient.OnAny((name, response) =>
                                 {
                                     // WorldName_HuntName
-
-                                    PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
-
-                                    var split = name.Split('_');
-                                    if (split[^1] == "SpawnPoint")
+                                    try
                                     {
-                                        var point = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.ToString());
-                                        Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point[0].worldName, point[0].huntName, point[0].key);
-                                        return;
+                                        PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
+
+                                        var split = name.Split('_');
+                                        if (split.Last() == "SpawnPoint")
+                                        {
+                                            var point = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.ToString());
+                                            Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point[0].worldName, point[0].huntName, point[0].key);
+                                            return;
+                                        }
+
+                                        // ignore fate
+                                        if (split[1].StartsWith("FATE"))
+                                            return;
+
+                                        // TODO: maybe update huntstatus here
                                     }
-
-                                    // ignore fate
-                                    if (split[1].StartsWith("FATE"))
-                                        return;
-
-                                    // TODO: maybe update huntstatus here
+                                    catch (Exception e)
+                                    {
+                                        PluginLog.Error(e, "Erro when getting /HuntUpdate");
+                                    }
                                 });
 
         _route.OnAny((name, response) =>
                      {
                          PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
 
-                         switch (name)
+                         try
                          {
-                             case "SpawnPoint":
-                                 // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
-                                 PluginLog.Debug($"{name}");
+                             switch (name)
+                             {
+                                 case "SpawnPoint":
+                                     // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
+                                     PluginLog.Debug($"{name}");
 
-                                 return;
-                             case "Huntmap":
-                                 var huntMapName = _requestQueue.Dequeue().Split('@');
-                                 var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
+                                     return;
+                                 case "Huntmap":
+                                     var huntMapName = _requestQueue.Dequeue().Split('@');
+                                     var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
 
-                                 Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
-                                 break;
+                                     Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
+                                     break;
+                             }
+                         }
+                         catch (Exception e)
+                         {
+                             PluginLog.Error(e, "Erro when getting /PublicRoutes");
                          }
                      });
         PluginLog.Debug("Event binded");
