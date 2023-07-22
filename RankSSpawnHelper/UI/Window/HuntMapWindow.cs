@@ -8,22 +8,19 @@ namespace RankSSpawnHelper.UI.Window;
 
 internal class HuntMapWindow : Dalamud.Interface.Windowing.Window
 {
-    private string _currentMapInstance = string.Empty;
-    private MapTextureInfo _currentMapTexture;
-    private string _selectedSpawnPoint = string.Empty;
-    private List<SpawnPoints> _spawnPoints = new();
+    private string            _currentMapInstance = string.Empty;
+    private MapTextureInfo    _currentMapTexture;
+    private string            _selectedSpawnPoint = string.Empty;
+    private List<SpawnPoints> _spawnPoints        = new();
 
     public HuntMapWindow() : base("狩猎地图##S怪触发小助手")
     {
         Flags |= ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
     }
 
-    public override void PreOpenCheck()
+    public override bool DrawConditions()
     {
-        if (_currentMapTexture?.texture == null || _currentMapTexture.texture.ImGuiHandle == nint.Zero)
-        {
-            IsOpen = false;
-        }
+        return _currentMapTexture is { texture: not null } && _currentMapTexture.texture.ImGuiHandle != nint.Zero;
     }
 
     public override void Draw()

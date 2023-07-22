@@ -191,6 +191,8 @@ internal partial class Counter : IDisposable
         if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
             return;
 
+        Plugin.Features.ShowHuntMap.DontRequest();
+
 #if DEBUG || DEBUG_CN
         Plugin.Print("SRank spotted.");
         PluginLog.Warning("SRank spotted.");

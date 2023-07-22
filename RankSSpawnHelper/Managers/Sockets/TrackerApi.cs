@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Logging;
 using Newtonsoft.Json;
@@ -11,8 +12,8 @@ namespace RankSSpawnHelper.Managers.Sockets;
 internal class TrackerApi : IDisposable
 {
     private readonly SocketIO      _huntUpdateclient;
-    private readonly SocketIO      _route;
     private readonly Queue<string> _requestQueue = new();
+    private readonly SocketIO      _route;
 
     public TrackerApi()
     {
@@ -29,6 +30,8 @@ internal class TrackerApi : IDisposable
         _huntUpdateclient.OnConnected += Client_OnConnected;
         _route.OnConnected            += Client_OnConnected;
 
+        DalamudApi.ClientState.Login += Client_OnLogin;
+
         BindEvent();
 
         Task.Run(async () =>
@@ -37,19 +40,26 @@ internal class TrackerApi : IDisposable
                          return;
 
                      await _route.ConnectAsync();
-                     await _huntUpdateclient.ConnectAsync();
+                     // await _huntUpdateclient.ConnectAsync();
                  });
+    }
+
+    private void Client_OnLogin(object sender, EventArgs e)
+    {
+        Task.Run(OnLogin);
     }
 
     public void Dispose()
     {
         _huntUpdateclient.OnConnected -= Client_OnConnected;
         _route.OnConnected            -= Client_OnConnected;
+        DalamudApi.ClientState.Login  -= Client_OnLogin;
+
         _huntUpdateclient?.Dispose();
         _route?.Dispose();
     }
-
-    public async void OnLogin()
+    
+    private async void OnLogin()
     {
         // Do nothing if connected, we only need to initialize once
         if (!_huntUpdateclient.Connected)
@@ -79,12 +89,6 @@ internal class TrackerApi : IDisposable
         // HuntUpdate
         await ((SocketIO)sender).EmitAsync("Change Room Request", dataCenter);
 
-        if (sender == _route)
-        {
-            SendHuntmapRequest("海猫茶屋", "Tyger");
-            SendHuntmapRequest("延夏", "Tyger");
-        }
-
         PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
     }
 
@@ -94,7 +98,7 @@ internal class TrackerApi : IDisposable
                                 {
                                     // WorldName_HuntName
 
-                                    PluginLog.Debug($"_huntUpdateclient. Name: {name}");
+                                    PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
 
                                     var split = name.Split('_');
                                     if (split[^1] == "SpawnPoint")
@@ -107,6 +111,8 @@ internal class TrackerApi : IDisposable
                                     // ignore fate
                                     if (split[1].StartsWith("FATE"))
                                         return;
+
+                                    // TODO: maybe update huntstatus here
                                 });
 
         _route.OnAny((name, response) =>
@@ -122,9 +128,9 @@ internal class TrackerApi : IDisposable
                                  return;
                              case "Huntmap":
                                  var huntMapName = _requestQueue.Dequeue().Split('@');
-                                 var spawnPoints  = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
+                                 var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
 
-                                 Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1],spawnPoints);
+                                 Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
                                  break;
                          }
                      });

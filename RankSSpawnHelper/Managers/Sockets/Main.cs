@@ -10,6 +10,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 using ImGuiNET;
 using Newtonsoft.Json;
+using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
 using Websocket.Client;
 using Websocket.Client.Models;
@@ -25,7 +26,7 @@ internal class Main : IDisposable
 #if DEBUG || DEBUG_CN
     private const string Url = "ws://127.0.0.1:8000";
 #else
-    private const string Url = "ws://124.220.161.157:8000";
+    private const string Url = "wss://nuko.me/ws";
 #endif
 
     private string _userName = string.Empty;
@@ -79,54 +80,51 @@ internal class Main : IDisposable
     }
 
 #if DEBUG || DEBUG_CN
-    public void Connect(string url)
+    public async void Connect(string url)
 #else
-    private void Connect(string url)
+    private async void Connect(string url)
 #endif
     {
-        Task.Run(async () =>
-                 {
-                     try
-                     {
-                         if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
-                         {
-                             _client?.Dispose();
-                             return;
-                         }
+        try
+        {
+            if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
+            {
+                _client?.Dispose();
+                return;
+            }
 
-                         _client?.Dispose();
-                         _userName = DataManagers.Player.GetLocalPlayerName();
+            _client?.Dispose();
+            _userName = Player.GetLocalPlayerName();
 
-                         _client = new WebsocketClient(new Uri(url), () =>
-                                                                     {
-                                                                         var client = new ClientWebSocket
-                                                                         {
-                                                                             Options =
-                                                                             {
-                                                                                 KeepAliveInterval = TimeSpan.FromSeconds(40)
-                                                                             }
-                                                                         };
-                                                                         client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
-                                                                         client.Options.SetRequestHeader("server-version", ServerVersion);
-                                                                         client.Options.SetRequestHeader("user-type", "Dalamud");
-                                                                         client.Options.SetRequestHeader("plugin-version", Plugin.PluginVersion);
-                                                                         client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
-                                                                         return client;
-                                                                     })
-                         {
-                             ReconnectTimeout      = TimeSpan.FromSeconds(120),
-                             ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
-                         };
-                         _client.ReconnectionHappened.Subscribe(OnReconntion);
-                         _client.MessageReceived.Subscribe(OnMessageReceived);
-                         _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
-                         await _client.Start();
-                     }
-                     catch (Exception e)
-                     {
-                         PluginLog.Debug(e, "Exception in Managers::Socket::Connect()");
-                     }
-                 });
+            _client = new WebsocketClient(new Uri(url), () =>
+                                                        {
+                                                            var client = new ClientWebSocket
+                                                            {
+                                                                Options =
+                                                                {
+                                                                    KeepAliveInterval = TimeSpan.FromSeconds(40)
+                                                                }
+                                                            };
+                                                            client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
+                                                            client.Options.SetRequestHeader("server-version", ServerVersion);
+                                                            client.Options.SetRequestHeader("user-type", "Dalamud");
+                                                            client.Options.SetRequestHeader("plugin-version", Plugin.PluginVersion);
+                                                            client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
+                                                            return client;
+                                                        })
+            {
+                ReconnectTimeout      = TimeSpan.FromSeconds(120),
+                ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
+            };
+            _client.ReconnectionHappened.Subscribe(OnReconntion);
+            _client.MessageReceived.Subscribe(OnMessageReceived);
+            _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
+            await _client.Start();
+        }
+        catch (Exception e)
+        {
+            PluginLog.Debug(e, "Exception in Managers::Socket::Connect()");
+        }
     }
 
     private void OnDisconnectionHappened(DisconnectionInfo obj)
@@ -178,7 +176,7 @@ internal class Main : IDisposable
         if (!DalamudApi.ClientState.LocalPlayer || localTracker == null || localTracker.Count == 0)
             return;
 
-        var name = DataManagers.Player.GetLocalPlayerName();
+        var name = Player.GetLocalPlayerName();
 
         List<NetTracker> trackers = new();
 

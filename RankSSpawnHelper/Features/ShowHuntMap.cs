@@ -40,7 +40,6 @@ internal class ShowHuntMap : IDisposable
         _territoryType = DalamudApi.DataManager.GetExcelSheet<TerritoryType>();
 
         DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
-        DalamudApi.ChatGui.ChatMessage       += ChatGui_OnChatMessage;
 
         Task.Run(
                  async () =>
@@ -69,7 +68,6 @@ internal class ShowHuntMap : IDisposable
     public void Dispose()
     {
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
-        DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
     }
 
     public bool CanShowHuntMapWithMonsterName(string name)
@@ -140,19 +138,8 @@ internal class ShowHuntMap : IDisposable
         Plugin.Windows.HuntMapWindow.UpdateSpawnPoints(points);
     }
 
-    private void ChatGui_OnChatMessage(
-        XivChatType  type,
-        uint         senderid,
-        ref SeString sender,
-        ref SeString message,
-        ref bool     ishandled)
-    {
-        if (type is not XivChatType.SystemMessage || message.TextValue != "感觉到了强大的恶名精英的气息……")
-            return;
-
-        _shouldRequest = false;
-    }
-
+    public void DontRequest() => _shouldRequest = false;
+    
     public void FetchAndPrint()
     {
         var currentTerritory = DalamudApi.ClientState.TerritoryType;
@@ -203,17 +190,12 @@ internal class ShowHuntMap : IDisposable
         var currentInstance  = Plugin.Managers.Data.Player.GetCurrentTerritory();
        
         if (points == null || points.Count == 0)
-        {
-            PluginLog.Error($"null: {points == null}, == 0: {points.Count == 0}");
             return;
-        }
-
-        PluginLog.Debug($"{points.Count}");
+        
+        Plugin.Windows.HuntMapWindow.SetCurrentMap(GeTexture(currentTerritory), points, currentInstance);
 
         if (points.Count > 5)
         {
-            var texture = GeTexture(currentTerritory);
-            Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, points, currentInstance);
             Plugin.Windows.HuntMapWindow.IsOpen = true;
             return;
         }
