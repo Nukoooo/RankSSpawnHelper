@@ -11,7 +11,7 @@ namespace RankSSpawnHelper.Managers.Sockets;
 
 internal class TrackerApi : IDisposable
 {
-    private readonly Queue<string> _requestQueue = new();
+    private Queue<string> _requestQueue = new();
     private          SocketIO      _huntUpdateclient;
     private          SocketIO      _route;
 
@@ -19,22 +19,19 @@ internal class TrackerApi : IDisposable
     {
         DalamudApi.ClientState.Login += Client_OnLogin;
 
-        BindEvent();
+        if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
+            return;
 
-        Task.Run(async () =>
-                 {
-                     if (DalamudApi.ClientState.LocalPlayer == null)
-                         return;
-
-                     await _route.ConnectAsync();
-                     await _huntUpdateclient.ConnectAsync();
-                 });
+        ConnectHuntUpdate();
+        ConnectRoute();
     }
 
     public void Dispose()
     {
-        _huntUpdateclient.OnConnected -= Client_OnConnected;
-        _route.OnConnected            -= Client_OnConnected;
+        if (_huntUpdateclient != null)
+            _huntUpdateclient.OnConnected -= Client_OnConnected;
+        if (_route != null)
+            _route.OnConnected            -= Client_OnConnected;
         DalamudApi.ClientState.Login  -= Client_OnLogin;
 
         _huntUpdateclient?.Dispose();
@@ -45,39 +42,45 @@ internal class TrackerApi : IDisposable
     {
         Task.Run(async () =>
                  {
-                     if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
-                     {
+                     if (DalamudApi.ClientState.LocalPlayer == null)
                          await Task.Delay(100);
-                     }
 
                      OnLogin();
                  });
     }
 
-    private async void Connect()
+    private void ConnectHuntUpdate()
     {
-        _huntUpdateclient?.Dispose();
-        _route?.Dispose();
-
+        if (_huntUpdateclient != null)
+            return;
         _huntUpdateclient = new SocketIO("https://tracker-api.beartoolkit.com/HuntUpdate", new SocketIOOptions
         {
             Path = "/socket"
         });
 
+        _huntUpdateclient.OnConnected += Client_OnConnected;
+        _huntUpdateclient.ConnectAsync();
+    }
+
+    private void ConnectRoute()
+    {
+        if (_route != null)
+            return;
         _route = new SocketIO("https://tracker-api.beartoolkit.com/PublicRoutes", new SocketIOOptions
         {
             Path = "/socket"
         });
 
-        _huntUpdateclient.OnConnected += Client_OnConnected;
-        _route.OnConnected            += Client_OnConnected;
+        BindEvent();
 
-        await _route.ConnectAsync();
-        await _huntUpdateclient.ConnectAsync();
+        _route.OnConnected            += Client_OnConnected;
+        _route.ConnectAsync();
     }
 
     private async void OnLogin()
     {
+        ConnectHuntUpdate();
+        ConnectRoute();
         // Do nothing if connected, we only need to initialize once
         if (_huntUpdateclient is { Connected: false })
             await _huntUpdateclient.ConnectAsync();
@@ -88,11 +91,19 @@ internal class TrackerApi : IDisposable
 
     public async void SendHuntmapRequest(string worldName, string huntName)
     {
-        if (_route is { Connected: false })
-            return;
-
-        _requestQueue.Enqueue($"{worldName}@{huntName}");
-        await _route.EmitAsync("Huntmap", $"{{\"HuntName\": \"{huntName}\", \"WorldName\": \"{worldName}\"}}");
+        switch (_route)
+        {
+            case null:
+                PluginLog.Debug($"_route null");
+                return;
+            case { Connected: false }:
+                PluginLog.Debug($"Not connected");
+                return;
+            default:
+                _requestQueue.Enqueue($"{worldName}@{huntName}");
+                await _route.EmitAsync("Huntmap", $"{{\"HuntName\": \"{huntName}\", \"WorldName\": \"{worldName}\"}}");
+                break;
+        }
     }
 
     private async void Client_OnConnected(object sender, EventArgs e)

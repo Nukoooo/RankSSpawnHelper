@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ internal class ShowHuntMap : IDisposable
         { 180, 2967 }   // 牛头黑神
     };
 
-    private readonly Dictionary<string, List<SpawnPoints>> _spawnPoints = new();
+    private readonly ConcurrentDictionary<string, List<SpawnPoints>> _spawnPoints = new();
 
     private readonly ExcelSheet<TerritoryType> _territoryType;
     private          bool                      _shouldRequest = true;
