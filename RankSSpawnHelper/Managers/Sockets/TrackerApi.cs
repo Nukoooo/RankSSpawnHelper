@@ -11,7 +11,7 @@ namespace RankSSpawnHelper.Managers.Sockets;
 
 internal class TrackerApi : IDisposable
 {
-    private Queue<string> _requestQueue = new();
+    private readonly Queue<string> _requestQueue = new();
     private          SocketIO      _huntUpdateclient;
     private          SocketIO      _route;
 
@@ -31,8 +31,8 @@ internal class TrackerApi : IDisposable
         if (_huntUpdateclient != null)
             _huntUpdateclient.OnConnected -= Client_OnConnected;
         if (_route != null)
-            _route.OnConnected            -= Client_OnConnected;
-        DalamudApi.ClientState.Login  -= Client_OnLogin;
+            _route.OnConnected -= Client_OnConnected;
+        DalamudApi.ClientState.Login -= Client_OnLogin;
 
         _huntUpdateclient?.Dispose();
         _route?.Dispose();
@@ -49,44 +49,114 @@ internal class TrackerApi : IDisposable
                  });
     }
 
-    private void ConnectHuntUpdate()
+    private async void ConnectHuntUpdate()
     {
         if (_huntUpdateclient != null)
             return;
+
         _huntUpdateclient = new SocketIO("https://tracker-api.beartoolkit.com/HuntUpdate", new SocketIOOptions
         {
-            Path = "/socket"
+            Path                 = "/socket",
+            Reconnection         = true,
+            ReconnectionAttempts = int.MaxValue,
+            ReconnectionDelay    = 2.5,
+            ReconnectionDelayMax = 5
         });
 
+        _huntUpdateclient.OnAny((name, response) =>
+                                 {
+                                     // WorldName_HuntName
+                                     try
+                                     {
+                                         PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
+
+                                         var split = name.Split('_');
+                                         if (split.Last() == "SpawnPoint")
+                                         {
+                                             var point = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.ToString());
+                                             Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point[0].worldName, point[0].huntName, point[0].key);
+                                             return;
+                                         }
+
+                                         // ignore fate
+                                         if (split[1].StartsWith("FATE"))
+                                             return;
+
+                                         // TODO: maybe update huntstatus here
+                                     }
+                                     catch (Exception e)
+                                     {
+                                         PluginLog.Error(e, "Erro when getting /HuntUpdate");
+                                     }
+                                 });
+
         _huntUpdateclient.OnConnected += Client_OnConnected;
-        _huntUpdateclient.ConnectAsync();
+        try
+        {
+            await _huntUpdateclient.ConnectAsync();
+        }
+        catch (Exception e)
+        {
+            PluginLog.Error(e, "Error when connecting to /HuntUpdate");
+        }
     }
 
-    private void ConnectRoute()
+    private async void ConnectRoute()
     {
         if (_route != null)
             return;
+
         _route = new SocketIO("https://tracker-api.beartoolkit.com/PublicRoutes", new SocketIOOptions
         {
-            Path = "/socket"
+            Path                 = "/socket",
+            Reconnection         = true,
+            ReconnectionAttempts = int.MaxValue,
+            ReconnectionDelay    = 2.5,
+            ReconnectionDelayMax = 5
         });
 
-        BindEvent();
+        _route.OnAny((name, response) =>
+                      {
+                          PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
 
-        _route.OnConnected            += Client_OnConnected;
-        _route.ConnectAsync();
+                          try
+                          {
+                              switch (name)
+                              {
+                                  case "SpawnPoint":
+                                      // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
+                                      PluginLog.Debug($"{name}");
+
+                                      return;
+                                  case "Huntmap":
+                                      var huntMapName = _requestQueue.Dequeue().Split('@');
+                                      var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
+
+                                      Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
+                                      break;
+                              }
+                          }
+                          catch (Exception e)
+                          {
+                              PluginLog.Error(e, "Erro when getting /PublicRoutes");
+                          }
+                      });
+
+        _route.OnConnected += Client_OnConnected;
+        try
+        {
+            await _route.ConnectAsync();
+        }
+        catch (Exception e)
+        {
+            PluginLog.Error(e, "Error when connecting to /PublicRoutes");
+        }
     }
 
     private async void OnLogin()
     {
         ConnectHuntUpdate();
         ConnectRoute();
-        // Do nothing if connected, we only need to initialize once
-        if (_huntUpdateclient is { Connected: false })
-            await _huntUpdateclient.ConnectAsync();
-
-        if (_route is { Connected: false })
-            await _route.ConnectAsync();
     }
 
     public async void SendHuntmapRequest(string worldName, string huntName)
@@ -94,10 +164,10 @@ internal class TrackerApi : IDisposable
         switch (_route)
         {
             case null:
-                PluginLog.Debug($"_route null");
+                PluginLog.Debug("_route null");
                 return;
             case { Connected: false }:
-                PluginLog.Debug($"Not connected");
+                PluginLog.Debug("Not connected");
                 return;
             default:
                 _requestQueue.Enqueue($"{worldName}@{huntName}");
@@ -122,62 +192,5 @@ internal class TrackerApi : IDisposable
 
         PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
     }
-
-    private void BindEvent()
-    {
-        _huntUpdateclient.OnAny((name, response) =>
-                                {
-                                    // WorldName_HuntName
-                                    try
-                                    {
-                                        PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
-
-                                        var split = name.Split('_');
-                                        if (split.Last() == "SpawnPoint")
-                                        {
-                                            var point = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.ToString());
-                                            Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point[0].worldName, point[0].huntName, point[0].key);
-                                            return;
-                                        }
-
-                                        // ignore fate
-                                        if (split[1].StartsWith("FATE"))
-                                            return;
-
-                                        // TODO: maybe update huntstatus here
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        PluginLog.Error(e, "Erro when getting /HuntUpdate");
-                                    }
-                                });
-
-        _route.OnAny((name, response) =>
-                     {
-                         PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
-
-                         try
-                         {
-                             switch (name)
-                             {
-                                 case "SpawnPoint":
-                                     // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
-                                     PluginLog.Debug($"{name}");
-
-                                     return;
-                                 case "Huntmap":
-                                     var huntMapName = _requestQueue.Dequeue().Split('@');
-                                     var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
-
-                                     Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
-                                     break;
-                             }
-                         }
-                         catch (Exception e)
-                         {
-                             PluginLog.Error(e, "Erro when getting /PublicRoutes");
-                         }
-                     });
-        PluginLog.Debug("Event binded");
-    }
+    
 }

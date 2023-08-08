@@ -7,22 +7,38 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace RankSSpawnHelper.Features;
 
-internal partial class Counter : IDisposable
+internal partial class Counter
 {
+    private bool _usingItem;
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
     [Signature("40 53 55 56 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 ?? 4C 8B 89", DetourName = nameof(Detour_InventoryTransactionDiscard))]
     private Hook<InventoryTransactionDiscardDelegate> InventoryTransactionDiscard { get; init; } = null!;
 
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+    [Signature("E8 ?? ?? ?? ?? EB 64 B1 01", DetourName = nameof(Detour_UseAction))]
+    private Hook<UseActionDelegate> UseActionHook { get; init; } = null!;
+
+    private bool Detour_UseAction(nint a1, ActionType actionType, uint actionId, uint a4, uint a5, uint a6, nint a7, nint a8)
+    {
+        if(actionType != ActionType.Item)
+            goto original;
+
+        _usingItem = true;
+
+        original:
+        return UseActionHook.Original(a1, actionType, actionId, a4, a5, a6, a7, a8);
+    }
+
     private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)
     {
         /*
-        var slot      = *(uint*)(a2 + 0xC);
-        var slotIndex = *(uint*)(a2 + 0x10);
+        var slot      = *(int*)(a2 + 0xC);
+        var slotIndex = *(int*)(a2 + 0x10);
         */
 
         // Use regenny or reclass to find this
         var amount = *(uint*)(a2 + 0x14);
-        var itemId = *(uint*)(a2 + 0x18);
+        var itemId = *(uint*)(a2 + 0x18); // will not return HQ item id
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
 
@@ -40,13 +56,20 @@ internal partial class Counter : IDisposable
         switch (territoryType)
         {
             case 621:
-                if (!(DalamudApi.Condition[ConditionFlag.Mounted] || DalamudApi.Condition[ConditionFlag.Mounted2]) &&
-                    ActionManager.Instance()->GetActionStatus(ActionType.Item, itemId) != 0)
+                var action = Plugin.Managers.Data.GetItemAction(itemId);
+                if (action.Type == 0)
+                    goto final;
+
+                if (_usingItem)
+                    goto callOrginal;
+
+                if (!(DalamudApi.Condition[ConditionFlag.Mounted] || DalamudApi.Condition[ConditionFlag.Mounted2]))
                 {
                     PluginLog.Debug("Found using an item, skipping");
                     goto callOrginal;
                 }
 
+            final:
                 itemId = 0;
                 break;
             case 961 when amount != 5:
@@ -58,8 +81,11 @@ internal partial class Counter : IDisposable
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
 
     callOrginal:
+        _usingItem = false;
         InventoryTransactionDiscard.Original(a1, a2);
     }
+
+    private unsafe delegate bool UseActionDelegate(nint a1, ActionType a2, uint actionId, uint a4, uint a5, uint a6, nint a7, nint a8);
 
     private delegate void InventoryTransactionDiscardDelegate(nint a1, nint a2);
 }

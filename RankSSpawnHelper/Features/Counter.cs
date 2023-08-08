@@ -6,6 +6,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
 
@@ -34,7 +35,7 @@ internal partial class Counter : IDisposable
 
     private readonly Stopwatch _timer = new();
 
-    public Counter()
+    public unsafe Counter()
     {
         SignatureHelper.Initialise(this);
 
@@ -44,7 +45,8 @@ internal partial class Counter : IDisposable
         InventoryTransactionDiscard.Enable();
         ProcessSpawnNpcPacket.Enable();
         ProcessOpenTreasure.Enable();
-        /*UseActionHook.Enable();*/
+        // UseActionHook = Hook<UseActionDelegate>.FromFunctionPointerVariable((IntPtr)ActionManager.Addresses.UseAction.Value, Detour_UseAction);
+        UseActionHook.Enable();
         DalamudApi.Framework.Update += Framework_Update;
 
         DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
@@ -54,10 +56,6 @@ internal partial class Counter : IDisposable
     [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 48 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 66 0F 1F 84 00 ?? ?? ?? ?? 48 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 11 48 ?? 49 83 E8 ?? 75 ?? 4C 8D 44 24", DetourName = nameof(Detour_ProcessSpawnNpcPacket))]
     private Hook<ProcessSpawnNpcDelegate> ProcessSpawnNpcPacket { get; init; } = null!;
 
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    /*[Signature("E8 ?? ?? ?? ?? EB 64 B1 01", DetourName = nameof(Detour_UseAction))]
-    private Hook<UseActionDelegate> UseActionHook { get; init; } = null!;*/
-
     public void Dispose()
     {
         ProcessSpawnNpcPacket.Dispose();
@@ -65,7 +63,7 @@ internal partial class Counter : IDisposable
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
         ProcessOpenTreasure.Dispose();
-        /*UseActionHook.Dispose();*/
+        UseActionHook.Dispose();
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
         DalamudApi.Framework.Update          -= Framework_Update;
         GC.SuppressFinalize(this);
@@ -231,17 +229,6 @@ internal partial class Counter : IDisposable
         });
     }
 
-    /*private unsafe bool Detour_UseAction(nint a1, ActionType actionType, uint actionID, uint a4, uint a5, uint a6, void* a7)
-    {
-        var newActionId = actionID;
-        if (newActionId > 1_000_000)
-            newActionId -= 1_000_000;
-
-        PluginLog.Warning($"{(uint)actionType}, {newActionId:X}");
-        
-        return UseActionHook.Original(a1, actionType, actionID, a4, a5, a6, a7);
-    }*/
-
     private void AddToTracker(string key, string targetName, uint targetId, bool isItem = false)
     {
         if (!_localTracker.ContainsKey(key))
@@ -352,6 +339,4 @@ internal partial class Counter : IDisposable
     }
 
     private delegate void ProcessSpawnNpcDelegate(nint a1, uint a2, nint packetData);
-
-    /*private unsafe delegate bool UseActionDelegate(nint a1, ActionType a2, uint actionId, uint a4, uint a5, uint a6, void* a7);*/
 }

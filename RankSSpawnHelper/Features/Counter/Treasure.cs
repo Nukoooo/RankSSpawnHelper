@@ -5,7 +5,7 @@ using Dalamud.Utility.Signatures;
 
 namespace RankSSpawnHelper.Features;
 
-internal partial class Counter : IDisposable
+internal partial class Counter
 {
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
     [Signature("40 53 48 83 EC ?? 0F B6 81 ?? ?? ?? ?? 48 8B D9 F3 0F 11 89", DetourName = nameof(Detour_ProcessOpenTreasurePacket))]

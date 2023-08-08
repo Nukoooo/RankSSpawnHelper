@@ -67,10 +67,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 更换服务器IP\n"),
-            new TextPayload("  [+] 增加获取当前点位图的指令\n"),
-            new TextPayload("  [+] 狩猎点位现在可以实时更新了(虽然不是很明显)\n"),
-            new TextPayload("  [-] 尝试修复炸游戏的问题\n"),
+            new TextPayload("  [-] sbsbsbsbsbsbsbsbsbs\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
         });

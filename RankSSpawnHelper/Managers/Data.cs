@@ -14,7 +14,7 @@ namespace RankSSpawnHelper.Managers;
 
 internal class Data : IDisposable
 {
-    private readonly Dictionary<uint, string> _itemName;
+    private readonly Dictionary<uint, (string, ItemAction?)> _itemName;
 
     private readonly Dictionary<uint, string> _npcName;
     private readonly Dictionary<uint, string> _territoryName;
@@ -32,9 +32,10 @@ internal class Data : IDisposable
     {
         _worldSheet    = DalamudApi.DataManager.GetExcelSheet<World>();
         _npcName       = DalamudApi.DataManager.GetExcelSheet<BNpcName>()!.ToDictionary(i => i.RowId, i => i.Singular.RawString);
-        _itemName      = DalamudApi.DataManager.GetExcelSheet<Item>()!.ToDictionary(i => i.RowId, i => i.Singular.RawString);
+        _itemName      = DalamudApi.DataManager.GetExcelSheet<Item>()!.ToDictionary(i => i.RowId, i => (i.Singular.RawString, i.ItemAction.Value));
         _worldName     = _worldSheet.ToDictionary(i => i.RowId, i => i.Name.RawString);
         _territoryName = DalamudApi.DataManager.GetExcelSheet<TerritoryType>()!.ToDictionary(i => i.RowId, i => i.PlaceName.Value.Name.RawString);
+
 
         _textInfo = new CultureInfo("en-US", false).TextInfo;
 
@@ -112,7 +113,7 @@ internal class Data : IDisposable
 
     public uint GetItemIdByName(string name)
     {
-        return _itemName.Where(key => string.Equals(key.Value, name, StringComparison.CurrentCultureIgnoreCase)).Select(key => key.Key).FirstOrDefault();
+        return _itemName.Where(key => string.Equals(key.Value.Item1, name, StringComparison.CurrentCultureIgnoreCase)).Select(key => key.Key).FirstOrDefault();
     }
 
     public uint GetNpcIdByName(string name)
@@ -122,7 +123,12 @@ internal class Data : IDisposable
 
     public string GetItemName(uint id)
     {
-        return _textInfo.ToTitleCase(_itemName[id]);
+        return _textInfo.ToTitleCase(_itemName[id].Item1);
+    }
+
+    public ItemAction GetItemAction(uint id)
+    {
+        return _itemName[id].Item2;
     }
 
     public long GetServerRestartTimeRaw()
