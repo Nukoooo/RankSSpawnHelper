@@ -126,6 +126,11 @@ internal class Data : IDisposable
         return _textInfo.ToTitleCase(_itemName[id].Item1);
     }
 
+    public bool IsItem(uint id)
+    {
+        return _itemName.ContainsKey(id);
+    }
+
     public ItemAction GetItemAction(uint id)
     {
         return _itemName[id].Item2;
