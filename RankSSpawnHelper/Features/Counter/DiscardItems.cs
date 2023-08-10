@@ -18,27 +18,29 @@ internal partial class Counter
     [Signature("E8 ?? ?? ?? ?? EB 64 B1 01", DetourName = nameof(Detour_UseAction))]
     private Hook<UseActionDelegate> UseActionHook { get; init; } = null!;
 
-    private bool Detour_UseAction(nint a1, ActionType actionType, uint actionId, uint targetId, uint a5, uint a6, nint a7, nint a8)
+    private unsafe bool Detour_UseAction(nint a1, ActionType actionType, uint actionId, long targetId, uint a4, uint a5, uint a6, void* a7)
     {
-        if(actionType != ActionType.Item)
-            goto original;
+        PluginLog.Debug($"{actionType} / targetId: 0x{targetId:X}, actionId: {actionId}");
+
+        var original = UseActionHook.Original(a1, actionType, actionId, targetId, a4, a5, a6, a7);
+        if (actionType != ActionType.Item)
+            return original;
 
         if (targetId != 0xE0000000)
-            goto original;
+            return original;
 
         var itemId = actionId;
         if (itemId >= 1000000)
             itemId -= 1000000;
 
         if (!Plugin.Managers.Data.IsItem(itemId))
-            goto original;
+            return original;
 
         PluginLog.Debug($"targetId: 0x{targetId:X}, actionId: {itemId}");
 
         _usingItem = true;
-
-        original:
-        return UseActionHook.Original(a1, actionType, actionId, targetId, a5, a6, a7, a8);
+        
+        return original;
     }
 
     private unsafe void Detour_InventoryTransactionDiscard(nint a1, nint a2)
@@ -97,7 +99,7 @@ internal partial class Counter
         InventoryTransactionDiscard.Original(a1, a2);
     }
 
-    private unsafe delegate bool UseActionDelegate(nint a1, ActionType actionType, uint actionId, uint targetId, uint a5, uint a6, nint a7, nint a8);
+    private unsafe delegate bool UseActionDelegate(nint a1, ActionType actionType, uint actionId, long targetId, uint a4, uint a5, uint a6, void* a7);
 
     private delegate void InventoryTransactionDiscardDelegate(nint a1, nint a2);
 }
