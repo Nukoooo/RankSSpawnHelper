@@ -153,7 +153,7 @@ internal class TrackerApi : IDisposable
         }
     }
 
-    private async void OnLogin()
+    private void OnLogin()
     {
         ConnectHuntUpdate();
         ConnectRoute();
@@ -185,12 +185,19 @@ internal class TrackerApi : IDisposable
         var dataCenter = DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData.DataCenter.Value.Name.RawString;
         PluginLog.Debug($"DataCenter: {dataCenter}");
 
-        // HuntMap
-        await ((SocketIO)sender).EmitAsync("SetDatacenter", dataCenter);
-        // HuntUpdate
-        await ((SocketIO)sender).EmitAsync("Change Room Request", dataCenter);
+        try
+        {
+            // HuntMap
+            await ((SocketIO)sender).EmitAsync("SetDatacenter", dataCenter);
+            // HuntUpdate
+            await ((SocketIO)sender).EmitAsync("Change Room Request", dataCenter);
 
-        PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
+            PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(ex, "Error when conneting to tracker api.");
+        }
     }
     
 }

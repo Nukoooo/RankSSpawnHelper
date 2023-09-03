@@ -9,6 +9,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using ImGuiNET;
 using RankSSpawnHelper.Attributes;
@@ -57,6 +58,7 @@ public class EntryPoint : IDalamudPlugin
 
         var pluginVersion = _assembly.GetName().Version.ToString();
         Plugin.PluginVersion = pluginVersion;
+        PluginLog.Information($"Version: {Plugin.PluginVersion}");
 #if RELEASE
         if (Plugin.Configuration.PluginVersion == pluginVersion)
             return;
@@ -67,7 +69,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] sb?\n"),
+            new TextPayload("  [-] 尝试修复获取点位/S怪状态导致炸游戏的问题\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
         });

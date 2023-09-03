@@ -282,15 +282,15 @@ internal class SRank
             { "WorldName", server }
         };
 
-        var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
-
-        if (response.StatusCode != HttpStatusCode.OK)
-        {
-            return null;
-        }
-
         try
         {
+            var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return null;
+            }
+
             var content = await response.Content.ReadAsStringAsync();
             var status  = JsonConvert.DeserializeObject<HuntStatus>(content);
             if (status != null)

@@ -72,85 +72,93 @@ internal class SpawnNotification : IDisposable
         Task.Run(
                  async () =>
                  {
-                     if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.Off)
-                         return;
-
-                     var territory = DalamudApi.ClientState.TerritoryType;
-
-                     if (!_monsterIdMap.ContainsKey(territory))
+                     try
                      {
-                         return;
-                     }
+                         if (Plugin.Configuration.SpawnNotificationType == (int)SpawnNotificationType.Off)
+                             return;
 
-                     var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-                     var split           = currentInstance.Split('@');
-                     var monsterName     = Plugin.Managers.Data.SRank.GetSRankNameById(_monsterIdMap[territory]);
+                         var territory = DalamudApi.ClientState.TerritoryType;
 
-                     if (_shouldNotNotify)
-                     {
-                         _shouldNotNotify = false;
-                         return;
-                     }
+                         if (!_monsterIdMap.ContainsKey(territory))
+                         {
+                             return;
+                         }
 
-                     if (!_huntStatus.TryGetValue(currentInstance, out var result))
-                     {
-                         result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
-                                                                                                                  ? 0
-                                                                                                                  : int.Parse(split[2]));
-                     }
+                         if (_shouldNotNotify)
+                         {
+                             _shouldNotNotify = false;
+                             return;
+                         }
 
-                     result ??= await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
-                                                                                                                ? 0
-                                                                                                                : int.Parse(split[2]));
+                         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+                         var split = currentInstance.Split('@');
+                         var monsterName = Plugin.Managers.Data.SRank.GetSRankNameById(_monsterIdMap[territory]);
 
-                     _huntStatus.TryAdd(currentInstance, result);
 
-                     var payloads = new List<Payload>
+                         if (!_huntStatus.TryGetValue(currentInstance, out var result))
+                         {
+                             result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
+                                                                                                                      ? 0
+                                                                                                                      : int.Parse(split[2]));
+                         }
+
+                         result ??= await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
+                                                                                                                    ? 0
+                                                                                                                    : int.Parse(split[2]));
+
+                         _huntStatus.TryAdd(currentInstance, result);
+
+                         var payloads = new List<Payload>
                      {
                              new UIForegroundPayload(1),
                              new TextPayload($"{currentInstance} - {monsterName}:")
                      };
 
-                     var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() > result.expectMinTime;
-                     if (isSpawnable)
-                     {
-                         payloads.Add(new TextPayload("\n当前可触发概率: "));
-                         payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
-                         payloads.Add(
-                                      new
-                                              TextPayload(
-                                                          $"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
-                         payloads.Add(new UIForegroundPayload(0));
-                     }
-                     else
-                     {
-                         if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.SpawnableOnly)
+                         var isSpawnable = DateTimeOffset.Now.ToUnixTimeSeconds() > result.expectMinTime;
+                         if (isSpawnable)
                          {
-                             PluginLog.Debug("Not spawnable, ignoring");
-                             return;
+                             payloads.Add(new TextPayload("\n当前可触发概率: "));
+                             payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
+                             payloads.Add(
+                                          new
+                                                  TextPayload(
+                                                              $"{100 * ((DateTimeOffset.Now.ToUnixTimeSeconds() - result.expectMinTime) / (double)(result.expectMaxTime - result.expectMinTime)):F1}%"));
+                             payloads.Add(new UIForegroundPayload(0));
+                         }
+                         else
+                         {
+                             if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.SpawnableOnly)
+                             {
+                                 PluginLog.Debug("Not spawnable, ignoring");
+                                 return;
+                             }
+
+                             payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
+                             payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
+                             var minTime = DateTimeOffset.FromUnixTimeSeconds(result.expectMinTime);
+                             var delta = (minTime - DateTimeOffset.Now).TotalMinutes;
+
+                             payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
+                             payloads.Add(new UIForegroundPayload(0));
+
+                             if (Plugin.Configuration.CoolDownNotificationSound)
+                             {
+                                 UIModule.PlayChatSoundEffect(6);
+                                 UIModule.PlayChatSoundEffect(6);
+                                 UIModule.PlayChatSoundEffect(6);
+                             }
                          }
 
-                         payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
-                         payloads.Add(new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor));
-                         var minTime = DateTimeOffset.FromUnixTimeSeconds(result.expectMinTime);
-                         var delta   = (minTime - DateTimeOffset.Now).TotalMinutes;
-
-                         payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
                          payloads.Add(new UIForegroundPayload(0));
 
-                         if (Plugin.Configuration.CoolDownNotificationSound)
-                         {
-                             UIModule.PlayChatSoundEffect(6);
-                             UIModule.PlayChatSoundEffect(6);
-                             UIModule.PlayChatSoundEffect(6);
-                         }
+                         Plugin.Print(payloads);
+                         if (isSpawnable && Plugin.Configuration.OnlyFetchInDuration)
+                             Plugin.Features.ShowHuntMap.FetchAndPrint();
                      }
-
-                     payloads.Add(new UIForegroundPayload(0));
-
-                     Plugin.Print(payloads);
-                     if (isSpawnable && Plugin.Configuration.OnlyFetchInDuration)
-                         Plugin.Features.ShowHuntMap.FetchAndPrint();
+                     catch (Exception e)
+                     {
+                         PluginLog.Error(e, "Error when fetching hunt status");
+                     }
                  });
     }
 }

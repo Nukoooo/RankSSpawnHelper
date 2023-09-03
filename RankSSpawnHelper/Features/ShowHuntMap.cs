@@ -211,14 +211,8 @@ internal class ShowHuntMap : IDisposable
         foreach (var spawnPoint in points)
         {
             payloads.Add(new TextPayload("\n"));
-            payloads.Add(new UIForegroundPayload(0x0225));
-            payloads.Add(new UIGlowPayload(0x0226));
             payloads.Add(new MapLinkPayload(currentTerritory, mapId, spawnPoint.x, spawnPoint.y));
-            payloads.Add(new UIForegroundPayload(500));
-            payloads.Add(new UIGlowPayload(501));
             payloads.Add(new TextPayload($"{(char)SeIconChar.LinkMarker}"));
-            payloads.Add(new UIForegroundPayload(0));
-            payloads.Add(new UIGlowPayload(0));
             payloads.Add(
                          new TextPayload(
                                          $"{spawnPoint.key.Replace("SpawnPoint", "")} ({spawnPoint.x:0.00}, {spawnPoint.y:0.00})"));
