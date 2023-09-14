@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,6 @@ using Newtonsoft.Json;
 using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
 using Websocket.Client;
-using Websocket.Client.Models;
 
 namespace RankSSpawnHelper.Managers.Sockets;
 
@@ -36,7 +36,7 @@ internal class Main : IDisposable
         DalamudApi.ClientState.Login  += ClientState_OnLogin;
         DalamudApi.ClientState.Logout += ClientState_OnLogout;
 
-        if (DalamudApi.ClientState.LocalPlayer != null && DalamudApi.ClientState.IsLoggedIn)
+        if (DalamudApi.ClientState.LocalPlayer != null)
             Connect(Url);
     }
 
@@ -87,7 +87,7 @@ internal class Main : IDisposable
     {
         try
         {
-            if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
+            if (DalamudApi.ClientState.LocalPlayer == null)
             {
                 _client?.Dispose();
                 return;
@@ -102,23 +102,29 @@ internal class Main : IDisposable
                                                             {
                                                                 Options =
                                                                 {
-                                                                    KeepAliveInterval = TimeSpan.FromSeconds(40)
-                                                                }
+                                                                    KeepAliveInterval = TimeSpan.FromSeconds(40),
+                                                                },
                                                             };
                                                             client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
                                                             client.Options.SetRequestHeader("server-version", ServerVersion);
                                                             client.Options.SetRequestHeader("user-type", "Dalamud");
                                                             client.Options.SetRequestHeader("plugin-version", Plugin.PluginVersion);
                                                             client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
+
+                                                            if (Plugin.Configuration.UseProxy)
+                                                                client.Options.Proxy = new WebProxy(Plugin.Configuration.ProxyUrl);
+
                                                             return client;
                                                         })
             {
                 ReconnectTimeout      = TimeSpan.FromSeconds(120),
                 ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
             };
+
             _client.ReconnectionHappened.Subscribe(OnReconntion);
             _client.MessageReceived.Subscribe(OnMessageReceived);
             _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
+
             await _client.Start();
         }
         catch (Exception e)
@@ -136,7 +142,7 @@ internal class Main : IDisposable
 
     public bool Connected()
     {
-        return _client != null && _client.IsRunning;
+        return _client is { IsStarted: true, IsRunning: true };
     }
 
 #if DEBUG || DEBUG_CN
@@ -153,7 +159,18 @@ internal class Main : IDisposable
         if (_client == null)
             return;
 
-        await _client.Reconnect();
+        try
+        {
+            await _client.Reconnect();
+        }
+        catch (Exception)
+        {
+            _client.Dispose();
+
+            await Task.Delay(1000);
+
+            Connect(Url);
+        }
     }
 #endif
 

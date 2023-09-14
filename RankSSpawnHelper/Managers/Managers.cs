@@ -4,16 +4,9 @@ namespace RankSSpawnHelper.Managers;
 
 internal class Managers : IDisposable
 {
-    public Data Data;
-    public Font Font;
-    public Socket Socket;
-
-    public Managers()
-    {
-        Data   = new Data();
-        Font   = new Font();
-        Socket = new Socket();
-    }
+    public Data   Data   = new();
+    public Font   Font   = new();
+    public Socket Socket = new();
 
     public void Dispose()
     {

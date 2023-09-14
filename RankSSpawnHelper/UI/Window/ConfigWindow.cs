@@ -45,7 +45,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         Initialize();
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(500, 400),
+            MinimumSize = new Vector2(600, 400),
             MaximumSize = new Vector2(2000, 2000)
         };
     }
@@ -236,6 +236,36 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         if (ImGui.Button("连接到临时服务器")) Plugin.Managers.Socket.Main.Connect("wss://nuko.me/ws");
         ImGui.SameLine();
         if (ImGui.Button("断开连接")) Plugin.Managers.Socket.Main.Disconnect();
+#endif
+
+#if RELEASE || RELEASE_CN
+        Widget.BeginFramedGroup("代理设置");
+        ImGui.TextColored(ImGuiColors.DPSRed, "连不上的时候再用!!!!");
+
+        ImGui.TextUnformatted("使用方法: {代理类型}://127.0.0.1:{代理端口}, 比如 http://127.0.0.1:7890.");
+        ImGui.TextUnformatted("如果不知道怎么填请查看你所使用的代理设置.");
+        ImGui.TextUnformatted("Clash(图标是猫的)默认是http,端口7890, Shadowsocks(小飞机)默认是socks5,端口1080");
+        ImGui.TextUnformatted("请根据自己的实际情况填写,上述以及默认给出来的链接仅供参考!!!!!");
+        ImGui.NewLine();
+
+        var useProxy = Plugin.Configuration.UseProxy;
+        if (ImGui.Checkbox("使用代理连接到服务器", ref useProxy))
+        {
+            Plugin.Configuration.UseProxy = useProxy;
+            Plugin.Configuration.Save();
+        }
+
+        var configurationProxyUrl = Plugin.Configuration.ProxyUrl;
+        ImGui.InputText("代理链接", ref configurationProxyUrl, 256);
+
+        if (ImGui.Button("保存并重新连接"))
+        {
+            Plugin.Configuration.ProxyUrl = configurationProxyUrl;
+            Plugin.Configuration.Save();
+            Plugin.Managers.Socket.Main.Reconnect();
+        }
+
+        Widget.EndFramedGroup();
 #endif
 
         DrawTrackerTable();

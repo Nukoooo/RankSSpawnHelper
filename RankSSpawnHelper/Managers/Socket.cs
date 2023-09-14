@@ -6,14 +6,8 @@ namespace RankSSpawnHelper.Managers;
 
 internal class Socket : IDisposable
 {
-    public Main       Main;
-    public TrackerApi TrackerApi;
-
-    public Socket()
-    {
-        Main                          =  new Main();
-        TrackerApi                    =  new TrackerApi();
-    }
+    public Main       Main       = new();
+    public TrackerApi TrackerApi = new();
 
     public void Dispose()
     {

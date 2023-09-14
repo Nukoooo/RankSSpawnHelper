@@ -1,5 +1,4 @@
-﻿using System;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -23,23 +22,30 @@ internal partial class Counter
         PluginLog.Debug($"{actionType} / targetId: 0x{targetId:X}, actionId: {actionId}");
 
         var original = UseActionHook.Original(a1, actionType, actionId, targetId, a4, a5, a6, a7);
-        if (actionType != ActionType.Item)
-            return original;
+        switch (actionType)
+        {
+            case ActionType.Item when targetId == 0xE0000000:
+            {
+                var itemId = actionId;
+                if (itemId >= 1000000)
+                    itemId -= 1000000;
 
-        if (targetId != 0xE0000000)
-            return original;
+                if (!Plugin.Managers.Data.IsItem(itemId))
+                    return original;
 
-        var itemId = actionId;
-        if (itemId >= 1000000)
-            itemId -= 1000000;
+                PluginLog.Debug($"targetId: 0x{targetId:X}, actionId: {itemId}");
 
-        if (!Plugin.Managers.Data.IsItem(itemId))
-            return original;
+                _usingItem = true;
+                break;
+            }
+            case ActionType.Spell when targetId == 0xE0000000:
+            {
+                if (actionId is 300 or 268 or 297)
+                    _usingItem = true;
+                break;
+            }
+        }
 
-        PluginLog.Debug($"targetId: 0x{targetId:X}, actionId: {itemId}");
-
-        _usingItem = true;
-        
         return original;
     }
 

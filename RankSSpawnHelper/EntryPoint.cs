@@ -69,7 +69,10 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 尝试修复获取点位/S怪状态导致炸游戏的问题\n"),
+            new TextPayload("  [-] 尝试修复因长时间无法连接到服务器而导致游戏爆炸的问题\n"),
+            new TextPayload("  [-] 修复 以小钓大/放生 也算进扔垃圾计数的问题\n"),
+            new TextPayload("  [-] 尝试修复在切换地图后可能会炸游戏的问题\n"),
+            new TextPayload("  [+] 增加代理设置\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
         });
