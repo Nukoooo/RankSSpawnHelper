@@ -180,7 +180,7 @@ internal class SearchCounter : IDisposable
             textNode = newTextNode;
 
             newTextNode->AtkResNode.Type      = NodeType.Text;
-            newTextNode->AtkResNode.Flags     = numberNode->AtkResNode.Flags;
+            newTextNode->AtkResNode.NodeFlags = numberNode->AtkResNode.NodeFlags;
             newTextNode->AtkResNode.DrawFlags = 0;
             newTextNode->AtkResNode.SetPositionShort(1, 1);
             newTextNode->AtkResNode.SetWidth(numberNodeRes->GetWidth());

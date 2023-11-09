@@ -288,6 +288,7 @@ internal class SRank
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
+                PluginLog.Error($"获取S怪状态失败. StatusCode: {response.StatusCode}");
                 return null;
             }
 
@@ -330,6 +331,7 @@ internal class SRank
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
+                PluginLog.Error($"获取狩猎地图失败. StatusCode: {response.StatusCode}");
                 return null;
             }
 

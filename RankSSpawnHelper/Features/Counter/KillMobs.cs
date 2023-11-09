@@ -14,6 +14,7 @@ internal partial class Counter
     private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
     {
         ActorControlSelf.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
+
         if (!Plugin.Configuration.TrackKillCount)
             return;
 

@@ -29,7 +29,7 @@ internal class Plugin
                            new UIForegroundPayload(0),
                            new TextPayload("] "),
                            new TextPayload(text),
-                           new UIForegroundPayload(0)
+                           new UIForegroundPayload(0),
                        };
         DalamudApi.ChatGui.Print(new SeString(payloads));
     }
@@ -45,7 +45,7 @@ internal class Plugin
                            new UIForegroundPayload(0),
                            new TextPayload("] "),
                            newPayloads,
-                           new UIForegroundPayload(0)
+                           new UIForegroundPayload(0),
                        };
         DalamudApi.ChatGui.Print(new SeString(payloads));
     }
@@ -59,7 +59,7 @@ internal class Plugin
                            new UIForegroundPayload(35),
                            new TextPayload("S怪触发"),
                            new UIForegroundPayload(0),
-                           new TextPayload("] ")
+                           new TextPayload("] "),
                        };
         payloads.AddRange(newPayloads);
         payloads.Add(new UIForegroundPayload(0));

@@ -10,6 +10,7 @@ using Dalamud.Game.Gui.PartyFinder;
 using Dalamud.Game.Network;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
@@ -21,19 +22,19 @@ internal class DalamudApi
 
     [PluginService] internal static ChatGui ChatGui { get; private set; } = null!;
 
-    [PluginService] internal static ClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
 
-    [PluginService] internal static CommandManager CommandManager { get; private set; } = null!;
+    [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
 
-    [PluginService] internal static SigScanner SigScanner { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
 
-    [PluginService] internal static DataManager DataManager { get; private set; } = null!;
+    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
 
-    [PluginService] internal static GameGui GameGui { get; set; } = null!;
+    [PluginService] internal static IGameGui GameGui { get; set; } = null!;
 
     // [PluginService] internal static FateTable FateTable { get; private set; } = null!;
 
-    [PluginService] internal static ObjectTable ObjectTable { get; private set; } = null!;
+    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
 
     [PluginService] internal static Framework Framework { get; private set; } = null!;
 
@@ -41,7 +42,8 @@ internal class DalamudApi
 
     // [PluginService] internal static PartyList PartyList { get; private set; } = null!;
 
-    [PluginService] internal static DtrBar DtrBar { get; private set; } = null!;
+    [PluginService] internal static IDtrBar DtrBar { get; private set; } = null!;
     [PluginService] internal static GameNetwork GameNetwork { get; private set; } = null!;
     [PluginService] internal static PartyFinderGui PartyFinderGui { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
 }

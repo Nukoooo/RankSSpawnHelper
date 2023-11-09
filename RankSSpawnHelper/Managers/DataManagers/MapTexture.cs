@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Dalamud.Logging;
 using ImGuiScene;
 using Lumina.Data.Files;
-using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
 
@@ -14,13 +13,7 @@ namespace RankSSpawnHelper.Managers.DataManagers;
 
 internal class MapTexture : IDisposable
 {
-    private readonly ExcelSheet<Map> _map;
     private readonly Dictionary<uint, MapTextureInfo> _textures = new();
-
-    public MapTexture()
-    {
-        _map = DalamudApi.DataManager.GetExcelSheet<Map>()!;
-    }
 
     public void Dispose()
     {
@@ -74,9 +67,9 @@ internal class MapTexture : IDisposable
     private static TextureWrap? GetTexture(string path)
     {
         if (path[0] is not ('/' or '\\') && path[1] != ':')
-            return DalamudApi.DataManager.GetImGuiTexture(path);
+            return DalamudApi.TextureProvider.GetTextureFromGame(path);
         var texFile = DalamudApi.DataManager.GameData.GetFileFromDisk<TexFile>(path);
-        return DalamudApi.DataManager.GetImGuiTexture(texFile);
+        return DalamudApi.TextureProvider.GetTexture(texFile);
     }
 
     private static string GetPathFromMap(Map map)

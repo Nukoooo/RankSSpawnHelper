@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.Text;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -44,11 +46,13 @@ internal partial class Counter : IDisposable
         InventoryTransactionDiscard.Enable();
         ProcessSpawnNpcPacket.Enable();
         ProcessOpenTreasure.Enable();
+        /*ProcessInventoryActionAckPacketHook.Enable();*/
         // UseActionHook = Hook<UseActionDelegate>.FromFunctionPointerVariable((IntPtr)ActionManager.Addresses.UseAction.Value, Detour_UseAction);
-        UseActionHook.Enable();
-        DalamudApi.Framework.Update += Framework_Update;
+        /*UseActionHook.Enable();*/
 
+        DalamudApi.Framework.Update += Framework_Update;
         DalamudApi.Condition.ConditionChange += Condition_OnConditionChange;
+        DalamudApi.ChatGui.ChatMessage += ChatGui_OnChatMessage;
     }
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
@@ -62,9 +66,12 @@ internal partial class Counter : IDisposable
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
         ProcessOpenTreasure.Dispose();
-        UseActionHook.Dispose();
+        /*UseActionHook.Dispose();*/
+        /*ProcessInventoryActionAckPacketHook.Dispose();*/
+
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
         DalamudApi.Framework.Update          -= Framework_Update;
+        DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
         GC.SuppressFinalize(this);
     }
 

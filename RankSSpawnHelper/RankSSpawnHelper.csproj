@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
-		<Version>1.3.2.9</Version>
+		<Version>1.3.3.0</Version>
 		<Configurations>Debug;Release;Debug_CN;Release_CN</Configurations>
 	</PropertyGroup>
 
@@ -38,7 +38,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release_CN' Or '$(Configuration)' == 'Debug_CN'">
-		<DalamudLibPath>D:\XIVLauncherCN\Roaming\addon\Hooks\dev</DalamudLibPath>
+		<DalamudLibPath>C:\XivLauncherCN\XIVLauncherCN\Roaming\addon\Hooks\dev</DalamudLibPath>
 	</PropertyGroup>
 
 	<ItemGroup>
