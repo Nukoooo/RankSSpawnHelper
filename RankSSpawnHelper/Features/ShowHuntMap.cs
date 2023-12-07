@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ internal class ShowHuntMap : IDisposable
         { 397, 4374 },  // 凯撒贝希摩斯
         { 622, 5986 },  // 兀鲁忽乃朝鲁
         { 139, 2966 },  // 南迪
-        { 180, 2967 }   // 牛头黑神
+        { 180, 2967 },  // 牛头黑神
     };
 
     private readonly Dictionary<string, List<SpawnPoints>> _spawnPoints = new();
@@ -83,10 +84,8 @@ internal class ShowHuntMap : IDisposable
 
     public MapTextureInfo? GeTextureWithMonsterName(string name)
     {
-        var id        = Plugin.Managers.Data.SRank.GetSRankIdByName(name);
-        var territory = _monsterTerritory.Where(i => i.Value == id).Select(i => i.Key).First();
-        var map       = _territoryType.GetRow(territory).Map;
-        return Plugin.Managers.Data.MapTexture.GetTexture(map.Row);
+        var territoryType = GetTerritoryTypeByHuntName(name);
+        return territoryType == null ? null : Plugin.Managers.Data.MapTexture.GetTexture(territoryType.Map.Row);
     }
 
     public void AddSpawnPoints(string worldName, string huntName, List<SpawnPoints> spawnPoints)
@@ -138,7 +137,14 @@ internal class ShowHuntMap : IDisposable
     }
 
     public void DontRequest() => _shouldRequest = false;
-    
+
+    public TerritoryType? GetTerritoryTypeByHuntName(string huntName)
+    {
+        var id        = Plugin.Managers.Data.SRank.GetSRankIdByName(huntName);
+        var territory = _monsterTerritory.Where(i => i.Value == id).Select(i => i.Key).FirstOrDefault();
+        return territory == 0 ? null : _territoryType.GetRow(territory);
+    }
+
     public void FetchAndPrint()
     {
         var currentTerritory = DalamudApi.ClientState.TerritoryType;
@@ -193,7 +199,7 @@ internal class ShowHuntMap : IDisposable
         
         Plugin.Windows.HuntMapWindow.SetCurrentMap(GeTexture(currentTerritory), points, currentInstance);
 
-        if (points.Count > 5)
+        if (points.Count >= 1)
         {
             Plugin.Windows.HuntMapWindow.IsOpen = true;
             return;
@@ -201,7 +207,7 @@ internal class ShowHuntMap : IDisposable
 
         var payloads = new List<Payload>
         {
-            new TextPayload($"{currentInstance} 的当前可触发点位:")
+            new TextPayload($"{currentInstance} 的当前可触发点位:"),
         };
 
         var mapId = _territoryType.GetRow(currentTerritory)!.Map.Row;

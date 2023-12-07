@@ -69,9 +69,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 回滚 检测湖区扔垃圾 的办法,改用读聊天消息\n        有一个想法就是读发给游戏服务器的数据包,但如果有人游戏掉了,但插件服务器没掉就会有误报qaq\n"),
-            new TextPayload("  [-] 部分适配API9(但国际服还是不能用)\n        注:如果有地图MOD,在使用显示狩猎地图的时候,显示的地图会是MOD的地图\n"),
-            new TextPayload("  [-] 给获取狩猎地图失败时加错误日志(在/xllog里能看)"),
+            new TextPayload("  [-] 尝试修复部分地图获取不到点位的问题\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
         });

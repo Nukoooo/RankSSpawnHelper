@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -423,6 +424,14 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                                      }
 
                                      var texture = Plugin.Features.ShowHuntMap.GeTextureWithMonsterName(status.localizedName);
+                                     if (texture == null)
+                                     {
+                                         var territoryType = Plugin.Features.ShowHuntMap.GetTerritoryTypeByHuntName(status.localizedName);
+                                         if (territoryType == null)
+                                             return;
+
+                                         Plugin.Managers.Data.MapTexture.AddMapTexture(territoryType.RowId, territoryType.Map.Value);
+                                     }
                                      Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMap.spawnPoints, currentInstance);
                                      Plugin.Windows.HuntMapWindow.IsOpen = true;
                                  });
