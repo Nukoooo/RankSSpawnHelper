@@ -38,3 +38,8 @@ internal class CounterMessage : BaseMessage
     public long StartTime { get; set; }
     public bool IsItem { get; set; } = false;
 }
+
+internal class GetTrackerList : BaseMessage
+{
+    public       List<string> ServerList = new();
+}

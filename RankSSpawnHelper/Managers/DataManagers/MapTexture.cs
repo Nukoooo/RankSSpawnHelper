@@ -32,13 +32,14 @@ internal class MapTexture : IDisposable
             var texture = GetTexture(path);
             if (texture != null && texture.ImGuiHandle != nint.Zero)
             {
-                PluginLog.Debug($"Added mapid: {map.RowId}");
+                PluginLog.Debug($"Added mapid: {map.RowId}, {map.SizeFactor}");
                 _textures.TryAdd(map.RowId, new MapTextureInfo
                 {
-                    texture   = texture,
-                    size      = new Vector2(texture.Width, texture.Height),
-                    mapId     = map.RowId,
-                    territory = territory,
+                    texture    = texture,
+                    size       = new Vector2(texture.Width, texture.Height),
+                    mapId      = map.RowId,
+                    territory  = territory,
+                    SizeFactor = map.SizeFactor,
                 });
             }
             else

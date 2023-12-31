@@ -199,7 +199,7 @@ internal class ShowHuntMap : IDisposable
         
         Plugin.Windows.HuntMapWindow.SetCurrentMap(GeTexture(currentTerritory), points, currentInstance);
 
-        if (points.Count >= 1)
+        if (points.Count > 5)
         {
             Plugin.Windows.HuntMapWindow.IsOpen = true;
             return;

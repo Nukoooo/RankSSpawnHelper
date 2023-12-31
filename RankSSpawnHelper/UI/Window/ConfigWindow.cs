@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Logging;
+using FFXIVClientStructs.Havok;
 using ImGuiNET;
-using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
@@ -26,10 +25,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private readonly string[]        _expansions              = { "2.0", "3.0", "4.0", "5.0", "6.0" };
     private readonly string[]        _playerSearchDisplayType = { "关闭", "聊天框", "游戏界面", "都显示" };
     private readonly string[]        _spawnNotificationType   = { "关闭", "只在可触发时", "一直" };
-    private readonly string[]        _tabNames                = { "计数", "查询S怪", "其他", "关于" };
+    private readonly string[]        _tabNames                = { "计数", "查询S怪", "查询计数", "其他", "关于" };
 
     private ColorPickerType _colorPickerType = ColorPickerType.Failed;
-    
+
     private List<string> _monsterNames;
     private int          _selectedExpansion;
     private int          _selectedInstance;
@@ -41,13 +40,16 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private string _serverUrl = string.Empty;
     private bool   _showColorPicker;
 
+    private List<TrackerData> _trackerData              = new();
+    private DateTime          _lastQueryTrackerDataTime = DateTime.UnixEpoch;
+
     public ConfigWindow() : base("SpawnHelper")
     {
         Initialize();
         SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(600, 400),
-            MaximumSize = new Vector2(2000, 2000)
+            MaximumSize = new Vector2(2000, 2000),
         };
     }
 
@@ -125,9 +127,12 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 DrawQueryTab();
                 break;
             case 2:
-                DrawMiscTab();
+                DrawTrackerTab();
                 break;
             case 3:
+                DrawMiscTab();
+                break;
+            case 4:
                 DrawAboutTab();
                 break;
         }
@@ -432,6 +437,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                                          Plugin.Managers.Data.MapTexture.AddMapTexture(territoryType.RowId, territoryType.Map.Value);
                                      }
+
                                      Plugin.Windows.HuntMapWindow.SetCurrentMap(texture, huntMap.spawnPoints, currentInstance);
                                      Plugin.Windows.HuntMapWindow.IsOpen = true;
                                  });
@@ -702,6 +708,51 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         ImGui.End();
     }
 
+    private void DrawTrackerTab()
+    {
+        if (ImGui.Button("点我获取数据"))
+        {
+            if (DateTime.Now - _lastQueryTrackerDataTime >= TimeSpan.FromSeconds(30) && Plugin.Managers.Socket.Main.Connected())
+            {
+                Plugin.Managers.Socket.Main.SendMessage(new GetTrackerList()
+                {
+                    Type       = "GetTrackerList",
+                    ServerList = Plugin.Managers.Data.GetServers(),
+                });
+                _lastQueryTrackerDataTime = DateTime.Now;
+            }
+        }
+
+        ImGui.SameLine();
+
+        {
+            var temp = "";
+            if (_lastQueryTrackerDataTime - DateTime.Now > TimeSpan.FromSeconds(0))
+                temp = $"还要等 {(_lastQueryTrackerDataTime - DateTime.Now).Seconds} 秒才可以请求";
+            ImGui.TextUnformatted($"上一次请求时间: {_lastQueryTrackerDataTime.ToLocalTime()} {temp}");
+        }
+        if (_trackerData.Count == 0)
+        {
+            ImGui.TextUnformatted("目前还没有数据");
+            return;
+        }
+
+        foreach (var data in _trackerData)
+        {
+            var counter = "";
+            foreach (var i in data.CounterData)
+            {
+                var isItem = data.TerritoryId is 814 or 400 or 961 or 813;
+                var keyName = isItem ? Plugin.Managers.Data.GetItemName(i.Key) :
+                              data.TerritoryId == 621 ? Plugin.IsChina()
+                                                              ? "扔垃圾"
+                                                              : "Item" : Plugin.Managers.Data.GetNpcName(i.Key);
+                counter += $"{keyName}: {i.Value} ";
+            }
+            ImGui.TextUnformatted($"{Plugin.Managers.Data.FormatInstance(data.WorldId, data.TerritoryId, data.InstanceId)}: 上一次更新时间: {DateTimeOffset.FromUnixTimeSeconds(data.LastUpdateTime).DateTime.ToLocalTime()}\n        {counter}");
+        }
+    }
+
     private Vector4 GetColor(uint id)
     {
         try
@@ -730,7 +781,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 });
             }
         }
-        
+
         Task.Run(async () =>
                  {
                      while (DalamudApi.ClientState.LocalPlayer == null)
@@ -740,6 +791,11 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
                      _servers = Plugin.Managers.Data.GetServers();
                  });
+    }
+
+    public void SetTrackerData(List<TrackerData> data)
+    {
+        _trackerData = data;
     }
 
     private enum ColorPickerType

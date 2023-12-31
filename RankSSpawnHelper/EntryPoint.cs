@@ -69,7 +69,8 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 尝试修复部分地图获取不到点位的问题\n"),
+            new TextPayload("  [-] 不知道写啥,反正就是更新了\n"),
+            new TextPayload("  [-] 修复了部分地图点位显示歪的问题\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
         });

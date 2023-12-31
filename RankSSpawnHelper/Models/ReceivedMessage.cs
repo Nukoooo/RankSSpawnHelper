@@ -9,6 +9,15 @@ public class UserCounter
     public string UserName;
 }
 
+public class TrackerData
+{
+    public Dictionary<uint, int> CounterData = null;
+    public uint                  WorldId        { get; set; }
+    public uint                  TerritoryId    { get; set; }
+    public uint                  InstanceId     { get; set; }
+    public long                  LastUpdateTime { get; set; }
+}
+
 internal class ReceivedMessage
 {
     public string Type { get; set; }
@@ -20,6 +29,7 @@ internal class ReceivedMessage
 
     public Dictionary<uint, int> Counter { get; set; }
     public List<UserCounter> UserCounter { get; set; }
+    public List<TrackerData> TrackerData { get; set; }
 
     // Broadcast message
     public string Message { get; set; }

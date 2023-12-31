@@ -24,7 +24,7 @@ internal class Main : IDisposable
     private IWebsocketClient _client;
 
 #if DEBUG || DEBUG_CN
-    private const string Url = "ws://127.0.0.1:8000";
+    private const string Url = "ws://127.0.0.1:8000/ws";
 #else
     private const string Url = "wss://nuko.me/ws";
 #endif
@@ -467,6 +467,11 @@ internal class Main : IDisposable
                         new TextPayload($"{time.DateTime.ToShortDateString()} {time.DateTime.ToShortTimeString()}"),
                         new UIForegroundPayload(0)
                     });
+                    return;
+                }
+                case "TrackerList":
+                {
+                    Plugin.Windows.PluginWindow.SetTrackerData(result.TrackerData);
                     return;
                 }
             }

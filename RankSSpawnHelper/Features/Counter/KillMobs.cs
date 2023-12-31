@@ -8,12 +8,12 @@ namespace RankSSpawnHelper.Features;
 internal partial class Counter
 {
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(Detour_ActorControlSelf))]
-    private Hook<ActorControlSelfDelegate> ActorControlSelf { get; init; } = null!;
+    [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(Detour_ActorControl))]
+    private Hook<ActorControlDelegate> ActorControl { get; init; } = null!;
 
-    private void Detour_ActorControlSelf(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
+    private void Detour_ActorControl(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
     {
-        ActorControlSelf.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
+        ActorControl.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
 
         if (!Plugin.Configuration.TrackKillCount)
             return;
@@ -67,5 +67,5 @@ internal partial class Counter
         AddToTracker(currentInstance, Plugin.Managers.Data.GetNpcName(name[targetName]), name[targetName]);
     }
 
-    private delegate void ActorControlSelfDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte  a10);
+    private delegate void ActorControlDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte  a10);
 }
