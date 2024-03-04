@@ -161,7 +161,7 @@ internal class SRank
                      }
                      catch (Exception e)
                      {
-                         PluginLog.Error(e, e.Message);
+                         DalamudApi.PluginLog.Error(e, e.Message);
                      }
                  });
     }
@@ -260,7 +260,7 @@ internal class SRank
                          }
                          catch (Exception e)
                          {
-                             PluginLog.Error(e.Message);
+                             DalamudApi.PluginLog.Error(e.Message);
                              _errorMessage = "An error occurred when fetching hunt status.";
                              _fetchStatus  = FetchStatus.Error;
                              return;
@@ -288,7 +288,7 @@ internal class SRank
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                PluginLog.Error($"获取S怪状态失败. StatusCode: {response.StatusCode}");
+                DalamudApi.PluginLog.Error($"获取S怪状态失败. StatusCode: {response.StatusCode}");
                 return null;
             }
 
@@ -307,7 +307,7 @@ internal class SRank
         }
         catch (Exception e)
         {
-            PluginLog.Error(e.Message);
+            DalamudApi.PluginLog.Error(e.Message);
 
             _fetchStatus = FetchStatus.None;
             return null;
@@ -331,7 +331,7 @@ internal class SRank
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                PluginLog.Error($"获取狩猎地图失败. StatusCode: {response.StatusCode}");
+                DalamudApi.PluginLog.Error($"获取狩猎地图失败. StatusCode: {response.StatusCode}");
                 return null;
             }
 
@@ -343,7 +343,7 @@ internal class SRank
         }
         catch (Exception e)
         {
-            PluginLog.Error(e.Message);
+            DalamudApi.PluginLog.Error(e.Message);
 
             _fetchStatus = FetchStatus.None;
             return null;

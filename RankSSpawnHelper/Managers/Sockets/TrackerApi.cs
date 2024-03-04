@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dalamud.Logging;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Models;
 using SocketIOClient;
@@ -38,7 +37,7 @@ internal class TrackerApi : IDisposable
         _route?.Dispose();
     }
 
-    private void Client_OnLogin(object sender, EventArgs e)
+    private void Client_OnLogin()
     {
         Task.Run(async () =>
                  {
@@ -54,13 +53,13 @@ internal class TrackerApi : IDisposable
         if (_huntUpdateclient != null)
             return;
 
-        _huntUpdateclient = new SocketIO("https://tracker-api.beartoolkit.com/HuntUpdate", new SocketIOOptions
+        _huntUpdateclient = new("https://tracker-api.beartoolkit.com/HuntUpdate", new()
         {
             Path                 = "/socket",
             Reconnection         = true,
             ReconnectionAttempts = int.MaxValue,
             ReconnectionDelay    = 2.5,
-            ReconnectionDelayMax = 5
+            ReconnectionDelayMax = 5,
         });
 
         _huntUpdateclient.OnAny((name, response) =>
@@ -68,7 +67,7 @@ internal class TrackerApi : IDisposable
                                      // WorldName_HuntName
                                      try
                                      {
-                                         PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
+                                         DalamudApi.PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
 
                                          var split = name.Split('_');
                                          if (split.Last() == "SpawnPoint")
@@ -86,7 +85,7 @@ internal class TrackerApi : IDisposable
                                      }
                                      catch (Exception e)
                                      {
-                                         PluginLog.Error(e, "Erro when getting /HuntUpdate");
+                                         DalamudApi.PluginLog.Error(e, "Erro when getting /HuntUpdate");
                                      }
                                  });
 
@@ -97,7 +96,7 @@ internal class TrackerApi : IDisposable
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, "Error when connecting to /HuntUpdate");
+            DalamudApi.PluginLog.Error(e, "Error when connecting to /HuntUpdate");
         }
     }
 
@@ -106,7 +105,7 @@ internal class TrackerApi : IDisposable
         if (_route != null)
             return;
 
-        _route = new SocketIO("https://tracker-api.beartoolkit.com/PublicRoutes", new SocketIOOptions
+        _route = new("https://tracker-api.beartoolkit.com/PublicRoutes", new()
         {
             Path                 = "/socket",
             Reconnection         = true,
@@ -117,7 +116,7 @@ internal class TrackerApi : IDisposable
 
         _route.OnAny((name, response) =>
                       {
-                          PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
+                          DalamudApi.PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
 
                           try
                           {
@@ -125,7 +124,7 @@ internal class TrackerApi : IDisposable
                               {
                                   case "SpawnPoint":
                                       // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
-                                      PluginLog.Debug($"{name}");
+                                      DalamudApi.PluginLog.Debug($"{name}");
 
                                       return;
                                   case "Huntmap":
@@ -138,7 +137,7 @@ internal class TrackerApi : IDisposable
                           }
                           catch (Exception e)
                           {
-                              PluginLog.Error(e, "Erro when getting /PublicRoutes");
+                              DalamudApi.PluginLog.Error(e, "Erro when getting /PublicRoutes");
                           }
                       });
 
@@ -149,7 +148,7 @@ internal class TrackerApi : IDisposable
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, "Error when connecting to /PublicRoutes");
+            DalamudApi.PluginLog.Error(e, "Error when connecting to /PublicRoutes");
         }
     }
 
@@ -164,10 +163,10 @@ internal class TrackerApi : IDisposable
         switch (_route)
         {
             case null:
-                PluginLog.Debug("_route null");
+                DalamudApi.PluginLog.Debug("_route null");
                 return;
             case { Connected: false }:
-                PluginLog.Debug("Not connected");
+                DalamudApi.PluginLog.Debug("Not connected");
                 return;
             default:
                 _requestQueue.Enqueue($"{worldName}@{huntName}");
@@ -183,7 +182,7 @@ internal class TrackerApi : IDisposable
 
         // tell the server what datacenter we are in
         var dataCenter = DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData.DataCenter.Value.Name.RawString;
-        PluginLog.Debug($"DataCenter: {dataCenter}");
+        DalamudApi.PluginLog.Debug($"DataCenter: {dataCenter}");
 
         try
         {
@@ -192,11 +191,11 @@ internal class TrackerApi : IDisposable
             // HuntUpdate
             await ((SocketIO)sender).EmitAsync("Change Room Request", dataCenter);
 
-            PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
+            DalamudApi.PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex, "Error when conneting to tracker api.");
+            DalamudApi.PluginLog.Error(ex, "Error when conneting to tracker api.");
         }
     }
     

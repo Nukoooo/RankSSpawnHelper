@@ -17,7 +17,7 @@ internal class Player
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). Last CallStack:{new StackFrame(1).GetMethod()?.Name}");
+            DalamudApi.PluginLog.Error(e, $"Exception from Managers::Data::GetCurrentInstance(). Last CallStack:{new StackFrame(1).GetMethod()?.Name}");
             return string.Empty;
         }
     }

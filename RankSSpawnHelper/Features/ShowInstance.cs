@@ -22,13 +22,15 @@ internal class ShowInstance : IDisposable
         DalamudApi.Framework.Update += Framework_OnUpdate;
     }
 
+
     public void Dispose()
     {
+        DalamudApi.Framework.Update -= Framework_OnUpdate;
         _dtrBarEntry?.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    private void Framework_OnUpdate(Framework framework)
+    private void Framework_OnUpdate(Dalamud.Plugin.Services.IFramework framework)
     {
         if (_dtrBarEntry == null)
             return;

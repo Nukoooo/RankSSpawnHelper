@@ -16,18 +16,18 @@ internal partial class Counter : IDisposable
 {
     private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionsMob = new()
     {
-        { 961, new Dictionary<string, uint>() }, // 鸟蛋
-        { 959, new Dictionary<string, uint>() }, // 叹息海
-        { 957, new Dictionary<string, uint>() }, // 萨维奈岛
-        { 814, new Dictionary<string, uint>() }, // 棉花
-        { 813, new Dictionary<string, uint>() }, // Lakeland
-        { 817, new Dictionary<string, uint>() }, // 拉凯提卡大森林
-        { 621, new Dictionary<string, uint>() }, // 湖区
-        { 613, new Dictionary<string, uint>() }, // 红玉海
-        { 612, new Dictionary<string, uint>() }, // 边区
-        { 402, new Dictionary<string, uint>() }, // 魔大陆
-        { 400, new Dictionary<string, uint>() }, // 翻云雾海
-        { 147, new Dictionary<string, uint>() }  // 北萨
+        { 961, new() }, // 鸟蛋
+        { 959, new() }, // 叹息海
+        { 957, new() }, // 萨维奈岛
+        { 814, new() }, // 棉花
+        { 813, new() }, // Lakeland
+        { 817, new() }, // 拉凯提卡大森林
+        { 621, new() }, // 湖区
+        { 613, new() }, // 红玉海
+        { 612, new() }, // 边区
+        { 402, new() }, // 魔大陆
+        { 400, new() }, // 翻云雾海
+        { 147, new() }  // 北萨
     };
 
     private readonly Dictionary<string, Tracker> _localTracker     = new();
@@ -37,7 +37,7 @@ internal partial class Counter : IDisposable
 
     public Counter()
     {
-        SignatureHelper.Initialise(this);
+        DalamudApi.GameInteropProvider.InitializeFromAttributes(this);
 
         InitializeData();
         ActorControl.Enable();
@@ -76,7 +76,7 @@ internal partial class Counter : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void Framework_Update(Framework framework)
+    private void Framework_Update(Dalamud.Plugin.Services.IFramework framework)
     {
         // check every 5 seconds
         if (DateTime.Now - _lastCleanerRunTime <= TimeSpan.FromSeconds(5))
@@ -131,18 +131,18 @@ internal partial class Counter : IDisposable
     {
         if (!_networkedTracker.ContainsKey(instance))
         {
-            _networkedTracker.Add(instance, new Tracker
+            _networkedTracker.Add(instance, new()
             {
                 startTime      = time,
                 lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                counter = new Dictionary<string, int>
+                counter = new()
                 {
                     { condition, value }
                 },
                 territoryId = territoryId
             });
 
-            PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
+            DalamudApi.PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
             Plugin.Windows.CounterWindow.IsOpen = true;
             return;
         }
@@ -159,7 +159,7 @@ internal partial class Counter : IDisposable
         result.counter[condition]           = value;
         Plugin.Windows.CounterWindow.IsOpen = true;
         result.lastUpdateTime               = DateTimeOffset.Now.ToUnixTimeSeconds();
-        PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
+        DalamudApi.PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
     }
 
     private void Condition_OnConditionChange(ConditionFlag flag, bool value)
@@ -244,7 +244,7 @@ internal partial class Counter : IDisposable
         {
             var tracker = new Tracker
             {
-                counter = new Dictionary<string, int>
+                counter = new()
                 {
                     { targetName, 1 }
                 },
@@ -260,7 +260,7 @@ internal partial class Counter : IDisposable
 
         if (!_localTracker.TryGetValue(key, out var value))
         {
-            PluginLog.Error($"Cannot get value by key {key}");
+            DalamudApi.PluginLog.Error($"Cannot get value by key {key}");
             return;
         }
 
@@ -275,7 +275,7 @@ internal partial class Counter : IDisposable
 
         value.lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
     Post:
-        PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
+        DalamudApi.PluginLog.Debug($"+1 to key \"{key}\" [{targetName}]");
 
         Plugin.Windows.CounterWindow.IsOpen = true;
 
@@ -288,7 +288,7 @@ internal partial class Counter : IDisposable
             StartTime = !GetLocalTrackers().TryGetValue(key, out var currentTracker)
                             ? DateTimeOffset.Now.ToUnixTimeSeconds()
                             : currentTracker.startTime,
-            Data = new Dictionary<uint, int>
+            Data = new()
             {
                 { targetId, 1 }
             },

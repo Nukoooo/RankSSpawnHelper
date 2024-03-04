@@ -40,7 +40,7 @@ internal class Main : IDisposable
             Connect(Url);
     }
 
-    private void ClientState_OnLogin(object sender, EventArgs e)
+    private void ClientState_OnLogin()
     {
         Task.Run(async () =>
                  {
@@ -53,7 +53,7 @@ internal class Main : IDisposable
                  });
     }
 
-    private void ClientState_OnLogout(object sender, EventArgs e)
+    private void ClientState_OnLogout()
     {
         async Task Function()
         {
@@ -66,7 +66,7 @@ internal class Main : IDisposable
 
         Task.Run(Function);
         _userName = string.Empty;
-        PluginLog.Information("ClientState_OnLogout");
+        DalamudApi.PluginLog.Information("ClientState_OnLogout");
     }
 
     public void Dispose()
@@ -96,26 +96,26 @@ internal class Main : IDisposable
             _client?.Dispose();
             _userName = Player.GetLocalPlayerName();
 
-            _client = new WebsocketClient(new Uri(url), () =>
+            _client = new WebsocketClient(new(url), () =>
+                                                    {
+                                                        var client = new ClientWebSocket
                                                         {
-                                                            var client = new ClientWebSocket
+                                                            Options =
                                                             {
-                                                                Options =
-                                                                {
-                                                                    KeepAliveInterval = TimeSpan.FromSeconds(40),
-                                                                },
-                                                            };
-                                                            client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
-                                                            client.Options.SetRequestHeader("server-version", ServerVersion);
-                                                            client.Options.SetRequestHeader("user-type", "Dalamud");
-                                                            client.Options.SetRequestHeader("plugin-version", Plugin.PluginVersion);
-                                                            client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
+                                                                KeepAliveInterval = TimeSpan.FromSeconds(40),
+                                                            },
+                                                        };
+                                                        client.Options.SetRequestHeader("ranks-spawn-helper-user", EncodeNonAsciiCharacters(_userName));
+                                                        client.Options.SetRequestHeader("server-version", ServerVersion);
+                                                        client.Options.SetRequestHeader("user-type", "Dalamud");
+                                                        client.Options.SetRequestHeader("plugin-version", Plugin.PluginVersion);
+                                                        client.Options.SetRequestHeader("iscn", Plugin.IsChina().ToString());
 
-                                                            if (Plugin.Configuration.UseProxy)
-                                                                client.Options.Proxy = new WebProxy(Plugin.Configuration.ProxyUrl);
+                                                        if (Plugin.Configuration.UseProxy)
+                                                            client.Options.Proxy = new WebProxy(Plugin.Configuration.ProxyUrl);
 
-                                                            return client;
-                                                        })
+                                                        return client;
+                                                    })
             {
                 ReconnectTimeout      = TimeSpan.FromSeconds(120),
                 ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
@@ -129,13 +129,13 @@ internal class Main : IDisposable
         }
         catch (Exception e)
         {
-            PluginLog.Debug(e, "Exception in Managers::Socket::Connect()");
+            DalamudApi.PluginLog.Debug(e, "Exception in Managers::Socket::Connect()");
         }
     }
 
     private void OnDisconnectionHappened(DisconnectionInfo obj)
     {
-        PluginLog.Debug($"Disconnection type: {obj.Type}");
+        DalamudApi.PluginLog.Debug($"Disconnection type: {obj.Type}");
         if (!DalamudApi.ClientState.IsLoggedIn)
             _client?.Dispose();
     }
@@ -181,12 +181,12 @@ internal class Main : IDisposable
 
         var str = JsonConvert.SerializeObject(message);
         _client.Send(str);
-        PluginLog.Debug($"Managers::Socket::SendMessage: {str}");
+        DalamudApi.PluginLog.Debug($"Managers::Socket::SendMessage: {str}");
     }
 
     private void OnReconntion(ReconnectionInfo args)
     {
-        PluginLog.Debug($"ReconnectionType: {args.Type}");
+        DalamudApi.PluginLog.Debug($"ReconnectionType: {args.Type}");
 
         var localTracker = Plugin.Features.Counter.GetLocalTrackers();
 
@@ -258,11 +258,11 @@ internal class Main : IDisposable
 
         if (!msg.StartsWith("{"))
         {
-            PluginLog.Error($"Managers::Socket::OnMessageReceived. Not a valid json format message. {msg}");
+            DalamudApi.PluginLog.Error($"Managers::Socket::OnMessageReceived. Not a valid json format message. {msg}");
             return;
         }
 
-        PluginLog.Debug($"Managers::Socket::OnMessageReceived. {msg}");
+        DalamudApi.PluginLog.Debug($"Managers::Socket::OnMessageReceived. {msg}");
 
         try
         {
@@ -478,7 +478,7 @@ internal class Main : IDisposable
         }
         catch (Exception exception)
         {
-            PluginLog.Error(exception, "Exception from Ws_MessageReceived.");
+            DalamudApi.PluginLog.Error(exception, "Exception from Ws_MessageReceived.");
         }
     }
 

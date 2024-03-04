@@ -52,11 +52,11 @@ internal class ShowHuntMap : IDisposable
                          if (mapRow == null)
                              continue;
 
-                         PluginLog.Debug($"Adding territory {k} | mapId: {territory.Map.Row}");
+                         DalamudApi.PluginLog.Debug($"Adding territory {k} | mapId: {territory.Map.Row}");
 
                          if (mapRow.Value == null)
                          {
-                             PluginLog.Debug("mapRow.Value null");
+                             DalamudApi.PluginLog.Debug("mapRow.Value null");
                              continue;
                          }
 

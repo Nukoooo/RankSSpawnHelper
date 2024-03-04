@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Numerics;
+using Dalamud.Interface.Internal;
 using Dalamud.Logging;
 using ImGuiScene;
 using Lumina.Data.Files;
@@ -32,11 +33,11 @@ internal class MapTexture : IDisposable
             var texture = GetTexture(path);
             if (texture != null && texture.ImGuiHandle != nint.Zero)
             {
-                PluginLog.Debug($"Added mapid: {map.RowId}, {map.SizeFactor}");
-                _textures.TryAdd(map.RowId, new MapTextureInfo
+                DalamudApi.PluginLog.Debug($"Added mapid: {map.RowId}, {map.SizeFactor}");
+                _textures.TryAdd(map.RowId, new()
                 {
                     texture    = texture,
-                    size       = new Vector2(texture.Width, texture.Height),
+                    size       = new(texture.Width, texture.Height),
                     mapId      = map.RowId,
                     territory  = territory,
                     SizeFactor = map.SizeFactor,
@@ -49,7 +50,7 @@ internal class MapTexture : IDisposable
         }
         catch (Exception ex)
         {
-            PluginLog.Error($"Exception occurred when loading map texture for id: {map.RowId}。 {ex.Message}");
+            DalamudApi.PluginLog.Error($"Exception occurred when loading map texture for id: {map.RowId}。 {ex.Message}");
         }
     }
 
@@ -58,7 +59,7 @@ internal class MapTexture : IDisposable
         return _textures.TryGetValue(map, out var texture) ? texture : null;
     }
 
-    private static TextureWrap? GetTexture(string path)
+    private static IDalamudTextureWrap? GetTexture(string path)
     {
         if (path[0] is not ('/' or '\\') && path[1] != ':')
             return DalamudApi.TextureProvider.GetTextureFromGame(path);

@@ -129,7 +129,7 @@ internal class SpawnNotification : IDisposable
                          {
                              if (Plugin.Configuration.SpawnNotificationType == SpawnNotificationType.SpawnableOnly)
                              {
-                                 PluginLog.Debug("Not spawnable, ignoring");
+                                 DalamudApi.PluginLog.Debug("Not spawnable, ignoring");
                                  return;
                              }
 
@@ -157,7 +157,7 @@ internal class SpawnNotification : IDisposable
                      }
                      catch (Exception e)
                      {
-                         PluginLog.Error(e, "Error when fetching hunt status");
+                         DalamudApi.PluginLog.Error(e, "Error when fetching hunt status");
                      }
                  });
     }

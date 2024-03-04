@@ -17,19 +17,17 @@ namespace RankSSpawnHelper.Features;
 internal class SearchCounter : IDisposable
 {
     private const    uint       TextNodeId = 0x133769;
-    private readonly List<long> _playerIds = new();
+    private readonly List<ulong> _playerIds = new();
     private          int        _searchCount;
 
     public unsafe SearchCounter()
     {
-        SignatureHelper.Initialise(this);
+        DalamudApi.GameInteropProvider.InitializeFromAttributes(this);
 
         var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
         var infoModule = uiModule->GetInfoModule();
         var proxy      = infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
-
-        InfoProxyPlayerSearchUpdate = Hook<InfoProxyPlayerSearchUpdateDelegate>.FromAddress
-                ((nint)proxy->vtbl[12], Detour_InfoProxyPlayerSearchUpdate);
+        InfoProxyPlayerSearchUpdate = DalamudApi.GameInteropProvider.HookFromAddress<InfoProxyPlayerSearchUpdateDelegate>((nint)proxy->vtbl[12], Detour_InfoProxyPlayerSearchUpdate);
 
         InfoProxyPlayerSearchUpdate.Enable();
         SocialListDraw.Enable();
@@ -79,7 +77,7 @@ internal class SearchCounter : IDisposable
                 continue;
 
             _playerIds.Add(entry->ContentId);
-            PluginLog.Debug($"{Marshal.PtrToStringUTF8((IntPtr)entry->Name)} / content_id: {entry->ContentId}");
+            DalamudApi.PluginLog.Debug($"{Marshal.PtrToStringUTF8((IntPtr)entry->Name)} / content_id: {entry->ContentId}");
         }
 
         if (original == 1)
@@ -92,29 +90,29 @@ internal class SearchCounter : IDisposable
             Plugin.Print(
                          new List<Payload>
                          {
-                                 new TextPayload(
-                                                 "对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " + "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" + "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" + "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" + "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
-                                 new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                                 new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
+                             new TextPayload(
+                                             "对计数有疑问?或者不知道怎么用? 可以试试下面的方法: " + "\n1. 先搜当前地图人数(不选择任何军队以及其他选项,只选地图)" + "\n2. 如果得到的人数超过200,那就只选一个军队进行搜索" + "\n      比如: 先搜双蛇,再搜恒辉,最后搜黑涡,以此反复循环" + "\n3. 得到的人数将会是这几次搜索的总人数(已经排除重复的人)"),
+                             new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                             new TextPayload("\n本消息可以在 设置 -> 其他 里关掉")
                          });
         }
 
         if (Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
-                                                         or PlayerSearchDispalyType.UiOnly)
+                                                            or PlayerSearchDispalyType.UiOnly)
             return original;
 
         Plugin.Print(
                      new List<Payload>
                      {
-                             new TextPayload("在经过 "),
-                             new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                             new TextPayload($"{_searchCount} "),
-                             new UIForegroundPayload(0),
-                             new TextPayload("次搜索后, 和你在同一张图里大约有 "),
-                             new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
-                             new TextPayload($"{_playerIds.Count} "),
-                             new UIForegroundPayload(0),
-                             new TextPayload("人.")
+                         new TextPayload("在经过 "),
+                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                         new TextPayload($"{_searchCount} "),
+                         new UIForegroundPayload(0),
+                         new TextPayload("次搜索后, 和你在同一张图里大约有 "),
+                         new UIForegroundPayload((ushort)Plugin.Configuration.HighlightColor),
+                         new TextPayload($"{_playerIds.Count} "),
+                         new UIForegroundPayload(0),
+                         new TextPayload("人.")
                      });
 
 
@@ -133,7 +131,7 @@ internal class SearchCounter : IDisposable
 
         // for whatever reason, this function is also called in other addon..
         // probably some kind of inherited addon
-        var name = Marshal.PtrToStringUTF8(new IntPtr(unitBase->Name));
+        var name = Marshal.PtrToStringUTF8(new(unitBase->Name));
         if (name is not "SocialList")
             return;
 
@@ -157,8 +155,8 @@ internal class SearchCounter : IDisposable
         }
 
         if ((_playerIds.Count == 0 || Plugin.Configuration.PlayerSearchDispalyType is PlayerSearchDispalyType.Off
-                                                                                   or PlayerSearchDispalyType.ChatOnly)
-         && textNode != null)
+                                                                                      or PlayerSearchDispalyType.ChatOnly)
+            && textNode != null)
         {
             textNode->AtkResNode.ToggleVisibility(false);
             return;

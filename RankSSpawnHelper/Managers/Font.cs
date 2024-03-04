@@ -32,7 +32,7 @@ internal class Font : IDisposable
 
         if (!File.Exists(fontPath))
         {
-            PluginLog.Error($"Cannot find font \"{fontName}\". fontPath: {fontPath}");
+            DalamudApi.PluginLog.Error($"Cannot find font \"{fontName}\". fontPath: {fontPath}");
             return;
         }
 

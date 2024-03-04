@@ -26,17 +26,17 @@ internal partial class Counter
         var sourceTarget = DalamudApi.ObjectTable.SearchById(direct);
         if (target == null)
         {
-            PluginLog.Error($"Cannot found target by id 0x{entityId:X}");
+            DalamudApi.PluginLog.Error($"Cannot found target by id 0x{entityId:X}");
             return;
         }
 
         if (sourceTarget == null)
         {
-            PluginLog.Error($"Cannot found source target by id 0x{direct:X}");
+            DalamudApi.PluginLog.Error($"Cannot found source target by id 0x{direct:X}");
             return;
         }
 
-        PluginLog.Information($"{target.Name} got killed by {sourceTarget.Name}");
+        DalamudApi.PluginLog.Information($"{target.Name} got killed by {sourceTarget.Name}");
 
         Process(target, sourceTarget, DalamudApi.ClientState.TerritoryType);
     }
@@ -50,7 +50,7 @@ internal partial class Counter
 
         if (!_conditionsMob.TryGetValue(territory, out var name))
         {
-            PluginLog.Error($"Cannot get condition name with territory id \"{territory}\"");
+            DalamudApi.PluginLog.Error($"Cannot get condition name with territory id \"{territory}\"");
             return;
         }
 

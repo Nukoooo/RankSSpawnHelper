@@ -48,8 +48,8 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         Initialize();
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(600, 400),
-            MaximumSize = new Vector2(2000, 2000),
+            MinimumSize = new(600, 400),
+            MaximumSize = new(2000, 2000),
         };
     }
 
@@ -79,7 +79,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             }
             catch (Exception ex)
             {
-                PluginLog.Error($"{ex.Message}\n{ex.StackTrace}");
+                DalamudApi.PluginLog.Error($"{ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -102,7 +102,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         ImGui.BeginGroup();
 
-        ImGui.BeginChild("Child1##SpawnHelper", new Vector2(100, 0), true);
+        ImGui.BeginChild("Child1##SpawnHelper", new(100, 0), true);
 
         for (var i = 0; i < _tabNames.Length; i++)
         {
@@ -116,7 +116,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         ImGui.SameLine();
 
-        ImGui.BeginChild("Child2##SpawnHelper", new Vector2(-1, -1), true);
+        ImGui.BeginChild("Child2##SpawnHelper", new(-1, -1), true);
 
         switch (_selectedTab)
         {
@@ -285,7 +285,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             return;
 
         // 从FFLogsViewer那边拿过来的, credit goes to Aireil <3333
-        if (ImGui.BeginTable("##农怪计数表格", 6, TableFlags, new Vector2(-1, -1)))
+        if (ImGui.BeginTable("##农怪计数表格", 6, TableFlags, new(-1, -1)))
         {
             ImGui.TableSetupScrollFreeze(0, 1);
             ImGui.TableSetupColumn("所在服务器");
@@ -293,7 +293,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             ImGui.TableSetupColumn("##计数①");
             ImGui.TableSetupColumn("##计数②");
             ImGui.TableSetupColumn("##计数③");
-            ImGui.TableSetupColumn("##删除计数清除", ImGuiTableColumnFlags.WidthFixed, 20 * ImGuiHelpers.GlobalScale);
+            ImGui.TableSetupColumn("##删除计数清除", ImGuiTableColumnFlags.WidthFixed, 3 * ImGui.GetFrameHeight());
             ImGui.TableHeadersRow();
 
             foreach (var (mainKey, mainValue) in Plugin.Features.Counter.GetLocalTrackers())
@@ -424,7 +424,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                                      var huntMap = await Plugin.Managers.Data.SRank.FetchHuntMap(status.worldName, status.localizedName, status.instance);
                                      if (huntMap == null || huntMap.spawnPoints.Count == 0)
                                      {
-                                         PluginLog.Debug("huntMap == null || huntMap.spawnPoints.Count == 0 from QueryTab");
+                                         DalamudApi.PluginLog.Debug("huntMap == null || huntMap.spawnPoints.Count == 0 from QueryTab");
                                          return;
                                      }
 
@@ -666,7 +666,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         if (!_showColorPicker)
             return;
 
-        ImGui.SetNextWindowSize(new Vector2(320, 360));
+        ImGui.SetNextWindowSize(new(320, 360));
 
         var type = _colorPickerType switch
                    {
@@ -758,11 +758,11 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         try
         {
             var bytes = BitConverter.GetBytes(_colorInfos.Find(info => info.RowId == id).Color);
-            return new Vector4((float)bytes[3] / 255, (float)bytes[2] / 255, (float)bytes[1] / 255, (float)bytes[0] / 255);
+            return new((float)bytes[3] / 255, (float)bytes[2] / 255, (float)bytes[1] / 255, (float)bytes[0] / 255);
         }
         catch (Exception)
         {
-            return new Vector4(0f, 0f, 0f, 0f);
+            return new(0f, 0f, 0f, 0f);
         }
     }
 
@@ -774,7 +774,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             var result = _colorInfos.Find(info => info.Color == color.UIForeground);
             if (result == null)
             {
-                _colorInfos.Add(new ColorInfo
+                _colorInfos.Add(new()
                 {
                     RowId = color.RowId,
                     Color = color.UIForeground

@@ -34,7 +34,7 @@ public class EntryPoint : IDalamudPlugin
         pi.Create<Plugin>();
 
         // Load all of our commands
-        _commandManager = new PluginCommandManager<EntryPoint>(this);
+        _commandManager = new(this);
 
         _assembly = Assembly.GetExecutingAssembly();
         _context  = AssemblyLoadContext.GetLoadContext(_assembly);
@@ -45,20 +45,20 @@ public class EntryPoint : IDalamudPlugin
         _debug = new DebugThingy();
 #endif
 
-        Plugin.Managers      = new Managers.Managers();
+        Plugin.Managers      = new();
         Plugin.Configuration = (Configuration)pi.GetPluginConfig() ?? pi.Create<Configuration>();
-        Plugin.Features      = new Features.Features();
+        Plugin.Features      = new();
 
         // Initialize the UI
-        _windowSystem  = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
-        Plugin.Windows = new Ui.Ui(ref _windowSystem);
+        _windowSystem  = new(typeof(EntryPoint).AssemblyQualifiedName);
+        Plugin.Windows = new(ref _windowSystem);
 
         DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
         DalamudApi.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
 
         var pluginVersion = _assembly.GetName().Version.ToString();
         Plugin.PluginVersion = pluginVersion;
-        PluginLog.Information($"Version: {Plugin.PluginVersion}");
+        DalamudApi.PluginLog.Information($"Version: {Plugin.PluginVersion}");
 #if RELEASE
         if (Plugin.Configuration.PluginVersion == pluginVersion)
             return;

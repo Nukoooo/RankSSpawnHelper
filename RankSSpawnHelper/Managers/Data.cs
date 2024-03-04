@@ -39,9 +39,9 @@ internal class Data : IDisposable
 
         _textInfo = new CultureInfo("en-US", false).TextInfo;
 
-        SRank      = new SRank();
-        Player     = new Player();
-        MapTexture = new MapTexture();
+        SRank      = new();
+        Player     = new();
+        MapTexture = new();
 
         DalamudApi.PartyFinderGui.ReceiveListing += PartyFinderGui_ReceiveListing;
     }
@@ -59,7 +59,7 @@ internal class Data : IDisposable
     public List<string> GetServers()
     {
         if (DalamudApi.ClientState.LocalPlayer == null)
-            return new List<string>();
+            return new();
 
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
         if (dcRowId == 0)

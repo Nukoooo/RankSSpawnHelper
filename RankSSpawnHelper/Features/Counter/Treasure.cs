@@ -17,7 +17,7 @@ internal partial class Counter
 
     private void Detour_ProcessOpenTreasurePacket(nint a1, float a2, float a3, float a4)
     {
-        PluginLog.Warning($"[OpenTreasurePacket] a1: 0x{a1:X}, a2: {a2} a3: {a3} a4: {a4}");
+        DalamudApi.PluginLog.Warning($"[OpenTreasurePacket] a1: 0x{a1:X}, a2: {a2} a3: {a3} a4: {a4}");
 
         ProcessOpenTreasure.Original(a1, a2, a3, a4);
     }
@@ -41,7 +41,7 @@ internal partial class Counter
         var eventItemId = *(uint*)(data + 4);
         var subRowId = *(uint*)(data + 8);
         var justOpened = *(uint*)(data + 12) == 1;
-        PluginLog.Debug($"{eventItemId}, {subRowId}, {justOpened}");
+        DalamudApi.PluginLog.Debug($"{eventItemId}, {subRowId}, {justOpened}");
 
         switch (eventItemId)
         {

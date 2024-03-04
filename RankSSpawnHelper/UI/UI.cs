@@ -13,10 +13,10 @@ internal class Ui
 
     public Ui(ref WindowSystem windowSystem)
     {
-        PluginWindow  = new ConfigWindow();
-        CounterWindow = new CounterWindow();
-        WeeEaWindow   = new WeeEaWindow();
-        HuntMapWindow = new HuntMapWindow();
+        PluginWindow  = new();
+        CounterWindow = new();
+        WeeEaWindow   = new();
+        HuntMapWindow = new();
 
         windowSystem.AddWindow(PluginWindow);
         windowSystem.AddWindow(CounterWindow);

@@ -124,16 +124,16 @@ public static class Widget
         var thickness = 2 * ImGui.GetStyle().ChildBorderSize;
 
         // Left
-        DrawClippedRect(new Vector2(-float.MaxValue, -float.MaxValue), currentLabelMin with { Y = float.MaxValue }, frameMin,
+        DrawClippedRect(new(-float.MaxValue, -float.MaxValue), currentLabelMin with { Y = float.MaxValue }, frameMin,
                         frameMax, borderColor, thickness);
         // Right
-        DrawClippedRect(currentLabelMax with { Y = -float.MaxValue }, new Vector2(float.MaxValue, float.MaxValue), frameMin,
+        DrawClippedRect(currentLabelMax with { Y = -float.MaxValue }, new(float.MaxValue, float.MaxValue), frameMin,
                         frameMax, borderColor, thickness);
         // Top
-        DrawClippedRect(currentLabelMin with { Y = -float.MaxValue }, new Vector2(currentLabelMax.X, currentLabelMin.Y), frameMin,
+        DrawClippedRect(currentLabelMin with { Y = -float.MaxValue }, new(currentLabelMax.X, currentLabelMin.Y), frameMin,
                         frameMax, borderColor, thickness);
         // Bottom
-        DrawClippedRect(new Vector2(currentLabelMin.X, currentLabelMax.Y), currentLabelMax with { Y = float.MaxValue }, frameMin,
+        DrawClippedRect(new(currentLabelMin.X, currentLabelMax.Y), currentLabelMax with { Y = float.MaxValue }, frameMin,
                         frameMax, borderColor, thickness);
 
         style.Pop(2);
