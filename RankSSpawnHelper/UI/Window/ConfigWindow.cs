@@ -93,7 +93,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
     public override void Draw()
     {
-        if (Plugin.Managers.Font.IsFontBuilt() && !Plugin.IsChina())
+        if (Plugin.Managers.Font.IsFontBuilt())
         {
             ImGui.PushFont(Plugin.Managers.Font.NotoSan18);
         }
@@ -141,7 +141,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         ImGui.EndGroup();
 
-        if (Plugin.Managers.Font.IsFontBuilt() && !Plugin.IsChina())
+        if (Plugin.Managers.Font.IsFontBuilt())
         {
             ImGui.PopFont();
         }
@@ -744,11 +744,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             {
                 var isItem = data.TerritoryId is 814 or 400 or 961 or 813;
                 var keyName = isItem ? Plugin.Managers.Data.GetItemName(i.Key) :
-                              data.TerritoryId == 621 ? Plugin.IsChina()
-                                                              ? "扔垃圾"
-                                                              : "Item" : Plugin.Managers.Data.GetNpcName(i.Key);
+                              data.TerritoryId == 621 ? "扔垃圾" : Plugin.Managers.Data.GetNpcName(i.Key);
                 counter += $"{keyName}: {i.Value} ";
             }
+
             ImGui.TextUnformatted($"{Plugin.Managers.Data.FormatInstance(data.WorldId, data.TerritoryId, data.InstanceId)}: 上一次更新时间: {DateTimeOffset.FromUnixTimeSeconds(data.LastUpdateTime).DateTime.ToLocalTime()}\n        {counter}");
         }
     }

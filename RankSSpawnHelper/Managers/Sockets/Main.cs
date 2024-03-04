@@ -314,10 +314,11 @@ internal class Main : IDisposable
                     foreach (var (key, value) in result.Counter)
                     {
                         var isItem = result.TerritoryId is 814 or 400 or 961 or 813;
-                        var keyName = isItem ? Plugin.Managers.Data.GetItemName(key) :
-                                      result.TerritoryId == 621 ? Plugin.IsChina()
-                                                                      ? "扔垃圾"
-                                                                      : "Item" : Plugin.Managers.Data.GetNpcName(key);
+                        var keyName = isItem
+                                          ? Plugin.Managers.Data.GetItemName(key)
+                                          : result.TerritoryId == 621
+                                              ? "扔垃圾"
+                                              : Plugin.Managers.Data.GetNpcName(key);
                         Plugin.Features.Counter.UpdateNetworkedTracker(instance, keyName, value, result.Time, result.TerritoryId);
                     }
 
@@ -356,9 +357,7 @@ internal class Main : IDisposable
                             name = Plugin.Managers.Data.GetItemName(k);
                         else if (result.TerritoryId == 621)
                         {
-                            name = Plugin.IsChina()
-                                       ? "扔垃圾"
-                                       : "Item";
+                            name = "扔垃圾";
                         }
                         else
                             name = Plugin.Managers.Data.GetNpcName(k);
@@ -387,9 +386,7 @@ internal class Main : IDisposable
                                 name = Plugin.Managers.Data.GetItemName(k);
                             else if (result.TerritoryId == 621)
                             {
-                                name = Plugin.IsChina()
-                                           ? "扔垃圾"
-                                           : "Item";
+                                name = "扔垃圾";
                             }
                             else
                                 name = Plugin.Managers.Data.GetNpcName(k);

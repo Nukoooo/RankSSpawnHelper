@@ -10,15 +10,13 @@ namespace RankSSpawnHelper.UI.Window;
 public class CounterWindow : Dalamud.Interface.Windowing.Window
 {
     private const ImGuiWindowFlags WindowFlags = ImGuiWindowFlags.None;
-    private readonly string _clickIfFailed;
     private readonly string _startTime;
     private DateTime _nextClickTime = DateTime.Now;
 
     public CounterWindow() : base("农怪计数##RankSSpawnHelper1337")
     {
         Flags          = WindowFlags;
-        _startTime     = Plugin.IsChina() ? "开始时间" : "Start time";
-        _clickIfFailed = Plugin.IsChina() ? "寄了点我" : "Click if failed";
+        _startTime     = "开始时间";
     }
 
     private static ImGuiWindowFlags BuildWindowFlags(ImGuiWindowFlags var)

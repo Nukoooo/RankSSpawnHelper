@@ -76,7 +76,7 @@ internal partial class Counter
             return;
         }
 
-        var name =  Plugin.IsChina() ? "扔垃圾" : "Item";
+        const string name = "扔垃圾";
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, 0, true);
     }
 

@@ -27,7 +27,8 @@ internal class Font : IDisposable
     {
         // DalamudApi.Interface.DalamudAssetDirectory;
         // var windowsFolder  = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System));
-        var fontName = Plugin.IsChina() ? "NotoSansCJKsc-Medium.otf" : "NotoSansCJKjp-Medium.otf";
+        const string fontName = "NotoSansCJKsc-Medium.otf";
+
         var fontPath = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes", fontName);
 
         if (!File.Exists(fontPath))
