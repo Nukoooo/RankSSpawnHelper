@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud;
-using Dalamud.Logging;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Models;

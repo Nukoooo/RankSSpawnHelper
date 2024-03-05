@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Dalamud.Logging;
 using ImGuiNET;
 
 namespace RankSSpawnHelper.Managers;

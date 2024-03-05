@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 
 namespace RankSSpawnHelper.Managers.DataManagers;

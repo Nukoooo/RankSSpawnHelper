@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Logging;
 using ImGuiNET;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Managers.DataManagers;
