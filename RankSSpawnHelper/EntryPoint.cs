@@ -38,7 +38,6 @@ public class EntryPoint : IDalamudPlugin
 
         _assembly = Assembly.GetExecutingAssembly();
         _context  = AssemblyLoadContext.GetLoadContext(_assembly);
-        DalamudApi.Interface.Inject(this, Array.Empty<object>());
         LoadCosturaAssembles();
 
 #if DEBUG || DEBUG_CN
@@ -69,8 +68,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 不知道写啥,反正就是更新了\n"),
-            new TextPayload("  [-] 修复了部分地图点位显示歪的问题\n"),
+            new TextPayload("  [-] ayyyyy API9 lets goooo\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
         });
