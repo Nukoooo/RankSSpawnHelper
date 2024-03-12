@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
+using Dalamud.Utility;
 using Dalamud.Utility.Signatures;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
@@ -39,7 +41,7 @@ internal partial class Counter : IDisposable
         ActorControl.Enable();
         SystemLogMessage.Enable();
         InventoryTransactionDiscard.Enable();
-        ProcessSpawnNpcPacket.Enable();
+        OnReceiveCreateNonPlayerBattleCharaPacket.Enable();
         ProcessOpenTreasure.Enable();
         ProcessActorControlSelf.Enable();
         /*ProcessInventoryActionAckPacketHook.Enable();*/
@@ -52,12 +54,12 @@ internal partial class Counter : IDisposable
     }
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 48 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 66 0F 1F 84 00 ?? ?? ?? ?? 48 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 11 48 ?? 49 83 E8 ?? 75 ?? 4C 8D 44 24", DetourName = nameof(Detour_ProcessSpawnNpcPacket))]
-    private Hook<ProcessSpawnNpcDelegate> ProcessSpawnNpcPacket { get; init; } = null!;
+    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 4C 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? 66 66 0F 1F 84 00 ?? ?? ?? ?? 4D 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 41 0F 11 48 ?? 48 83 E8 ?? 75 ?? 48 8B 03", DetourName = nameof(Detour_OnReceiveCreateNonPlayerBattleCharaPacket))]
+    private Hook<ProcessSpawnNpcDelegate> OnReceiveCreateNonPlayerBattleCharaPacket { get; init; } = null!;
 
     public void Dispose()
     {
-        ProcessSpawnNpcPacket.Dispose();
+        OnReceiveCreateNonPlayerBattleCharaPacket.Dispose();
         ActorControl.Dispose();
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
@@ -183,13 +185,14 @@ internal partial class Counter : IDisposable
         Plugin.Windows.CounterWindow.IsOpen = false;
     }
 
-    private unsafe void Detour_ProcessSpawnNpcPacket(nint a1, uint a2, nint packetData)
+    private unsafe void Detour_OnReceiveCreateNonPlayerBattleCharaPacket(nint a1, uint a2, nint packetData)
     {
-        ProcessSpawnNpcPacket.Original(a1, a2, packetData);
+        OnReceiveCreateNonPlayerBattleCharaPacket.Original(a1, a2, packetData);
         if (packetData == nint.Zero)
             return;
 
         var baseName = *(uint*)(packetData + 0x44);
+        DalamudApi.PluginLog.Debug($"{baseName}");
 
         if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
             return;
@@ -198,7 +201,7 @@ internal partial class Counter : IDisposable
 
 #if DEBUG || DEBUG_CN
         Plugin.Print("SRank spotted.");
-        PluginLog.Warning("SRank spotted.");
+        DalamudApi.PluginLog.Warning("SRank spotted.");
 #endif
 
         var territory = DalamudApi.ClientState.TerritoryType;
@@ -220,6 +223,7 @@ internal partial class Counter : IDisposable
         if (!_conditionsMob.ContainsKey(territory))
             return;
 
+        /*2959*/
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
         if (!_networkedTracker.ContainsKey(currentInstance))
             return;
