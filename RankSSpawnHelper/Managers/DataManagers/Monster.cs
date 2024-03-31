@@ -17,7 +17,7 @@ internal enum FetchStatus
     None,
     Fetching,
     Error,
-    Success
+    Success,
 }
 
 internal class SRank
@@ -40,119 +40,101 @@ internal class SRank
     {
         var bNpcNames = DalamudApi.DataManager.GetExcelSheet<BNpcName>();
 
+        for (uint i = 2953; i < 2970; i++)
         {
-            for (uint i = 2953; i < 2970; i++)
+            var item = new SRankMonster
             {
-                var item = new SRankMonster
-                {
-                    expansion     = GameExpansion.ARealmReborn,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                    id            = i
-                };
-                _sRankMonsters.Add(item);
-            }
+                expansion     = GameExpansion.ARealmReborn,
+                localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                id            = i,
+            };
+            _sRankMonsters.Add(item);
         }
 
+        for (uint i = 4374; i < 4381; i++)
         {
-            for (uint i = 4374; i < 4381; i++)
-            {
-                if (i == 4379) continue;
+            if (i == 4379) continue;
 
-                var item = new SRankMonster
-                {
-                    expansion     = GameExpansion.Heavensward,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                    id            = i
-                };
-                _sRankMonsters.Add(item);
-            }
+            var item = new SRankMonster
+            {
+                expansion     = GameExpansion.Heavensward,
+                localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                id            = i,
+            };
+            _sRankMonsters.Add(item);
         }
 
+        for (uint i = 5984; i < 5990; i++)
         {
-            for (uint i = 5984; i < 5990; i++)
+            var item = new SRankMonster
             {
-                var item = new SRankMonster
-                {
-                    expansion     = GameExpansion.Stormblood,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                    id            = i
-                };
-                _sRankMonsters.Add(item);
-            }
+                expansion     = GameExpansion.Stormblood,
+                localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                id            = i,
+            };
+            _sRankMonsters.Add(item);
         }
 
+        var aglaope = new SRankMonster
         {
-            var aglaope = new SRankMonster
+            expansion     = GameExpansion.Shadowbringers,
+            localizedName = bNpcNames.GetRow(8653).Singular.RawString,
+            id            = 8653,
+        };
+        _sRankMonsters.Add(aglaope); // 阿格拉俄珀
+        for (uint i = 8890; i < 8915; i += 5)
+        {
+            var item = new SRankMonster
             {
                 expansion     = GameExpansion.Shadowbringers,
-                localizedName = bNpcNames.GetRow(8653).Singular.RawString,
-                id            = 8653
+                localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                id            = i,
             };
-            _sRankMonsters.Add(aglaope); // 阿格拉俄珀
-            for (uint i = 8890; i < 8915; i += 5)
-            {
-                var item = new SRankMonster
-                {
-                    expansion     = GameExpansion.Shadowbringers,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                    id            = i
-                };
-                _sRankMonsters.Add(item);
-            }
+            _sRankMonsters.Add(item);
         }
 
+        for (uint i = 10617; i < 10623; i++)
         {
-            for (uint i = 10617; i < 10623; i++)
+            var item = new SRankMonster
             {
-                var item = new SRankMonster
-                {
-                    expansion     = GameExpansion.Endwalker,
-                    localizedName = bNpcNames.GetRow(i).Singular.RawString,
-                    id            = i
-                };
+                expansion     = GameExpansion.Endwalker,
+                localizedName = bNpcNames.GetRow(i).Singular.RawString,
+                id            = i,
+            };
 
-                _sRankMonsters.Add(item);
-            }
+            _sRankMonsters.Add(item);
         }
 
-        Task.Run(async () =>
-                 {
-                     while (DalamudApi.ClientState.LocalPlayer == null)
+        var region = DalamudApi.ClientState.ClientLanguage switch
                      {
-                         await Task.Delay(500);
-                     }
+                         ClientLanguage.Japanese => "jp",
+                         ClientLanguage.English  => "en",
+                         ClientLanguage.German   => "de",
+                         ClientLanguage.French   => "fr",
+                         (ClientLanguage)4       => "cn",
+                         _                       => throw new ArgumentOutOfRangeException(),
+                     };
 
-                     var region = DalamudApi.ClientState.ClientLanguage switch
-                                  {
-                                      ClientLanguage.Japanese => "jp",
-                                      ClientLanguage.English  => "en",
-                                      ClientLanguage.German   => "de",
-                                      ClientLanguage.French   => "fr",
-                                      (ClientLanguage)4       => "cn",
-                                      _                       => throw new ArgumentOutOfRangeException()
-                                  };
-                     
-                     try
-                     {
-                         var content = Encoding.UTF8.GetString(Resource.hunt);
-                         var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
+        try
+        {
+            var content = Encoding.UTF8.GetString(Resource.hunt);
+            var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
 
-                         foreach (var (key, value) in json)
-                         {
-                             if (!value.TryGetValue(region, out var name))
-                                 continue;
+            foreach (var (key, value) in json)
+            {
+                if (!value.TryGetValue(region, out var name))
+                    continue;
 
-                             foreach (var m in _sRankMonsters.Where(monster => monster.localizedName == name))
-                             {
-                                 m.keyName = key;
-                             }
-                         }
-                     }
-                     catch (Exception e)
-                     {
-                         DalamudApi.PluginLog.Error(e, e.Message);
-                     }
-                 });
+                foreach (var m in _sRankMonsters.Where(monster => monster.localizedName == name))
+                {
+                    m.keyName = key;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            DalamudApi.PluginLog.Error(e, e.Message);
+        }
     }
 
     public List<string> GetSRanksByExpansion(GameExpansion expansion)
@@ -221,7 +203,7 @@ internal class SRank
                                       _sRankMonsters.Find(i => i.localizedName == monsterName).keyName +
                                       (instance == 0 ? string.Empty : $" {instance}")
                                   },
-                                  { "WorldName", server }
+                                  { "WorldName", server },
                               }))
                      {
                          var response = await _httpClient.PostAsync(Url + "public/huntStatus", new FormUrlEncodedContent(body));
@@ -268,7 +250,7 @@ internal class SRank
         var body = new Dictionary<string, string>
         {
             { "HuntName", _sRankMonsters.Find(i => i.localizedName == monsterName).keyName + (instance == 0 ? string.Empty : $" {instance}") },
-            { "WorldName", server }
+            { "WorldName", server },
         };
 
         try
@@ -313,7 +295,7 @@ internal class SRank
             var body = new Dictionary<string, string>
             {
                 { "HuntName", _sRankMonsters.Find(i => i.localizedName == monster).keyName + (instance == 0 ? string.Empty : $" {instance}") },
-                { "WorldName", server }
+                { "WorldName", server },
             };
 
             var response = await _httpClient.PostAsync(Url + "public/huntmap", new FormUrlEncodedContent(body));
