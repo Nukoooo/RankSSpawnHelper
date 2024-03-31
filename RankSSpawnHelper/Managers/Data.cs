@@ -6,9 +6,6 @@ using Dalamud.Game.Gui.PartyFinder.Types;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
-#if DEBUG || DEBUG_CN
-using Dalamud.Logging;
-#endif
 
 namespace RankSSpawnHelper.Managers;
 
@@ -76,7 +73,7 @@ internal class Data : IDisposable
     {
         var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
 #if DEBUG || DEBUG_CN
-        PluginLog.Debug($"Local: {DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.Name}, {_worldSheet.GetRow(worldId).DataCenter.Value.Name}, IsFromOtherDC: {dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId}");
+        DalamudApi.PluginLog.Debug($"Local: {DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.Name}, {_worldSheet.GetRow(worldId).DataCenter.Value.Name}, IsFromOtherDC: {dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId}");
 #endif
         return dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
     }

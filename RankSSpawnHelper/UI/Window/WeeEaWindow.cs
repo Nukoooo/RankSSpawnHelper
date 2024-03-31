@@ -14,7 +14,6 @@ namespace RankSSpawnHelper.UI.Window;
 internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 {
     private readonly Dictionary<string, DateTime> _dateTimes = new();
-    private List<string> _nameList = new();
 
     public WeeEaWindow() : base("异亚计数##RankSSpawnHelper")
     {
@@ -94,54 +93,16 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 
     public override void Draw()
     {
-        _nameList.Clear();
-        var count    = 0;
-        var count2   = 0;
-        var nameList = new List<string>();
-
-        var enumerator = DalamudApi.ObjectTable.Where(i => i != null && i.Address != nint.Zero
-                                                                     && i.ObjectKind == ObjectKind.Companion);
-
-        var localPlayerPos = DalamudApi.ClientState.LocalPlayer.Position;
-
-        foreach (var obj in enumerator)
-        {
-            var delta = obj.Position - localPlayerPos;
-
-            // xzy 
-            var length2D = Math.Sqrt(delta.X * delta.X + delta.Z * delta.Z);
-
-            if (length2D > 10)
-                continue;
-
-            // TODO: Get name from excel sheet
-            if (obj.Name.ToString() == "小异亚")
-            {
-                count++;
-                var owner = (PlayerCharacter)DalamudApi.ObjectTable[obj.ObjectIndex - 1];
-                if (owner != null)
-                {
-                    var name = $"{owner.Name.TextValue}@{owner.HomeWorld.GameData.Name.RawString}";
-                    nameList.Add(name);
-                }
-
-                continue;
-            }
-
-            count2++;
-        }
-
-        _nameList = nameList;
-
+        var (nameList, nonWeeEaCount) = Plugin.Features.Counter.GetWeeEaData();
         if (Plugin.Managers.Font.IsFontBuilt())
             ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
 
         if (ImGui.Button("[ 寄了点我 ]"))
-            AttemptFail(count, nameList);
+            AttemptFail(nameList.Count, nameList);
 
         ImGui.SameLine();
 
-        ImGui.Text($"附近的小异亚数量:{count}\n非小异亚的数量: {count2}");
+        ImGui.Text($"附近的小异亚数量:{nameList.Count}\n非小异亚的数量: {nonWeeEaCount}");
 
         if (Plugin.Managers.Font.IsFontBuilt())
             ImGui.PopFont();

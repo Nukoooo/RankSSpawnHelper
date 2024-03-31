@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
-using Dalamud.Utility;
 using Dalamud.Utility.Signatures;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
@@ -76,6 +74,8 @@ internal partial class Counter : IDisposable
 
     private void Framework_Update(Dalamud.Plugin.Services.IFramework framework)
     {
+        UpdateNameList();
+
         // check every 5 seconds
         if (DateTime.Now - _lastCleanerRunTime <= TimeSpan.FromSeconds(5))
         {
@@ -135,9 +135,9 @@ internal partial class Counter : IDisposable
                 lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 counter = new()
                 {
-                    { condition, value }
+                    { condition, value },
                 },
-                territoryId = territoryId
+                territoryId = territoryId,
             });
 
             DalamudApi.PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
@@ -192,7 +192,7 @@ internal partial class Counter : IDisposable
             return;
 
         var baseName = *(uint*)(packetData + 0x44);
-        DalamudApi.PluginLog.Debug($"{baseName}");
+        DalamudApi.PluginLog.Debug($"baseName: {baseName}");
 
         if (!Plugin.Managers.Data.SRank.IsSRank(baseName))
             return;
@@ -208,15 +208,18 @@ internal partial class Counter : IDisposable
 
         if (territory == 960)
         {
-            Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
+            lock(_weeEaNameList)
             {
-                Type        = "WeeEa",
-                WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
-                InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
-                TerritoryId = territory,
-                Failed      = false,
-                Names       = Plugin.Windows.WeeEaWindow.GetNameList()
-            });
+                Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
+                {
+                    Type        = "WeeEa",
+                    WorldId     = Plugin.Managers.Data.Player.GetCurrentWorldId(),
+                    InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
+                    TerritoryId = territory,
+                    Failed      = false,
+                    Names       = _weeEaNameList,
+                });
+            }
             return;
         }
 

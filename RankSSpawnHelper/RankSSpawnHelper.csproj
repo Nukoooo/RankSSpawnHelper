@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0-windows</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Version>1.3.5.1</Version>
 		<Configurations>Debug;Release;Debug_CN;Release_CN</Configurations>

@@ -122,30 +122,20 @@ internal class SRank
                          await Task.Delay(500);
                      }
 
-                     string region;
-
-                     if (Plugin.IsChina())
-                     {
-                         region = "cn";
-                     }
-                     else
-                     {
-                         region = DalamudApi.ClientState.ClientLanguage switch
+                     var region = DalamudApi.ClientState.ClientLanguage switch
                                   {
                                       ClientLanguage.Japanese => "jp",
                                       ClientLanguage.English  => "en",
                                       ClientLanguage.German   => "de",
                                       ClientLanguage.French   => "fr",
+                                      (ClientLanguage)4       => "cn",
                                       _                       => throw new ArgumentOutOfRangeException()
                                   };
-                     }
-
+                     
                      try
                      {
                          var content = Encoding.UTF8.GetString(Resource.hunt);
                          var json    = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(content);
-
-                         { }
 
                          foreach (var (key, value) in json)
                          {
@@ -154,6 +144,7 @@ internal class SRank
 
                              foreach (var m in _sRankMonsters.Where(monster => monster.localizedName == name))
                              {
+                                 DalamudApi.PluginLog.Debug($"{{\"{key}\", \"{name}\"}},");
                                  m.keyName = key;
                              }
                          }
