@@ -144,7 +144,6 @@ internal class SRank
 
                              foreach (var m in _sRankMonsters.Where(monster => monster.localizedName == name))
                              {
-                                 DalamudApi.PluginLog.Debug($"{{\"{key}\", \"{name}\"}},");
                                  m.keyName = key;
                              }
                          }

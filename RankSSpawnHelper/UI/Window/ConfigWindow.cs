@@ -91,11 +91,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
     public override void Draw()
     {
-        if (Plugin.Managers.Font.IsFontBuilt())
-        {
-            ImGui.PushFont(Plugin.Managers.Font.NotoSan18);
-        }
-
+        Plugin.Managers.Font.NotoSan18.Push();
         DrawAfdian();
 
         ImGui.BeginGroup();
@@ -139,10 +135,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         ImGui.EndGroup();
 
-        if (Plugin.Managers.Font.IsFontBuilt())
-        {
-            ImGui.PopFont();
-        }
+        Plugin.Managers.Font.NotoSan18.Pop();
     }
 
     public override void PostDraw()

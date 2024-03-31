@@ -67,11 +67,8 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
 
         if (!Plugin.Configuration.TrackerShowCurrentInstance)
         {
-            if (Plugin.Managers.Font.IsFontBuilt())
-            {
-                ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
-                ImGui.SetWindowFontScale(0.8f);
-            }
+            Plugin.Managers.Font.NotoSan24.Push();
+            ImGui.SetWindowFontScale(0.8f);
 
             foreach (var (k, v) in actualTracker)
             {
@@ -91,9 +88,7 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
                 }
             }
 
-            if (!Plugin.Managers.Font.IsFontBuilt()) return;
-
-            ImGui.PopFont();
+            Plugin.Managers.Font.NotoSan24.Pop();
             ImGui.SetWindowFontScale(1.0f);
 
             return;
@@ -107,11 +102,8 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
             return;
         }
 
-        if (Plugin.Managers.Font.IsFontBuilt())
-        {
-            ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
-            ImGui.SetWindowFontScale(0.8f);
-        }
+        Plugin.Managers.Font.NotoSan24.Push();
+        ImGui.SetWindowFontScale(0.8f);
 
         if (ImGui.Button("[ 寄了点我 ]##only_show_single_instance"))
         {
@@ -184,10 +176,7 @@ public class CounterWindow : Dalamud.Interface.Windowing.Window
             ImGui.Text(textToDraw);
         }
 
-        if (!Plugin.Managers.Font.IsFontBuilt())
-            return;
-
-        ImGui.PopFont();
+        Plugin.Managers.Font.NotoSan24.Pop();
         ImGui.SetWindowFontScale(1.0f);
     }
 }

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
@@ -15,7 +11,7 @@ namespace RankSSpawnHelper;
 
 public class EntryPoint : IDalamudPlugin
 {
-    private readonly Commands _commands;
+    private readonly Commands     _commands;
     private readonly WindowSystem _windowSystem;
 
     public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
@@ -27,8 +23,6 @@ public class EntryPoint : IDalamudPlugin
         _commands = new();
 
         var assembly = Assembly.GetExecutingAssembly();
-        var context  = AssemblyLoadContext.GetLoadContext(assembly);
-        LoadCosturaAssembles();
 
         Plugin.Managers      = new();
         Plugin.Configuration = (Configuration)pi.GetPluginConfig() ?? pi.Create<Configuration>();
@@ -39,7 +33,8 @@ public class EntryPoint : IDalamudPlugin
         Plugin.Windows = new(ref _windowSystem);
 
         DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
-        DalamudApi.Interface.UiBuilder.OpenConfigUi += OpenConfigUi;
+        DalamudApi.Interface.UiBuilder.OpenConfigUi += UiBuilder_OnOpenConfigUi;
+        DalamudApi.Interface.UiBuilder.OpenMainUi   += UiBuilder_OnOpenConfigUi;
 
         var pluginVersion = assembly.GetName().Version.ToString();
         Plugin.PluginVersion = pluginVersion;
@@ -62,39 +57,14 @@ public class EntryPoint : IDalamudPlugin
         });
 
         return;
-
-        void LoadCosturaAssembles()
-        {
-            Span<byte> span = new byte[65536];
-            foreach (var text in from name in assembly.GetManifestResourceNames()
-                                 where name.StartsWith("costura.") && name.EndsWith(".dll.compressed")
-                                 select name)
-            {
-                using var deflateStream =
-                    new DeflateStream(assembly.GetManifestResourceStream(text), CompressionMode.Decompress, false);
-                using var memoryStream = new MemoryStream();
-
-                int num;
-                while ((num = deflateStream.Read(span)) != 0)
-                {
-                    Stream stream = memoryStream;
-                    var    span2  = span;
-                    stream.Write(span2[..num]);
-                }
-
-                memoryStream.Position = 0L;
-                context.LoadFromStream(memoryStream);
-            }
-        }
     }
 
-    public string Name => "SpawnHelper";
-
-
-    private void OpenConfigUi()
+    private void UiBuilder_OnOpenConfigUi()
     {
         Plugin.Windows.PluginWindow.IsOpen = true;
     }
+
+    public string Name => "SpawnHelper";
 
     protected virtual void Dispose(bool disposing)
     {
@@ -107,8 +77,8 @@ public class EntryPoint : IDalamudPlugin
         Plugin.Managers.Dispose();
         Plugin.Features.Dispose();
 
-
-        DalamudApi.Interface.UiBuilder.Draw -= _windowSystem.Draw;
+        DalamudApi.Interface.UiBuilder.Draw       -= _windowSystem.Draw;
+        DalamudApi.Interface.UiBuilder.OpenMainUi -= UiBuilder_OnOpenConfigUi;
         _windowSystem.RemoveAllWindows();
     }
 

@@ -94,8 +94,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
     public override void Draw()
     {
         var (nameList, nonWeeEaCount) = Plugin.Features.Counter.GetWeeEaData();
-        if (Plugin.Managers.Font.IsFontBuilt())
-            ImGui.PushFont(Plugin.Managers.Font.NotoSan24);
+        Plugin.Managers.Font.NotoSan24.Push();
 
         if (ImGui.Button("[ 寄了点我 ]"))
             AttemptFail(nameList.Count, nameList);
@@ -104,12 +103,6 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 
         ImGui.Text($"附近的小异亚数量:{nameList.Count}\n非小异亚的数量: {nonWeeEaCount}");
 
-        if (Plugin.Managers.Font.IsFontBuilt())
-            ImGui.PopFont();
-    }
-
-    public List<string> GetNameList()
-    {
-        return _nameList;
+        Plugin.Managers.Font.NotoSan24.Pop();
     }
 }
