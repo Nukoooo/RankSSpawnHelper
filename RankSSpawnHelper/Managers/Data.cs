@@ -44,6 +44,10 @@ internal class Data : IDisposable
 
         DalamudApi.PartyFinderGui.ReceiveListing += PartyFinderGui_ReceiveListing;
         DalamudApi.ClientState.Login             += ClientState_OnLogin;
+
+        // LOL
+        if (DalamudApi.ClientState.IsLoggedIn)
+            ClientState_OnLogin();
     }
 
     private void ClientState_OnLogin()

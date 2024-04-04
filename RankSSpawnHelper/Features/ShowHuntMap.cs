@@ -102,7 +102,7 @@ internal class ShowHuntMap : IDisposable
             return;
 
         var currentHuntName = Plugin.Managers.Data.SRank.GetSRankKeyNameById(monsterId);
-        if (currentHuntName != huntName)
+        if (!huntName.StartsWith(currentHuntName))
             return;
 
         PrintOrShowSpawnPoints(spawnPoints);
@@ -128,7 +128,7 @@ internal class ShowHuntMap : IDisposable
             return;
 
         var currentHuntName = Plugin.Managers.Data.SRank.GetSRankKeyNameById(monsterId);
-        if (currentHuntName != huntName)
+        if (!huntName.StartsWith(currentHuntName))
             return;
 
         PrintOrShowSpawnPoints(points);

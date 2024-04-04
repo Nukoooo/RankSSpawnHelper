@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using RankSSpawnHelper.Models;
 using SocketIOClient;
-using SocketIOClient.Newtonsoft.Json;
 
 namespace RankSSpawnHelper.Managers.Sockets;
 
 internal class TrackerApi : IDisposable
 {
-    private readonly Queue<string> _requestQueue = new();
-    private          SocketIO      _huntUpdateclient;
-    private          SocketIO      _route;
+    private readonly Queue<string>           _requestQueue = new();
+    private          SocketIOClient.SocketIO _huntUpdateclient;
+    private          SocketIOClient.SocketIO _route;
 
     public TrackerApi()
     {
@@ -93,7 +93,7 @@ internal class TrackerApi : IDisposable
                                     }
                                     catch (Exception e)
                                     {
-                                        DalamudApi.PluginLog.Error(e, "Erro when getting /HuntUpdate");
+                                        DalamudApi.PluginLog.Error(e, "Error in /HuntUpdate");
                                     }
                                 });
 
@@ -123,10 +123,10 @@ internal class TrackerApi : IDisposable
             ReconnectionDelay    = 5,
             ReconnectionDelayMax = 10,
         });
-
+        
         _route.OnAny((name, response) =>
                      {
-                         DalamudApi.PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
+                         DalamudApi.PluginLog.Debug($"_route. Name: {name}, response: {response}");
 
                          try
                          {
@@ -139,7 +139,9 @@ internal class TrackerApi : IDisposable
                                      return;
                                  case "Huntmap":
                                      var huntMapName = _requestQueue.Dequeue().Split('@');
-                                     var spawnPoints = response.GetValue<List<SpawnPoints>>();
+                                     // TODO: find a better way for this crap
+                                     /*var spawnPoints = response.GetValue<List<SpawnPoints>>();*/
+                                     var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
                                      DalamudApi.PluginLog.Debug($"{spawnPoints.Count} / {spawnPoints[0].x} - {spawnPoints[0].y}");
                                      Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
                                      break;
@@ -147,7 +149,7 @@ internal class TrackerApi : IDisposable
                          }
                          catch (Exception e)
                          {
-                             DalamudApi.PluginLog.Error(e, "Erro when getting /PublicRoutes");
+                             DalamudApi.PluginLog.Error(e, "Error in /PublicRoutes");
                          }
                      });
 
