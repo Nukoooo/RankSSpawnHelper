@@ -35,21 +35,16 @@ internal class Main : IDisposable
         DalamudApi.ClientState.Login  += ClientState_OnLogin;
         DalamudApi.ClientState.Logout += ClientState_OnLogout;
 
-        if (DalamudApi.ClientState.LocalPlayer != null)
-            Connect(Url);
+        DalamudApi.Framework.Run(() =>
+                                 {
+                                     if (DalamudApi.ClientState.LocalPlayer != null)
+                                         Connect(Url);
+                                 });
     }
 
     private void ClientState_OnLogin()
     {
-        Task.Run(async () =>
-                 {
-                     while (DalamudApi.ClientState.LocalPlayer == null)
-                     {
-                         await Task.Delay(100);
-                     }
-
-                     Connect(Url);
-                 });
+        Connect(Url);
     }
 
     private void ClientState_OnLogout()
@@ -86,7 +81,7 @@ internal class Main : IDisposable
     {
         try
         {
-            if (DalamudApi.ClientState.LocalPlayer == null)
+            if (!DalamudApi.ClientState.IsLoggedIn)
             {
                 _client?.Dispose();
                 return;
@@ -120,9 +115,9 @@ internal class Main : IDisposable
                 ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
             };
 
-            _client.ReconnectionHappened.Subscribe(OnReconntion);
-            _client.MessageReceived.Subscribe(OnMessageReceived);
-            _client.DisconnectionHappened.Subscribe(OnDisconnectionHappened);
+            _client.ReconnectionHappened.Subscribe(info => { DalamudApi.Framework.Run(() => OnReconntion(info)); });
+            _client.MessageReceived.Subscribe(args => { DalamudApi.Framework.Run(() => OnMessageReceived(args)); });
+            _client.DisconnectionHappened.Subscribe(args => { DalamudApi.Framework.Run(() => OnDisconnectionHappened(args)); });
 
             await _client.Start();
         }
@@ -185,11 +180,12 @@ internal class Main : IDisposable
 
     private void OnReconntion(ReconnectionInfo args)
     {
+        DalamudApi.Framework.Run(() => { });
         DalamudApi.PluginLog.Debug($"ReconnectionType: {args.Type}");
 
         var localTracker = Plugin.Features.Counter.GetLocalTrackers();
 
-        if (!DalamudApi.ClientState.LocalPlayer || localTracker == null || localTracker.Count == 0)
+        if (!DalamudApi.ClientState.IsLoggedIn || localTracker == null || localTracker.Count == 0)
             return;
 
         var name = Player.GetLocalPlayerName();
@@ -255,7 +251,7 @@ internal class Main : IDisposable
 
         var msg = Encoding.UTF8.GetString(args.Binary);
 
-        if (!msg.StartsWith("{"))
+        if (!msg.StartsWith('{'))
         {
             DalamudApi.PluginLog.Error($"Managers::Socket::OnMessageReceived. Not a valid json format message. {msg}");
             return;

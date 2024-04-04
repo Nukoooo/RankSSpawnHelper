@@ -18,7 +18,9 @@ internal class Data : IDisposable
     private readonly TextInfo                 _textInfo;
     private readonly Dictionary<uint, string> _worldName;
     private readonly ExcelSheet<World>        _worldSheet;
+    private          List<string>             _serverList = new();
 
+    private uint       _dataCenterRowId;
     private long       _serverRestartTime;
     public  MapTexture MapTexture;
     public  Player     Player;
@@ -41,11 +43,27 @@ internal class Data : IDisposable
         MapTexture = new();
 
         DalamudApi.PartyFinderGui.ReceiveListing += PartyFinderGui_ReceiveListing;
+        DalamudApi.ClientState.Login             += ClientState_OnLogin;
+    }
+
+    private void ClientState_OnLogin()
+    {
+        _dataCenterRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
+        if (_dataCenterRowId == 0)
+        {
+            throw new IndexOutOfRangeException("aaaaaaaaaaaaaaaaaaaaaaa");
+        }
+
+        var worlds = _worldSheet.Where(world => world.DataCenter.Value?.RowId == _dataCenterRowId).ToList();
+
+        _serverList = worlds?.Select(world => world.Name).Select(dummy => dummy.RawString).ToList();
+        DalamudApi.PluginLog.Debug($"server list: {_serverList.Count}");
     }
 
     public void Dispose()
     {
         DalamudApi.PartyFinderGui.ReceiveListing -= PartyFinderGui_ReceiveListing;
+        DalamudApi.ClientState.Login             -= ClientState_OnLogin;
     }
 
     private void PartyFinderGui_ReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
@@ -55,27 +73,15 @@ internal class Data : IDisposable
 
     public List<string> GetServers()
     {
-        if (DalamudApi.ClientState.LocalPlayer == null)
-            return new();
-
-        var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
-        if (dcRowId == 0)
-        {
-            throw new IndexOutOfRangeException("aaaaaaaaaaaaaaaaaaaaaaa");
-        }
-
-        var worlds = _worldSheet.Where(world => world.DataCenter.Value?.RowId == dcRowId).ToList();
-
-        return worlds?.Select(world => world.Name).Select(dummy => dummy.RawString).ToList();
+        return _serverList;
     }
 
     public bool IsFromOtherServer(uint worldId)
     {
-        var dcRowId = DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.RowId;
 #if DEBUG || DEBUG_CN
         DalamudApi.PluginLog.Debug($"Local: {DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.Name}, {_worldSheet.GetRow(worldId).DataCenter.Value.Name}, IsFromOtherDC: {dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId}");
 #endif
-        return dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
+        return _dataCenterRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
     }
 
     public string GetNpcName(uint id)

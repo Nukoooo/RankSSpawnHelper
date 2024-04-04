@@ -12,7 +12,7 @@ internal class Commands : IDisposable
     private readonly List<string> _clearTracker = new()
     {
         "/清除计数",
-        "/clr_tracker",
+        "/clear_tracker",
     };
 
     private readonly List<string> _ggnore = new()
@@ -21,21 +21,59 @@ internal class Commands : IDisposable
         "/ggnore",
     };
 
+    private readonly List<string> _fetchHuntMap = new()
+    {
+        "/fetch_huntmap",
+        "/获取点位",
+    };
+
+    private readonly List<string> _clearPlayerSearch = new()
+    {
+        "/clear_player_search",
+        "/清除玩家搜索",
+    };
+
     public Commands()
     {
         foreach (var cmd in _clearTracker)
+        {
             DalamudApi.CommandManager.AddHandler(cmd, new(ClearTrackers)
             {
                 ShowInHelp  = true,
                 HelpMessage = "清除计数器",
             });
+        }
 
         foreach (var cmd in _ggnore)
+        {
             DalamudApi.CommandManager.AddHandler(cmd, new(SendFailedAttempt)
             {
                 ShowInHelp  = true,
                 HelpMessage = "寄了",
             });
+        }
+
+        foreach (var cmd in _fetchHuntMap)
+        {
+            DalamudApi.CommandManager.AddHandler(cmd, new((_, _) => Plugin.Features.ShowHuntMap.FetchAndPrint())
+            {
+                ShowInHelp  = true,
+                HelpMessage = "获取当前地图的点位",
+            });
+        }
+
+        foreach (var cmd in _clearPlayerSearch)
+        {
+            DalamudApi.CommandManager.AddHandler(cmd, new((_, _) =>
+                                                          {
+                                                              if (!Plugin.Features.SearchCounter.ClearPlayerList())
+                                                                  Plugin.Print("无法清除玩家搜索计数,因为当前正在搜索");
+                                                          })
+            {
+                ShowInHelp  = true,
+                HelpMessage = "清除玩家搜索计数",
+            });
+        }
 
         DalamudApi.CommandManager.AddHandler("/shelper", new((_, _) => Plugin.Windows.PluginWindow.IsOpen = true)
         {
@@ -43,11 +81,6 @@ internal class Commands : IDisposable
             HelpMessage = "打开设置菜单",
         });
 
-        DalamudApi.CommandManager.AddHandler("/fetch_huntmap", new((_, _) => Plugin.Windows.PluginWindow.IsOpen = true)
-        {
-            ShowInHelp  = true,
-            HelpMessage = "获取当前地图的点位",
-        });
     }
 
     public void Dispose()
@@ -58,8 +91,13 @@ internal class Commands : IDisposable
         foreach (var cmd in _ggnore)
             DalamudApi.CommandManager.RemoveHandler(cmd);
 
+        foreach (var cmd in _fetchHuntMap)
+            DalamudApi.CommandManager.RemoveHandler(cmd);
+
+        foreach (var cmd in _clearPlayerSearch)
+            DalamudApi.CommandManager.RemoveHandler(cmd);
+
         DalamudApi.CommandManager.RemoveHandler("/shelper");
-        DalamudApi.CommandManager.RemoveHandler("/fetch_huntmap");
     }
 
     private static void ClearTrackers(string cmd, string args)

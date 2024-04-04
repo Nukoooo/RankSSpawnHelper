@@ -23,12 +23,12 @@ internal class Player
 
     public string GetCurrentWorldName()
     {
-        return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.Name != null ? DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.Name.RawString : "";
+        return DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData!.Name != null ? DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.Name.RawString : "";
     }
 
     public uint GetCurrentWorldId()
     {
-        if (DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId != null)
+        if (DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData!.RowId != null)
             return (uint)DalamudApi.ClientState.LocalPlayer?.CurrentWorld.GameData.RowId;
 
         return 0;

@@ -185,7 +185,7 @@ internal class ShowHuntMap : IDisposable
             return;
         }
         
-        Task.Run(FetchAndPrint);
+        FetchAndPrint();
     }
 
     private void PrintOrShowSpawnPoints(List<SpawnPoints> points)
@@ -193,7 +193,7 @@ internal class ShowHuntMap : IDisposable
         var currentTerritory = DalamudApi.ClientState.TerritoryType;
         var currentInstance  = Plugin.Managers.Data.Player.GetCurrentTerritory();
        
-        if (points == null || points.Count == 0)
+        if (points.Count == 0)
             return;
         
         Plugin.Windows.HuntMapWindow.SetCurrentMap(GeTexture(currentTerritory), points, currentInstance);

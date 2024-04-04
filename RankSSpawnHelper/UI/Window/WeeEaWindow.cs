@@ -22,7 +22,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 
     public override void PreOpenCheck()
     {
-        IsOpen = DalamudApi.ClientState.LocalPlayer != null && DalamudApi.ClientState.IsLoggedIn && DalamudApi.ClientState.TerritoryType == 960 &&
+        IsOpen = DalamudApi.ClientState.IsLoggedIn && DalamudApi.ClientState.TerritoryType == 960 &&
                  Plugin.Configuration.WeeEaCounter;
     }
 

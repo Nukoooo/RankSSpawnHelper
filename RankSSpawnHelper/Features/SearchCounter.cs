@@ -15,9 +15,10 @@ namespace RankSSpawnHelper.Features;
 
 internal class SearchCounter : IDisposable
 {
-    private const    uint       TextNodeId = 0x133769;
+    private const    uint        TextNodeId = 0x133769;
     private readonly List<ulong> _playerIds = new();
-    private          int        _searchCount;
+    private          int         _searchCount;
+    private          bool        _isSearching = false;
 
     public unsafe SearchCounter()
     {
@@ -45,6 +46,17 @@ internal class SearchCounter : IDisposable
         DalamudApi.Condition.ConditionChange -= Condition_ConditionChange;
     }
 
+    public bool ClearPlayerList()
+    {
+        if (_isSearching)
+            return false;
+        
+        _playerIds.Clear();
+        _searchCount = 0;
+
+        return true;
+    }
+
     private void Condition_ConditionChange(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.BetweenAreas51 || value)
@@ -56,6 +68,7 @@ internal class SearchCounter : IDisposable
 
     private unsafe nint Detour_InfoProxyPlayerSearchUpdate(InfoProxySearch* proxy, nint packetData)
     {
+        _isSearching = true;
         var original = InfoProxyPlayerSearchUpdate.Original(proxy, packetData);
 
         var currentTerritoryId = DalamudApi.ClientState.TerritoryType;
@@ -83,6 +96,7 @@ internal class SearchCounter : IDisposable
             return original;
 
         _searchCount++;
+        _isSearching = false;
 
         if (Plugin.Configuration.PlayerSearchTip)
         {

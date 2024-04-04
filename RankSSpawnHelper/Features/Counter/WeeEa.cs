@@ -13,7 +13,7 @@ internal partial class Counter
     private void UpdateNameList()
     {
         var territoryType = DalamudApi.ClientState.TerritoryType;
-        if (DalamudApi.ClientState.LocalPlayer == null || territoryType != 960)
+        if (!DalamudApi.ClientState.IsLoggedIn || DalamudApi.ClientState.LocalPlayer == null || territoryType != 960)
             return;
         
         lock (_weeEaNameList)

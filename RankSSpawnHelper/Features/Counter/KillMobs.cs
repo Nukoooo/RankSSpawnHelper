@@ -10,6 +10,8 @@ internal partial class Counter
     [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(Detour_ActorControl))]
     private Hook<ActorControlDelegate> ActorControl { get; init; } = null!;
 
+    private const int DeathEventId = 6;
+
     private void Detour_ActorControl(uint entityId, int type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
     {
         ActorControl.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
@@ -17,8 +19,12 @@ internal partial class Counter
         if (!Plugin.Configuration.TrackKillCount)
             return;
 
-        // 死亡事件
-        if (type != 6)
+        if (type != DeathEventId)
+            return;
+
+        var territory = DalamudApi.ClientState.TerritoryType;
+
+        if (!_conditionsMob.ContainsKey(territory))
             return;
 
         var target       = DalamudApi.ObjectTable.SearchById(entityId);
@@ -37,23 +43,20 @@ internal partial class Counter
 
         DalamudApi.PluginLog.Information($"{target.Name} got killed by {sourceTarget.Name}");
 
-        Process(target, sourceTarget, DalamudApi.ClientState.TerritoryType);
+        Process(target, sourceTarget, territory);
     }
 
     private void Process(GameObject target, GameObject source, ushort territory)
     {
-        if (!_conditionsMob.ContainsKey(territory))
-            return;
-
         var targetName = target.Name.TextValue.ToLower();
 
-        if (!_conditionsMob.TryGetValue(territory, out var name))
+        if (!_conditionsMob.TryGetValue(territory, out var nameIdMap))
         {
             DalamudApi.PluginLog.Error($"Cannot get condition name with territory id \"{territory}\"");
             return;
         }
 
-        if (!name.ContainsKey(targetName))
+        if (!nameIdMap.TryGetValue(targetName, out var npcId))
             return;
 
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
@@ -63,7 +66,7 @@ internal partial class Counter
             source.ObjectId != DalamudApi.ClientState.LocalPlayer.ObjectId)
             return;
 
-        AddToTracker(currentInstance, Plugin.Managers.Data.GetNpcName(name[targetName]), name[targetName]);
+        AddToTracker(currentInstance, Plugin.Managers.Data.GetNpcName(npcId), npcId);
     }
 
     private delegate void ActorControlDelegate(uint entityId, int id, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4, uint arg5, ulong targetId, byte  a10);

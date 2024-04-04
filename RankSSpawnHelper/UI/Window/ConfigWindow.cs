@@ -33,8 +33,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     private int          _selectedMonster;
     private int          _selectedTab;
 
-    private List<string> _servers;
-
     private string _serverUrl = string.Empty;
     private bool   _showColorPicker;
 
@@ -351,7 +349,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         {
             ImGui.PushFont(UiBuilder.IconFont);
             if (ImGui.Button(FontAwesomeIcon.Search.ToIconString()))
-                Plugin.Managers.Data.SRank.FetchData(_servers, _monsterNames[_selectedMonster], _selectedInstance);
+                Plugin.Managers.Data.SRank.FetchData(Plugin.Managers.Data.GetServers(), _monsterNames[_selectedMonster], _selectedInstance);
             ImGui.PopFont();
         }
 
@@ -705,7 +703,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         {
             if (DateTime.Now - _lastQueryTrackerDataTime >= TimeSpan.FromSeconds(30) && Plugin.Managers.Socket.Main.Connected())
             {
-                Plugin.Managers.Socket.Main.SendMessage(new GetTrackerList()
+                Plugin.Managers.Socket.Main.SendMessage(new GetTrackerList
                 {
                     Type       = "GetTrackerList",
                     ServerList = Plugin.Managers.Data.GetServers(),
@@ -771,16 +769,6 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
                 });
             }
         }
-
-        Task.Run(async () =>
-                 {
-                     while (DalamudApi.ClientState.LocalPlayer == null)
-                     {
-                         await Task.Delay(100);
-                     }
-
-                     _servers = Plugin.Managers.Data.GetServers();
-                 });
     }
 
     public void SetTrackerData(List<TrackerData> data)

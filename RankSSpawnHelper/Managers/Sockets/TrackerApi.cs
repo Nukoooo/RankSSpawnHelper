@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RankSSpawnHelper.Models;
 using SocketIOClient;
+using SocketIOClient.Newtonsoft.Json;
 
 namespace RankSSpawnHelper.Managers.Sockets;
 
@@ -16,9 +17,10 @@ internal class TrackerApi : IDisposable
 
     public TrackerApi()
     {
-        DalamudApi.ClientState.Login += Client_OnLogin;
+        DalamudApi.ClientState.Login  += ClientState_OnLogin;
+        DalamudApi.ClientState.Logout += ClientState_OnLogout;
 
-        if (DalamudApi.ClientState.LocalPlayer == null || !DalamudApi.ClientState.IsLoggedIn)
+        if (!DalamudApi.ClientState.IsLoggedIn)
             return;
 
         ConnectHuntUpdate();
@@ -29,23 +31,26 @@ internal class TrackerApi : IDisposable
     {
         if (_huntUpdateclient != null)
             _huntUpdateclient.OnConnected -= Client_OnConnected;
+
         if (_route != null)
             _route.OnConnected -= Client_OnConnected;
-        DalamudApi.ClientState.Login -= Client_OnLogin;
+
+        DalamudApi.ClientState.Login  -= ClientState_OnLogin;
+        DalamudApi.ClientState.Logout -= ClientState_OnLogout;
 
         _huntUpdateclient?.Dispose();
         _route?.Dispose();
     }
 
-    private void Client_OnLogin()
+    private void ClientState_OnLogin()
     {
-        Task.Run(async () =>
-                 {
-                     if (DalamudApi.ClientState.LocalPlayer == null)
-                         await Task.Delay(100);
+        ConnectHuntUpdate();
+        ConnectRoute();
+    }
 
-                     OnLogin();
-                 });
+    private void ClientState_OnLogout()
+    {
+        Dispose();
     }
 
     private async void ConnectHuntUpdate()
@@ -62,34 +67,41 @@ internal class TrackerApi : IDisposable
             ReconnectionDelayMax = 5,
         });
 
+        _huntUpdateclient.JsonSerializer = new NewtonsoftJsonSerializer(new());
+
         _huntUpdateclient.OnAny((name, response) =>
-                                 {
-                                     // WorldName_HuntName
-                                     try
-                                     {
-                                         DalamudApi.PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
+                                {
+                                    // WorldName_HuntName
+                                    try
+                                    {
+                                        DalamudApi.PluginLog.Debug($"_huntUpdateclient. Name: {name}, {response}");
 
-                                         var split = name.Split('_');
-                                         if (split.Last() == "SpawnPoint")
-                                         {
-                                             var point = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.ToString());
-                                             Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point[0].worldName, point[0].huntName, point[0].key);
-                                             return;
-                                         }
+                                        var split = name.Split('_');
+                                        if (split.Last() == "SpawnPoint")
+                                        {
+                                            var point = response.GetValue<SpawnPoints>();
+                                            DalamudApi.Framework.Run(() => Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point.worldName, point.huntName, point.key));
+                                            return;
+                                        }
 
-                                         // ignore fate
-                                         if (split[1].StartsWith("FATE"))
-                                             return;
+                                        // ignore fate
+                                        if (split[1].StartsWith("FATE"))
+                                            return;
 
-                                         // TODO: maybe update huntstatus here
-                                     }
-                                     catch (Exception e)
-                                     {
-                                         DalamudApi.PluginLog.Error(e, "Erro when getting /HuntUpdate");
-                                     }
-                                 });
+                                        var huntStatus = response.GetValue<HuntStatus>();
+                                        DalamudApi.PluginLog.Debug($"huntStatus: {huntStatus.worldName}");
 
-        _huntUpdateclient.OnConnected += Client_OnConnected;
+                                        // TODO: maybe update huntstatus here
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        DalamudApi.PluginLog.Error(e, "Erro when getting /HuntUpdate");
+                                    }
+                                });
+
+        _huntUpdateclient.OnConnected    += Client_OnConnected;
+        _huntUpdateclient.OnDisconnected += (sender, s) => { DalamudApi.PluginLog.Debug($"_huntUpdateclient.OnDisconnect {s}"); };
+
         try
         {
             await _huntUpdateclient.ConnectAsync();
@@ -110,38 +122,45 @@ internal class TrackerApi : IDisposable
             Path                 = "/socket",
             Reconnection         = true,
             ReconnectionAttempts = int.MaxValue,
-            ReconnectionDelay    = 2.5,
-            ReconnectionDelayMax = 5
+            ReconnectionDelay    = 5,
+            ReconnectionDelayMax = 10,
+        });
+
+        _route.JsonSerializer = new NewtonsoftJsonSerializer(new()
+        {
+            TypeNameHandling = TypeNameHandling.All
         });
 
         _route.OnAny((name, response) =>
-                      {
-                          DalamudApi.PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
+                     {
+                         DalamudApi.PluginLog.Debug($"_route. Name: {name}, response: {response.GetValue().GetString()}");
 
-                          try
-                          {
-                              switch (name)
-                              {
-                                  case "SpawnPoint":
-                                      // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
-                                      DalamudApi.PluginLog.Debug($"{name}");
+                         try
+                         {
+                             switch (name)
+                             {
+                                 case "SpawnPoint":
+                                     // var point = JsonConvert.DeserializeObject<SpawnPoints>(response.GetValue().GetString());
+                                     DalamudApi.PluginLog.Debug($"{name}");
 
-                                      return;
-                                  case "Huntmap":
-                                      var huntMapName = _requestQueue.Dequeue().Split('@');
-                                      var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
+                                     return;
+                                 case "Huntmap":
+                                     var huntMapName = _requestQueue.Dequeue().Split('@');
+                                     var spawnPoints = response.GetValue<List<SpawnPoints>>();
+                                     DalamudApi.PluginLog.Debug($"{spawnPoints.Count} / {spawnPoints[0].x} - {spawnPoints[0].y}");
+                                     Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
+                                     break;
+                             }
+                         }
+                         catch (Exception e)
+                         {
+                             DalamudApi.PluginLog.Error(e, "Erro when getting /PublicRoutes");
+                         }
+                     });
 
-                                      Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
-                                      break;
-                              }
-                          }
-                          catch (Exception e)
-                          {
-                              DalamudApi.PluginLog.Error(e, "Erro when getting /PublicRoutes");
-                          }
-                      });
-
-        _route.OnConnected += Client_OnConnected;
+        _route.OnConnected    += Client_OnConnected;
+        _route.OnDisconnected += (sender, s) => { DalamudApi.PluginLog.Debug($"_router.OnDisconnect {s}"); };
+        _route.OnError        += (sender, s) => { DalamudApi.PluginLog.Debug($"_router.OnError {s}"); };
         try
         {
             await _route.ConnectAsync();
@@ -150,12 +169,6 @@ internal class TrackerApi : IDisposable
         {
             DalamudApi.PluginLog.Error(e, "Error when connecting to /PublicRoutes");
         }
-    }
-
-    private void OnLogin()
-    {
-        ConnectHuntUpdate();
-        ConnectRoute();
     }
 
     public async void SendHuntmapRequest(string worldName, string huntName)
@@ -175,28 +188,30 @@ internal class TrackerApi : IDisposable
         }
     }
 
-    private async void Client_OnConnected(object sender, EventArgs e)
+    private void Client_OnConnected(object sender, EventArgs e)
     {
-        while (DalamudApi.ClientState.LocalPlayer == null || DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData == null)
-            await Task.Delay(100);
+        DalamudApi.Framework.Run(async () =>
+                                 {
+                                     while (!DalamudApi.ClientState.IsLoggedIn)
+                                         await Task.Delay(100);
 
-        // tell the server what datacenter we are in
-        var dataCenter = DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData.DataCenter.Value.Name.RawString;
-        DalamudApi.PluginLog.Debug($"DataCenter: {dataCenter}");
+                                     try
+                                     {
+                                         // tell the server what datacenter we are in
+                                         var dataCenter = DalamudApi.ClientState.LocalPlayer.CurrentWorld.GameData.DataCenter.Value.Name.RawString;
+                                         DalamudApi.PluginLog.Debug($"DataCenter: {dataCenter}");
 
-        try
-        {
-            // HuntMap
-            await ((SocketIO)sender).EmitAsync("SetDatacenter", dataCenter);
-            // HuntUpdate
-            await ((SocketIO)sender).EmitAsync("Change Room Request", dataCenter);
+                                         // HuntMap
+                                         await ((SocketIO)sender).EmitAsync("SetDatacenter", dataCenter);
+                                         // HuntUpdate
+                                         await ((SocketIO)sender).EmitAsync("Change Room Request", dataCenter);
 
-            DalamudApi.PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
-        }
-        catch (Exception ex)
-        {
-            DalamudApi.PluginLog.Error(ex, "Error when conneting to tracker api.");
-        }
+                                         DalamudApi.PluginLog.Debug($"Conncted to tracker api. {((SocketIO)sender).Namespace}");
+                                     }
+                                     catch (Exception ex)
+                                     {
+                                         DalamudApi.PluginLog.Error(ex, "Error when conneting to tracker api.");
+                                     }
+                                 });
     }
-    
 }
