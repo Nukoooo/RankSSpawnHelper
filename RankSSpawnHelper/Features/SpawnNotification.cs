@@ -6,13 +6,12 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.Features;
 
 internal class SpawnNotification : IDisposable
 {
-    private readonly Dictionary<string, HuntStatus> _huntStatus = new();
+    /*private readonly Dictionary<string, HuntStatus> _huntStatus = new();*/
 
     private readonly Dictionary<ushort, uint> _monsterIdMap = new()
     {
@@ -59,8 +58,8 @@ internal class SpawnNotification : IDisposable
 
         _shouldNotNotify = true;
 
-        var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
-        _huntStatus.Remove(currentInstance);
+        /*var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
+        _huntStatus.Remove(currentInstance);*/
     }
 
     private void Condition_OnConditionChange(ConditionFlag flag, bool value)
@@ -93,18 +92,16 @@ internal class SpawnNotification : IDisposable
                          var split           = currentInstance.Split('@');
                          var monsterName     = Plugin.Managers.Data.SRank.GetSRankNameById(srankId);
 
-                         if (!_huntStatus.TryGetValue(currentInstance, out var result))
+                         /*if (!_huntStatus.TryGetValue(currentInstance, out var result))
                          {
                              result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
                                                                                                                   ? 0
                                                                                                                   : int.Parse(split[2]));
-                         }
+                         }*/
 
-                         result ??= await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
+                         var result = await Plugin.Managers.Data.SRank.FetchHuntStatus(split[0], monsterName, split.Length == 2
                                                                                                                 ? 0
                                                                                                                 : int.Parse(split[2]));
-
-                         _huntStatus.TryAdd(currentInstance, result);
 
                          var payloads = new List<Payload>
                          {

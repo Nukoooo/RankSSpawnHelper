@@ -101,7 +101,7 @@ internal partial class Counter
             goto callOrginal;
 
         // you can discard anything in The Lochs
-        if ( !value.ContainsValue(itemId))
+        if (!value.ContainsValue(itemId))
             goto callOrginal;
 
         switch (territoryType)
