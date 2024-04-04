@@ -67,8 +67,6 @@ internal class TrackerApi : IDisposable
             ReconnectionDelayMax = 5,
         });
 
-        _huntUpdateclient.JsonSerializer = new NewtonsoftJsonSerializer(new());
-
         _huntUpdateclient.OnAny((name, response) =>
                                 {
                                     // WorldName_HuntName
@@ -124,11 +122,6 @@ internal class TrackerApi : IDisposable
             ReconnectionAttempts = int.MaxValue,
             ReconnectionDelay    = 5,
             ReconnectionDelayMax = 10,
-        });
-
-        _route.JsonSerializer = new NewtonsoftJsonSerializer(new()
-        {
-            TypeNameHandling = TypeNameHandling.All
         });
 
         _route.OnAny((name, response) =>

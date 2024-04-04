@@ -51,7 +51,7 @@ public class EntryPoint : IDalamudPlugin
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
             new TextPayload("  [-] NET8 blablablablabla\n"),
-            new TextPayload("  [-] 好想重写代码啊\n"),
+            new TextPayload("  [-] 好想重写啊\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
         });
