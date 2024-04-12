@@ -77,7 +77,7 @@ internal class TrackerApi : IDisposable
                                         var split = name.Split('_');
                                         if (split.Last() == "SpawnPoint")
                                         {
-                                            var point = response.GetValue<SpawnPoints>();
+                                            var point = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.ToString()).First();
                                             DalamudApi.Framework.Run(() => Plugin.Features.ShowHuntMap.RemoveSpawnPoint(point.worldName, point.huntName, point.key));
                                             return;
                                         }
@@ -141,6 +141,7 @@ internal class TrackerApi : IDisposable
                                      var huntMapName = _requestQueue.Dequeue().Split('@');
                                      // TODO: find a better way for this crap
                                      /*var spawnPoints = response.GetValue<List<SpawnPoints>>();*/
+
                                      var spawnPoints = JsonConvert.DeserializeObject<List<SpawnPoints>>(response.GetValue().GetString());
                                      DalamudApi.PluginLog.Debug($"{spawnPoints.Count} / {spawnPoints[0].x} - {spawnPoints[0].y}");
                                      Plugin.Features.ShowHuntMap.AddSpawnPoints(huntMapName[0], huntMapName[1], spawnPoints);
@@ -178,7 +179,7 @@ internal class TrackerApi : IDisposable
                 return;
             default:
                 _requestQueue.Enqueue($"{worldName}@{huntName}");
-                await _route.EmitAsync("Huntmap", $"{{\"HuntName\": \"{huntName}\", \"WorldName\": \"{worldName}\"}}");
+                await _route.EmitAsync("Huntmap", $"{{\"HuntName\": \"{huntName}\", \"WorldName\": \"{worldName}\", \"GetAllSpawnPoints\": true}}");
                 break;
         }
     }
