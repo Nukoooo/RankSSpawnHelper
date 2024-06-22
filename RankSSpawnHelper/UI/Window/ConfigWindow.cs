@@ -5,6 +5,8 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
+using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Managers.DataManagers;
@@ -141,6 +143,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         DrawColorPicker();
     }
 
+#if RELEASE || RELEASE_CN
+    string configurationProxyUrl = Plugin.Configuration.ProxyUrl;
+#endif
+
     private void DrawCounterTab()
     {
         var trackKillCount = Plugin.Configuration.TrackKillCount;
@@ -250,8 +256,8 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             Plugin.Configuration.Save();
         }
 
-        var configurationProxyUrl = Plugin.Configuration.ProxyUrl;
-        ImGui.InputText("代理链接", ref configurationProxyUrl, 256);
+        ImGui.InputTextWithHint("##proxyURL", "代理链接", ref configurationProxyUrl, 256);
+        ImGui.Text("当前代理链接：" + Plugin.Configuration.ProxyUrl);
 
         if (ImGui.Button("保存并重新连接"))
         {
