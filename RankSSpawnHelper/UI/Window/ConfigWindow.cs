@@ -142,7 +142,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     }
 
 #if RELEASE || RELEASE_CN
-    string configurationProxyUrl = Plugin.Configuration.ProxyUrl;
+    string _proxyUrl = Plugin.Configuration.ProxyUrl;
 #endif
 
     private void DrawCounterTab()
@@ -254,12 +254,13 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             Plugin.Configuration.Save();
         }
 
-        ImGui.InputTextWithHint("##proxyURL", "代理链接", ref configurationProxyUrl, 256);
-        ImGui.Text("当前代理链接：" + Plugin.Configuration.ProxyUrl);
+        if (ImGui.InputTextWithHint("##proxyURL", "代理链接", ref _proxyUrl, 256))
+        {
+            Plugin.Configuration.ProxyUrl = _proxyUrl;
+        }
 
         if (ImGui.Button("保存并重新连接"))
         {
-            Plugin.Configuration.ProxyUrl = configurationProxyUrl;
             Plugin.Configuration.Save();
             Plugin.Managers.Socket.Main.Reconnect();
         }
