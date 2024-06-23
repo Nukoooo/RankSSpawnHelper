@@ -142,7 +142,7 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
     }
 
 #if RELEASE || RELEASE_CN
-    string _proxyUrl = Plugin.Configuration.ProxyUrl;
+    private string _proxyUrl = Plugin.Configuration.ProxyUrl;
 #endif
 
     private void DrawCounterTab()
