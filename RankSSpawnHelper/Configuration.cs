@@ -73,7 +73,7 @@ public class Configuration : IPluginConfiguration
     public bool UseProxy { get; set; } = false;
     public string ProxyUrl { get; set; } = "http://127.0.0.1:7890";
 
-    public int Version { get; set; }
+    public int Version { get; set; } = 0;
 
     public void Save()
     {

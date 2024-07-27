@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net8.0-windows8.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Version>1.3.6.2</Version>
 		<Configurations>Debug;Release;Debug_CN;Release_CN</Configurations>
@@ -30,18 +30,14 @@
 		<PackageReference Include="Websocket.Client" Version="5.1.1" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release' Or '$(Configuration)' == 'Debug'">
-		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release_CN' Or '$(Configuration)' == 'Debug_CN'">
-		<DalamudLibPath>C:\XivLauncherCN\XIVLauncherCN\Roaming\addon\Hooks\dev</DalamudLibPath>
+	<PropertyGroup>
+		<DalamudLibPath>..\.github\dependencies</DalamudLibPath>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Reference Include="Dalamud">
 			<HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
-			<Private>false</Private>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="ImGui.NET">
 			<HintPath>$(DalamudLibPath)\ImGui.NET.dll</HintPath>

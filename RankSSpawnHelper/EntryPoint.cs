@@ -40,12 +40,6 @@ public class EntryPoint : IDalamudPlugin
         Plugin.PluginVersion = pluginVersion;
         DalamudApi.PluginLog.Info($"Version: {Plugin.PluginVersion}");
 
-#if RELEASE
-        if (Plugin.Configuration.PluginVersion == pluginVersion)
-            return;
-        Plugin.Configuration.PluginVersion = pluginVersion;
-#endif
-
         Plugin.Print(new List<Payload>
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),

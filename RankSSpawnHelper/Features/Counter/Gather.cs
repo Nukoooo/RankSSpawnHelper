@@ -13,7 +13,7 @@ internal partial class Counter
     {
         SystemLogMessage.Original(a1, eventId, logId, a4, a5);
 #if DEBUG || DEBUG_CN
-        PluginLog.Warning($"eventID: 0x{eventId:X}, logId: {logId}");
+        DalamudApi.PluginLog.Warning($"eventID: 0x{eventId:X}, logId: {logId}");
 #endif
         // logId = 9332 => 特殊恶名精英的手下开始了侦察活动……
 
