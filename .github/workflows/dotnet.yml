@@ -26,6 +26,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Get Version
+      shell: pwsh
       run: |
         $xml = [xml](Get-Content '/home/runner/work/RankSSpawnHelper/RankSSpawnHelper/RankSSpawnHelper.csproj')  
         $version = $xml.Project.PropertyGroup.Version  
