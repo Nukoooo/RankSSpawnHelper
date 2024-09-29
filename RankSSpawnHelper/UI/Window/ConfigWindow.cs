@@ -141,6 +141,10 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
         DrawColorPicker();
     }
 
+#if RELEASE || RELEASE_CN
+    private string _proxyUrl = Plugin.Configuration.ProxyUrl;
+#endif
+
     private void DrawCounterTab()
     {
         var trackKillCount = Plugin.Configuration.TrackKillCount;
@@ -250,12 +254,13 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
             Plugin.Configuration.Save();
         }
 
-        var configurationProxyUrl = Plugin.Configuration.ProxyUrl;
-        ImGui.InputText("代理链接", ref configurationProxyUrl, 256);
+        if (ImGui.InputTextWithHint("##proxyURL", "代理链接", ref _proxyUrl, 256))
+        {
+            Plugin.Configuration.ProxyUrl = _proxyUrl;
+        }
 
         if (ImGui.Button("保存并重新连接"))
         {
-            Plugin.Configuration.ProxyUrl = configurationProxyUrl;
             Plugin.Configuration.Save();
             Plugin.Managers.Socket.Main.Reconnect();
         }
