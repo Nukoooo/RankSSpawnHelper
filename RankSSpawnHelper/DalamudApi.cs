@@ -10,7 +10,7 @@ namespace RankSSpawnHelper;
 internal class DalamudApi
 {
     [PluginService]
-    internal static DalamudPluginInterface Interface { get; private set; } = null!;
+    internal static IDalamudPluginInterface Interface { get; private set; } = null!;
 
     [PluginService]
     internal static IChatGui ChatGui { get; private set; } = null!;

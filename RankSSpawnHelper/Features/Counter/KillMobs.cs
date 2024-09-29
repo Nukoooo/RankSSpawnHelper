@@ -46,7 +46,7 @@ internal partial class Counter
         Process(target, sourceTarget, territory);
     }
 
-    private void Process(GameObject target, GameObject source, ushort territory)
+    private void Process(IGameObject target, IGameObject source, ushort territory)
     {
         var targetName = target.Name.TextValue.ToLower();
 
@@ -62,8 +62,8 @@ internal partial class Counter
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
         var sourceOwner = source.OwnerId;
-        if (sourceOwner != DalamudApi.ClientState.LocalPlayer.ObjectId &&
-            source.ObjectId != DalamudApi.ClientState.LocalPlayer.ObjectId)
+        if (sourceOwner != DalamudApi.ClientState.LocalPlayer.DataId &&
+            source.DataId != DalamudApi.ClientState.LocalPlayer.DataId)
             return;
 
         AddToTracker(currentInstance, Plugin.Managers.Data.GetNpcName(npcId), npcId);

@@ -70,7 +70,7 @@ internal class Data : IDisposable
         DalamudApi.ClientState.Login             -= ClientState_OnLogin;
     }
 
-    private void PartyFinderGui_ReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
+    private void PartyFinderGui_ReceiveListing(IPartyFinderListing listing, IPartyFinderListingEventArgs args)
     {
         _serverRestartTime = listing.LastPatchHotfixTimestamp;
     }
@@ -83,7 +83,7 @@ internal class Data : IDisposable
     public bool IsFromOtherServer(uint worldId)
     {
 #if DEBUG || DEBUG_CN
-        DalamudApi.PluginLog.Debug($"Local: {DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.Name}, {_worldSheet.GetRow(worldId).DataCenter.Value.Name}, IsFromOtherDC: {dcRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId}");
+        DalamudApi.PluginLog.Debug($"Local: {DalamudApi.ClientState.LocalPlayer.HomeWorld.GameData.DataCenter.Value.Name}, {_worldSheet.GetRow(worldId).DataCenter.Value.Name}, IsFromOtherDC: {_dataCenterRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId}");
 #endif
         return _dataCenterRowId != _worldSheet.GetRow(worldId).DataCenter.Value.RowId;
     }

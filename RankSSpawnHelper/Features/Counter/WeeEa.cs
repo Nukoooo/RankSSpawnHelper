@@ -41,7 +41,7 @@ internal partial class Counter
                     continue;
                 }
 
-                var owner = (PlayerCharacter)DalamudApi.ObjectTable[obj.ObjectIndex - 1];
+                var owner = (IPlayerCharacter)DalamudApi.ObjectTable[obj.ObjectIndex - 1];
                 if (owner == null) continue;
 
                 var name = $"{owner.Name.TextValue}@{owner.HomeWorld.GameData!.Name.RawString}";

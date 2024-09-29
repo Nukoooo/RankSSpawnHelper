@@ -50,7 +50,7 @@ public class PluginCommandManager<THost> : IDisposable
 
     private IEnumerable<(string, CommandInfo)> GetCommandInfoTuple(MethodInfo method)
     {
-        var handlerDelegate = (HandlerDelegate)Delegate.CreateDelegate(typeof(HandlerDelegate), _host, method);
+        var handlerDelegate = (IReadOnlyCommandInfo.HandlerDelegate)Delegate.CreateDelegate(typeof(IReadOnlyCommandInfo.HandlerDelegate), _host, method);
 
         var command         = handlerDelegate.Method.GetCustomAttribute<CommandAttribute>();
         var aliases         = handlerDelegate.Method.GetCustomAttribute<AliasesAttribute>();

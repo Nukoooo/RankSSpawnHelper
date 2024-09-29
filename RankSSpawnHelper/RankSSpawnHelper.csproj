@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
-		<Version>1.3.6.2</Version>
+		<Version>1.3.7.0</Version>
 		<Configurations>Debug;Release;Debug_CN;Release_CN</Configurations>
 	</PropertyGroup>
 
@@ -25,9 +25,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DalamudPackager" Version="2.1.12" />
+		<PackageReference Include="DalamudPackager" Version="2.1.13" />
 		<PackageReference Include="SocketIOClient.Newtonsoft.Json" Version="3.0.7" />
-		<PackageReference Include="Websocket.Client" Version="5.1.1" />
+		<PackageReference Include="Websocket.Client" Version="5.1.2" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release' Or '$(Configuration)' == 'Debug'">
@@ -35,7 +35,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release_CN' Or '$(Configuration)' == 'Debug_CN'">
-		<DalamudLibPath>C:\XivLauncherCN\XIVLauncherCN\Roaming\addon\Hooks\dev</DalamudLibPath>
+		<DalamudLibPath>F:\XivLauncherCn\XIVLauncherCN\Roaming\addon\Hooks\dev</DalamudLibPath>
 	</PropertyGroup>
 
 	<ItemGroup>

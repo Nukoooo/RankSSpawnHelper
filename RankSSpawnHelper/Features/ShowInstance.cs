@@ -5,7 +5,7 @@ namespace RankSSpawnHelper.Features;
 
 internal class ShowInstance : IDisposable
 {
-    private readonly DtrBarEntry _dtrBarEntry;
+    private readonly IDtrBarEntry _dtrBarEntry;
 
     public ShowInstance()
     {
@@ -25,7 +25,7 @@ internal class ShowInstance : IDisposable
     public void Dispose()
     {
         DalamudApi.Framework.Update -= Framework_OnUpdate;
-        _dtrBarEntry?.Dispose();
+        _dtrBarEntry?.Remove();
         GC.SuppressFinalize(this);
     }
 

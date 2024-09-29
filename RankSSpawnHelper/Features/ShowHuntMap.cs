@@ -59,7 +59,7 @@ internal class ShowHuntMap : IDisposable
                              continue;
                          }
 
-                         Plugin.Managers.Data.MapTexture.AddMapTexture(k, mapRow.Value);
+                         await DalamudApi.Framework.RunOnFrameworkThread(() =>Plugin.Managers.Data.MapTexture.AddMapTexture(k, mapRow.Value));
                      }
                  });
     }

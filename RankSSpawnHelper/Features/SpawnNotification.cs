@@ -48,7 +48,7 @@ internal class SpawnNotification : IDisposable
         DalamudApi.Condition.ConditionChange -= Condition_OnConditionChange;
     }
 
-    private void ChatGui_OnChatMessage(XivChatType type, uint senderid, ref SeString sender, ref SeString message, ref bool ishandled)
+    private void ChatGui_OnChatMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool ishandled)
     {
         if (type != XivChatType.SystemMessage)
             return;

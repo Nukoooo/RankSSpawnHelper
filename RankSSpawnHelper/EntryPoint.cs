@@ -14,7 +14,7 @@ public class EntryPoint : IDalamudPlugin
     private readonly Commands     _commands;
     private readonly WindowSystem _windowSystem;
 
-    public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
+    public EntryPoint(IDalamudPluginInterface pi)
     {
         pi.Create<DalamudApi>();
         pi.Create<Plugin>();
@@ -50,7 +50,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 尝试修复点位不更新的BUG\n"),
+            new TextPayload("  [-] 7.0 适配\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
         });

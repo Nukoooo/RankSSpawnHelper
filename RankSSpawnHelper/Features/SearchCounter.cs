@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Hooking;
+using Dalamud.Memory;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -27,7 +29,8 @@ internal class SearchCounter : IDisposable
         var uiModule   = (UIModule*)DalamudApi.GameGui.GetUIModule();
         var infoModule = uiModule->GetInfoModule();
         var proxy      = infoModule->GetInfoProxyById(InfoProxyId.PlayerSearch);
-        InfoProxyPlayerSearchUpdate = DalamudApi.GameInteropProvider.HookFromAddress<InfoProxyPlayerSearchUpdateDelegate>((nint)proxy->vtbl[12], Detour_InfoProxyPlayerSearchUpdate);
+
+        InfoProxyPlayerSearchUpdate = DalamudApi.GameInteropProvider.HookFromAddress<InfoProxyPlayerSearchUpdateDelegate>(((nint*)proxy->VirtualTable)[12], Detour_InfoProxyPlayerSearchUpdate);
 
         InfoProxyPlayerSearchUpdate.Enable();
         SocialListDraw.Enable();
@@ -89,7 +92,7 @@ internal class SearchCounter : IDisposable
                 continue;
 
             _playerIds.Add(entry->ContentId);
-            DalamudApi.PluginLog.Debug($"{Marshal.PtrToStringUTF8((IntPtr)entry->Name)} / content_id: {entry->ContentId}");
+            DalamudApi.PluginLog.Debug($"{Encoding.UTF8.GetString(entry->Name)} / content_id: {entry->ContentId}");
         }
 
         if (original == 1)
@@ -144,7 +147,7 @@ internal class SearchCounter : IDisposable
 
         // for whatever reason, this function is also called in other addon..
         // probably some kind of inherited addon
-        var name = Marshal.PtrToStringUTF8(new(unitBase->Name));
+        var name = Encoding.UTF8.GetString(unitBase->Name);
         if (name is not "SocialList")
             return;
 
@@ -160,7 +163,7 @@ internal class SearchCounter : IDisposable
         {
             if (unitBase->UldManager.NodeList[i] == null)
                 continue;
-            if (unitBase->UldManager.NodeList[i]->NodeID != TextNodeId)
+            if (unitBase->UldManager.NodeList[i]->NodeId != TextNodeId)
                 continue;
 
             textNode = (AtkTextNode*)unitBase->UldManager.NodeList[i];
@@ -203,7 +206,7 @@ internal class SearchCounter : IDisposable
             newTextNode->TextFlags         = numberNode->TextFlags;
             newTextNode->TextFlags2        = numberNode->TextFlags2;
 
-            newTextNode->AtkResNode.NodeID = TextNodeId;
+            newTextNode->AtkResNode.NodeId = TextNodeId;
 
             if (lastNode->ChildNode != null)
             {
@@ -238,7 +241,7 @@ internal class SearchCounter : IDisposable
         var drawPosY = numberNodeRes->Y;
 
         SetNodePosition((AtkResNode*)textNode, drawPosX, drawPosY);
-        if (!textNode->AtkResNode.IsVisible)
+        if (!textNode->AtkResNode.IsVisible())
             textNode->AtkResNode.ToggleVisibility(true);
     }
 

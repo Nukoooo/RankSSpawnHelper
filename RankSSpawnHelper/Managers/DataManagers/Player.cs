@@ -36,7 +36,7 @@ internal class Player
 
     public unsafe int GetCurrentInstance()
     {
-        return UIState.Instance()->AreaInstance.Instance;
+        return (int)UIState.Instance()->PublicInstance.InstanceId;
     }
 
     public static string GetLocalPlayerName()

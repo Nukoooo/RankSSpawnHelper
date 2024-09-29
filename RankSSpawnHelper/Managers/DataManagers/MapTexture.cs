@@ -1,7 +1,10 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 using Lumina.Data.Files;
 using Lumina.Excel.GeneratedSheets;
 using RankSSpawnHelper.Models;
@@ -28,21 +31,17 @@ internal class MapTexture : IDisposable
         {
             var path    = GetPathFromMap(map);
             var texture = GetTexture(path);
-            if (texture != null && texture.ImGuiHandle != nint.Zero)
+            if (texture.GetWrapOrDefault() is {} wrap)
             {
                 DalamudApi.PluginLog.Debug($"Added mapid: {map.RowId}, {map.SizeFactor}");
                 _textures.TryAdd(map.RowId, new()
                 {
-                    texture    = texture,
-                    size       = new(texture.Width, texture.Height),
+                    texture    = wrap,
+                    size       = new(wrap.Width, wrap.Height),
                     mapId      = map.RowId,
                     territory  = territory,
                     SizeFactor = map.SizeFactor,
                 });
-            }
-            else
-            {
-                texture?.Dispose();
             }
         }
         catch (Exception ex)
@@ -53,16 +52,16 @@ internal class MapTexture : IDisposable
 
     public MapTextureInfo? GetTexture(uint map)
     {
-        return _textures.TryGetValue(map, out var texture) ? texture : null;
+        return _textures.GetValueOrDefault(map);
     }
 
-    private static IDalamudTextureWrap? GetTexture(string path)
+    private static ISharedImmediateTexture GetTexture(string path)
     {
         if (path[0] is not ('/' or '\\') && path[1] != ':')
-            return DalamudApi.TextureProvider.GetTextureFromGame(path);
+            return DalamudApi.TextureProvider.GetFromGame(path);
 
         var texFile = DalamudApi.DataManager.GameData.GetFileFromDisk<TexFile>(path);
-        return DalamudApi.TextureProvider.GetTexture(texFile);
+        return DalamudApi.TextureProvider.GetFromFile(texFile.FilePath);
     }
 
     private static string GetPathFromMap(Map map)

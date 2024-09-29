@@ -11,7 +11,7 @@ internal partial class Counter
     [Signature("40 53 48 83 EC ?? 0F B6 81 ?? ?? ?? ?? 48 8B D9 F3 0F 11 89", DetourName = nameof(Detour_ProcessOpenTreasurePacket))]
     private Hook<ProcessOpenTreasurePacketDeleagate> ProcessOpenTreasure { get; init; } = null!;
 
-    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B D9 49 8B F8 41 0F B7 08", DetourName = nameof(Detour_ProcessActorControlSelfPacket))]
+    [Signature("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC ?? 33 FF 48 8B D9 41 0F B7 08", DetourName = nameof(Detour_ProcessActorControlSelfPacket))]
     private Hook<ProcessActorControlSelfPacketDelegate> ProcessActorControlSelf { get; init; } = null!;
 
     private void Detour_ProcessOpenTreasurePacket(nint a1, float a2, float a3, float a4)
