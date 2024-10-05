@@ -62,8 +62,8 @@ internal partial class Counter
         var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
         var sourceOwner = source.OwnerId;
-        if (sourceOwner != DalamudApi.ClientState.LocalPlayer.DataId &&
-            source.DataId != DalamudApi.ClientState.LocalPlayer.DataId)
+        if (sourceOwner != DalamudApi.ClientState.LocalPlayer.EntityId &&
+            source.EntityId != DalamudApi.ClientState.LocalPlayer.EntityId)
             return;
 
         AddToTracker(currentInstance, Plugin.Managers.Data.GetNpcName(npcId), npcId);
