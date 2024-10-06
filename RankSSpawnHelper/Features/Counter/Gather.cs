@@ -46,7 +46,7 @@ internal partial class Counter
         if (!value.ContainsValue(normalizedId))
             return;
 
-        var name = Plugin.Managers.Data.GetItemName(itemId);
+        var name = Plugin.Managers.Data.GetItemName(normalizedId);
 
         AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
     }
