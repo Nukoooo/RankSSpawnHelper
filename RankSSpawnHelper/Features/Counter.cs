@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
 using Lumina.Excel.GeneratedSheets;
+using RankSSpawnHelper.Managers.DataManagers;
 using RankSSpawnHelper.Models;
 
 namespace RankSSpawnHelper.Features;
@@ -12,18 +14,20 @@ internal partial class Counter : IDisposable
 {
     private readonly Dictionary<ushort, Dictionary<string, uint>> _conditionsMob = new()
     {
-        { 961, new() }, // 鸟蛋
-        { 959, new() }, // 叹息海
-        { 957, new() }, // 萨维奈岛
-        { 814, new() }, // 棉花
-        { 813, new() }, // Lakeland
-        { 817, new() }, // 拉凯提卡大森林
-        { 621, new() }, // 湖区
-        { 613, new() }, // 红玉海
-        { 612, new() }, // 边区
-        { 402, new() }, // 魔大陆
-        { 400, new() }, // 翻云雾海
-        { 147, new() }  // 北萨
+        { 961, new() },  // 鸟蛋
+        { 959, new() },  // 叹息海
+        { 957, new() },  // 萨维奈岛
+        { 814, new() },  // 棉花
+        { 813, new() },  // Lakeland
+        { 817, new() },  // 拉凯提卡大森林
+        { 621, new() },  // 湖区
+        { 613, new() },  // 红玉海
+        { 612, new() },  // 边区
+        { 402, new() },  // 魔大陆
+        { 400, new() },  // 翻云雾海
+        { 147, new() },  // 北萨
+        { 1191, new() }, // 遗产之地
+        { 1189, new() }  // 树海
     };
 
     private readonly Dictionary<string, Tracker> _localTracker     = new();
@@ -52,7 +56,8 @@ internal partial class Counter : IDisposable
     }
 
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 4C 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? 66 66 0F 1F 84 00 ?? ?? ?? ?? 4D 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 41 0F 11 48 ?? 48 83 E8 ?? 75 ?? 48 8B 03", DetourName = nameof(Detour_OnReceiveCreateNonPlayerBattleCharaPacket))]
+    [Signature("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 8B F2 49 8B D8 41 0F B6 50 ?? 48 8B F9 E8 ?? ?? ?? ?? 4C 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? 66 66 0F 1F 84 00 ?? ?? ?? ?? 4D 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 0F 10 43 ?? 41 0F 11 48 ?? 0F 10 4B ?? 41 0F 11 40 ?? 41 0F 11 48 ?? 48 83 E8 ?? 75 ?? 48 8B 03",
+               DetourName = nameof(Detour_OnReceiveCreateNonPlayerBattleCharaPacket))]
     private Hook<ProcessSpawnNpcDelegate> OnReceiveCreateNonPlayerBattleCharaPacket { get; init; } = null!;
 
     public void Dispose()
@@ -72,7 +77,7 @@ internal partial class Counter : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void Framework_Update(Dalamud.Plugin.Services.IFramework framework)
+    private void Framework_Update(IFramework framework)
     {
         UpdateNameList();
 
@@ -135,9 +140,9 @@ internal partial class Counter : IDisposable
                 lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 counter = new()
                 {
-                    { condition, value },
+                    { condition, value }
                 },
-                territoryId = territoryId,
+                territoryId = territoryId
             });
 
             DalamudApi.PluginLog.Debug($"[SetValue] instance: {instance}, condition: {condition}, value: {value}");
@@ -208,7 +213,7 @@ internal partial class Counter : IDisposable
 
         if (territory == 960)
         {
-            lock(_weeEaNameList)
+            lock (_weeEaNameList)
             {
                 Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
                 {
@@ -217,9 +222,10 @@ internal partial class Counter : IDisposable
                     InstanceId  = Plugin.Managers.Data.Player.GetCurrentInstance(),
                     TerritoryId = territory,
                     Failed      = false,
-                    Names       = _weeEaNameList,
+                    Names       = _weeEaNameList
                 });
             }
+
             return;
         }
 
@@ -254,7 +260,7 @@ internal partial class Counter : IDisposable
                 lastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 startTime      = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 territoryId    = DalamudApi.ClientState.TerritoryType,
-                trackerOwner   = Managers.DataManagers.Player.GetLocalPlayerName()
+                trackerOwner   = Player.GetLocalPlayerName()
             };
 
             _localTracker.Add(key, tracker);
@@ -348,6 +354,9 @@ internal partial class Counter : IDisposable
         // discard
         _conditionsMob[961].Add(GetItemName(36256), 36256);
         _conditionsMob[813].Add(GetItemName(27850), 27850);
+
+        _conditionsMob[1191].Add(GetItemName(44091), 44091);
+        _conditionsMob[1189].Add(GetItemName(7767), 7767);
     }
 
     private delegate void ProcessSpawnNpcDelegate(nint a1, uint a2, nint packetData);
