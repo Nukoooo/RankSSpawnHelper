@@ -25,13 +25,13 @@ internal partial class Counter
         var isGatherMessage = logId is 1049 or 1050;
         var isCraftMessage  = logId == 1157;
 
-        if (!isGatherMessage && isCraftMessage)
+        if (!isGatherMessage && !isCraftMessage)
             return;
 
         var itemId       = a4[0];
-        var isHq         = logId > 1000000;
+        var isHq         = itemId > 1000000;
         var normalizedId = itemId > 1000000 ? itemId - 1000000 : itemId;
-
+        
         // 27759 -- 矮人棉
         // 12634 -- 星极花, 12536 -- 皇金矿
 

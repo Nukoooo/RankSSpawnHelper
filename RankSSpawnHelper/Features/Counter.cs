@@ -273,11 +273,7 @@ internal partial class Counter : IDisposable
             return;
         }
 
-        if (!value.counter.ContainsKey(targetName))
-        {
-            value.counter.Add(targetName, 1);
-        }
-        else
+        if (!value.counter.TryAdd(targetName, 1))
         {
             value.counter[targetName]++;
         }
