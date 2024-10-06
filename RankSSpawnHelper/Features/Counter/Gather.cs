@@ -48,7 +48,7 @@ internal partial class Counter
 
         var name = Plugin.Managers.Data.GetItemName(normalizedId);
 
-        AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, itemId, true);
+        AddToTracker(Plugin.Managers.Data.Player.GetCurrentTerritory(), name, normalizedId, true);
     }
 
     private unsafe delegate void SystemLogMessageDelegate(nint a1, uint a2, uint a3, uint* a4, byte a5);
