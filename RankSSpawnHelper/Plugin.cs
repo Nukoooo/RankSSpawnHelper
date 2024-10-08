@@ -35,22 +35,6 @@ internal class Plugin
         DalamudApi.ChatGui.Print(new SeString(payloads));
     }
 
-    public static void Print(Payload newPayloads)
-    {
-        var payloads = new List<Payload>
-                       {
-                           new UIForegroundPayload(1),
-                           new TextPayload("["),
-                           new UIForegroundPayload(35),
-                           new TextPayload("S怪触发"),
-                           new UIForegroundPayload(0),
-                           new TextPayload("] "),
-                           newPayloads,
-                           new UIForegroundPayload(0),
-                       };
-        DalamudApi.ChatGui.Print(new SeString(payloads));
-    }
-
     public static void Print(IEnumerable<Payload> newPayloads)
     {
         var payloads = new List<Payload>

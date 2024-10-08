@@ -44,7 +44,7 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
 #endif
             var currentInstance = Plugin.Managers.Data.Player.GetCurrentTerritory();
 
-            if (!_dateTimes.ContainsKey(currentInstance))
+            if (!_dateTimes.TryGetValue(currentInstance, out var time))
             {
                 _dateTimes.Add(currentInstance, DateTime.Now + FromSeconds(15.0));
                 Plugin.Managers.Socket.Main.SendMessage(new AttemptMessage
@@ -60,7 +60,6 @@ internal class WeeEaWindow : Dalamud.Interface.Windowing.Window
                 return;
             }
 
-            var time = _dateTimes[currentInstance];
             if (time > DateTime.Now)
             {
                 var delta = time - DateTime.Now;

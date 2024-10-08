@@ -50,7 +50,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 修复召唤物（陆行鸟/巴哈等）打死怪不算进计数的BUG\n"),
+            new TextPayload("  [-] 修复出货不提示的BUG\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?"),
         });

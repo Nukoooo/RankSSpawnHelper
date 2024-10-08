@@ -8,7 +8,8 @@ public enum GameExpansion
     Heavensward,
     Stormblood,
     Shadowbringers,
-    Endwalker
+    Endwalker,
+    Dawntrail,
 }
 
 public class SRankMonster
