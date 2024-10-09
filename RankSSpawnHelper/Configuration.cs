@@ -73,6 +73,8 @@ public class Configuration : IPluginConfiguration
     public bool UseProxy { get; set; } = false;
     public string ProxyUrl { get; set; } = "http://127.0.0.1:7890";
 
+    public bool AccurateWorldTravelQueue { get; set; }= true;
+
     public int Version { get; set; }
 
     public void Save()

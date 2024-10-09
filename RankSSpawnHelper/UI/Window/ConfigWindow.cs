@@ -588,6 +588,24 @@ public class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         Widget.BeginFramedGroup("其他");
         {
+            var worldTravel = Plugin.Configuration.AccurateWorldTravelQueue;
+            var isValid     = Plugin.Features.AccurateWorldTravelQueueNumber.IsValid();
+
+            ImGui.BeginDisabled(!isValid);
+
+            if (ImGui.Checkbox("显示跨服排队的实际顺序", ref worldTravel))
+            {
+                Plugin.Features.AccurateWorldTravelQueueNumber.Patch(worldTravel);
+                Plugin.Configuration.AccurateWorldTravelQueue = worldTravel;
+                Plugin.Configuration.Save();
+            }
+            if (!isValid)
+            {
+                ImGui.SameLine();
+                ImGui.TextColored(new(1, 0, 0, 1), "无法使用，因为搜不到地址，可能有插件冲突？");
+            }
+            ImGui.EndDisabled();
+
             var showInstance = Plugin.Configuration.ShowInstance;
             if (ImGui.Checkbox("在基本情报栏显示几线", ref showInstance))
             {
