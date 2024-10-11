@@ -34,6 +34,8 @@ internal class AccurateWorldTravelQueueNumber : IDisposable
             if (_bytes2[0] == 0x90)
                 _address2 = 0;
         }
+
+        Patch(Plugin.Configuration.AccurateWorldTravelQueue);
     }
 
     public void Dispose()

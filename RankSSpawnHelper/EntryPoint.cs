@@ -50,7 +50,7 @@ public class EntryPoint : IDalamudPlugin
         {
             new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
             new UIForegroundPayload(35),
-            new TextPayload("  [-] 增加精准显示跨服等待顺序，可以在其他选项里关闭\n"),
+            new TextPayload("  [-] 修复加载插件后 精准显示跨服等待顺序 不生效的问题\n"),
             new UIForegroundPayload(0),
             new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
         });
