@@ -1,87 +1,142 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using Dalamud;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
+﻿using System.Reflection;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
+using Microsoft.Extensions.DependencyInjection;
+using RankSSpawnHelper.Managers;
+using RankSSpawnHelper.Modules;
+using RankSSpawnHelper.Windows;
 
 namespace RankSSpawnHelper;
 
-public class EntryPoint : IDalamudPlugin
+public class SpawnHelper : IDalamudPlugin
 {
-    private readonly Commands     _commands;
-    private readonly WindowSystem _windowSystem;
+    private readonly Configuration   _configuration;
+    private readonly WindowSystem    _windowSystem;
+    private readonly ServiceProvider _serviceProvider;
+    private readonly MainWindow      _mainWindow;
 
-    public EntryPoint(IDalamudPluginInterface pi)
+    public SpawnHelper(IDalamudPluginInterface pluginInterface)
     {
-        pi.Create<DalamudApi>();
-        pi.Create<Plugin>();
+        pluginInterface.Create<DalamudApi>();
+        _configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        _windowSystem  = new (typeof(SpawnHelper).AssemblyQualifiedName);
 
-        // Load all of our commands
-        _commands = new();
+        var pluginVersion = Assembly.GetExecutingAssembly()
+                                    .GetName()
+                                    .Version!.ToString();
 
-        var assembly = Assembly.GetExecutingAssembly();
-
-        Plugin.Managers      = new();
-        Plugin.Configuration = (Configuration)pi.GetPluginConfig() ?? pi.Create<Configuration>();
-        Plugin.Features      = new();
-
-        // Initialize the UI
-        _windowSystem  = new(typeof(EntryPoint).AssemblyQualifiedName);
-        Plugin.Windows = new(ref _windowSystem);
-
-        DalamudApi.Interface.UiBuilder.Draw         += _windowSystem.Draw;
-        DalamudApi.Interface.UiBuilder.OpenConfigUi += UiBuilder_OnOpenConfigUi;
-        DalamudApi.Interface.UiBuilder.OpenMainUi   += UiBuilder_OnOpenConfigUi;
-
-        var pluginVersion = assembly.GetName().Version.ToString();
-        Plugin.PluginVersion = pluginVersion;
-        DalamudApi.PluginLog.Info($"Version: {Plugin.PluginVersion}");
+        Utils.PluginVersion = pluginVersion;
+        DalamudApi.PluginLog.Info($"Version: {Utils.PluginVersion}");
 
 #if RELEASE
-        if (Plugin.Configuration.PluginVersion == pluginVersion)
-            return;
-        Plugin.Configuration.PluginVersion = pluginVersion;
+        if (_configuration.PluginVersion != pluginVersion)
 #endif
+        _configuration.PluginVersion = pluginVersion;
 
-        Plugin.Print(new List<Payload>
-        {
-            new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
-            new UIForegroundPayload(35),
-            new TextPayload("  [-] 修复加载插件后 精准显示跨服等待顺序 不生效的问题\n"),
-            new UIForegroundPayload(0),
-            new TextPayload("今天人类/畜畜/傻逼死绝了吗?")
-        });
+        var trackerApi = new TrackerApi();
+
+        var services = new ServiceCollection();
+        services.AddSingleton(_configuration);
+        services.AddSingleton(_windowSystem);
+        services.AddSingleton(trackerApi);
+        ConfigureServices(services);
+
+        _serviceProvider = services.BuildServiceProvider();
+
+        InitModule<IModule>();
+        InitModule<IUiModule>();
+
+        _mainWindow    = new (_serviceProvider);
+        var counterWindow = new CounterWindow(_serviceProvider, _configuration);
+        var huntMapWindow = new HuntMapWindow(_serviceProvider);
+        _windowSystem.AddWindow(_mainWindow);
+        _windowSystem.AddWindow(huntMapWindow);
+        _windowSystem.AddWindow(counterWindow);
+
+        PostInitModule<IModule>();
+        PostInitModule<IUiModule>();
+
+        pluginInterface.UiBuilder.Draw       += UiBuilderOnDraw;
+        pluginInterface.UiBuilder.OpenMainUi += UiBuilderOnOpenMainUi;
     }
-
-    public string Name => "SpawnHelper";
 
     public void Dispose()
     {
-        Dispose(true);
+        _windowSystem.RemoveAllWindows();
+
+        _serviceProvider.GetServices<IUiModule>()
+                        .ToList()
+                        .ForEach(x => x.Shutdown());
+
+        _serviceProvider.GetServices<IModule>()
+                        .ToList()
+                        .ForEach(x => x.Shutdown());
+
+        _configuration.Save();
+
         GC.SuppressFinalize(this);
     }
 
-    private void UiBuilder_OnOpenConfigUi()
+    private void UiBuilderOnOpenMainUi()
+        => _mainWindow.Toggle();
+
+    private void UiBuilderOnDraw()
+        => _windowSystem.Draw();
+
+    private static void ConfigureServices(IServiceCollection services)
     {
-        Plugin.Windows.PluginWindow.IsOpen = true;
+        services.ImplSingleton<IModule, ICommandHandler, CommandHandler>();
+        services.ImplSingleton<IModule, IDataManager, DataManger>();
+        services.ImplSingleton<IModule, IConnectionManager, ConnectionManager>();
+        services.AddSingleton<IModule, Misc>();
+        services.ImplSingleton<IUiModule, ICounter, Counter>();
+        services.AddSingleton<IUiModule, MobStatus>();
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void InitModule<T>() where T : IModule
     {
-        if (!disposing) return;
+        foreach (var service in _serviceProvider.GetServices<T>())
+        {
+            var serviceName = service.GetType()
+                                     .FullName;
 
-        _commands.Dispose();
+            if (!service.Init())
+            {
+                throw new ($"Failed to init module {serviceName}!");
+            }
 
-        Plugin.Managers.Data.MapTexture.Dispose();
-        Plugin.Configuration.Save();
-        Plugin.Managers.Dispose();
-        Plugin.Features.Dispose();
+            DalamudApi.PluginLog.Info($"Module {serviceName} is loaded.");
+        }
+    }
 
-        DalamudApi.Interface.UiBuilder.Draw       -= _windowSystem.Draw;
-        DalamudApi.Interface.UiBuilder.OpenMainUi -= UiBuilder_OnOpenConfigUi;
-        _windowSystem.RemoveAllWindows();
+    private void PostInitModule<T>() where T : IModule
+    {
+        foreach (var service in _serviceProvider.GetServices<T>())
+        {
+            try
+            {
+                service.PostInit(_serviceProvider);
+            }
+            catch (Exception e)
+            {
+                DalamudApi.PluginLog.Error(e, $"Error when calling PostInit for module {service.GetType().FullName}");
+
+                throw;
+            }
+        }
+    }
+}
+
+internal static class DependencyInjections
+{
+    public static void ImplSingleton<TService1, TService2, TImpl>(this IServiceCollection services)
+        where TImpl : class, TService1, TService2
+        where TService1 : class
+        where TService2 : class
+    {
+        services.AddSingleton<TImpl>();
+
+        services.AddSingleton<TService1>(x => x.GetRequiredService<TImpl>());
+        services.AddSingleton<TService2>(x => x.GetRequiredService<TImpl>());
     }
 }
