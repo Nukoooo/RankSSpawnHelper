@@ -62,8 +62,6 @@ internal partial class Counter : IUiModule, ICounter
         _dataManager       = dataManager;
         _connectionManager = connectionManager;
         _windowSystem      = windowSystem;
-
-        _proxyUrl          = configuration.ProxyUrl;
     }
 
     public bool Init()

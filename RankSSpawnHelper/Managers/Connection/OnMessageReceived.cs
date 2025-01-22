@@ -98,7 +98,7 @@ internal partial class ConnectionManager
 
                     foreach (var (key, value) in result.Counter)
                     {
-                        var isItem = result.TerritoryId is 814 or 400 or 961 or 813;
+                        var isItem = result.TerritoryId is 814 or 400 or 961 or 813 or 1189 or 1191;
 
                         var keyName = isItem
                             ? _dataManager.GetItemName(key)
@@ -143,7 +143,7 @@ internal partial class ConnectionManager
                         new UIForegroundPayload((ushort) _configuration.HighlightColor),
                     };
 
-                    var isItem = result.TerritoryId is 814 or 400 or 961 or 813;
+                    var isItem = result.TerritoryId is 814 or 400 or 961 or 813 or 1189 or 1191;
 
                     foreach (var (k, v) in result.Counter)
                     {
