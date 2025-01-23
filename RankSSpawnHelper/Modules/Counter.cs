@@ -20,6 +20,8 @@ internal interface ICounter
     void UpdateNetworkedTracker(string instance, string condition, int value, long time, uint territoryId);
 
     (List<string> nameList, int nonWeeEaCount) GetWeeEaCounter();
+
+    void UpdateTrackerData(List<ConnectionManager.TrackerData> data);
 }
 
 internal partial class Counter : IUiModule, ICounter
@@ -50,6 +52,8 @@ internal partial class Counter : IUiModule, ICounter
 
     private readonly Dictionary<string, Tracker> _localTracker     = [];
     private readonly Dictionary<string, Tracker> _networkedTracker = [];
+
+    private List<ConnectionManager.TrackerData> _trackerData = [];
 
     private DateTime _lastCleanerRunTime = DateTime.Now;
 
@@ -158,6 +162,9 @@ internal partial class Counter : IUiModule, ICounter
 
     public (List<string> nameList, int nonWeeEaCount) GetWeeEaCounter()
         => (_weeEaNameList, _nonWeeEaCount);
+
+    public void UpdateTrackerData(List<ConnectionManager.TrackerData> data)
+        => _trackerData = data;
 
     private void InitializeData()
     {

@@ -91,6 +91,8 @@ internal interface IDataManager
 
     TerritoryInfo GetTerritoryInfo(uint territoryId);
 
+    bool IsTerritoryItemThingy(uint territoryId);
+
     IFontHandle NotoSan24 { get; }
     IFontHandle NotoSan18 { get; }
 }
@@ -235,6 +237,9 @@ internal class DataManger : IDataManager, IModule
 
         return value;
     }
+
+    public bool IsTerritoryItemThingy(uint territoryId)
+        => territoryId is 814 or 400 or 961 or 813 or 1189 or 1191;
 
     public IFontHandle NotoSan24 { get; private set; } = null!;
     public IFontHandle NotoSan18 { get; private set; } = null!;

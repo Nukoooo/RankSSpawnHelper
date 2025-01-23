@@ -98,7 +98,7 @@ internal partial class ConnectionManager
 
                     foreach (var (key, value) in result.Counter)
                     {
-                        var isItem = result.TerritoryId is 814 or 400 or 961 or 813 or 1189 or 1191;
+                        var isItem = _dataManager.IsTerritoryItemThingy(result.TerritoryId);
 
                         var keyName = isItem
                             ? _dataManager.GetItemName(key)
@@ -143,19 +143,19 @@ internal partial class ConnectionManager
                         new UIForegroundPayload((ushort) _configuration.HighlightColor),
                     };
 
-                    var isItem = result.TerritoryId is 814 or 400 or 961 or 813 or 1189 or 1191;
+                    var isItem = _dataManager.IsTerritoryItemThingy(result.TerritoryId);
 
                     foreach (var (k, v) in result.Counter)
                     {
                         string name;
 
-                        if (isItem)
-                        {
-                            name = _dataManager.GetItemName(k);
-                        }
-                        else if (result.TerritoryId == 621)
+                        if (result.TerritoryId == 621)
                         {
                             name = "扔垃圾";
+                        }
+                        else if (isItem)
+                        {
+                            name = _dataManager.GetItemName(k);
                         }
                         else
                         {
@@ -188,13 +188,13 @@ internal partial class ConnectionManager
                         {
                             string name;
 
-                            if (isItem)
-                            {
-                                name = _dataManager.GetItemName(k);
-                            }
-                            else if (result.TerritoryId == 621)
+                            if (result.TerritoryId == 621)
                             {
                                 name = "扔垃圾";
+                            }
+                            else if (isItem)
+                            {
+                                name = _dataManager.GetItemName(k);
                             }
                             else
                             {
@@ -286,7 +286,7 @@ internal partial class ConnectionManager
                 }
                 case "TrackerList":
                 {
-                    /*Plugin.Windows.PluginWindow.SetTrackerData(result.TrackerData);*/
+                    _counter.UpdateTrackerData(result.TrackerData);
 
                     return;
                 }

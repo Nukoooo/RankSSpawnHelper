@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace RankSSpawnHelper.Managers;
 
-internal struct HuntStatus
+internal record HuntStatus
 {
     [JsonPropertyName("expectMaxTime")]
     public double ExpectMaxTime { get; init; }
@@ -21,10 +21,10 @@ internal struct HuntStatus
     public uint Instance { get; set; }
 
     [JsonPropertyName("worldName")]
-    public string WorldName { get; init; }
+    public string WorldName { get; init; } = string.Empty;
 }
 
-internal readonly record struct SpawnPoints
+internal record SpawnPoints
 {
     [JsonPropertyName("key")]
     public string Key { get; init; }
@@ -36,7 +36,7 @@ internal readonly record struct SpawnPoints
     public float Y { get; init; }
 }
 
-internal readonly record struct HuntSpawnPoints()
+internal record HuntSpawnPoints()
 {
     [JsonPropertyName("spawnPoints")]
     public List<SpawnPoints> SpawnPoints { get; init; } = [];

@@ -44,18 +44,19 @@ internal partial class ConnectionManager
 
             Dictionary<uint, int> data = new ();
 
-            var isItem = tracker.Value.TerritoryId is 814 or 400 or 961 or 813;
+            var isItem = _dataManager.IsTerritoryItemThingy(tracker.Value.TerritoryId);
 
             foreach (var counter in tracker.Value.Counter)
             {
-                if (isItem)
-                {
-                    data[_dataManager.GetItemId(counter.Key)] = counter.Value;
-                }
-                else if (tracker.Value.TerritoryId == 621)
+                if (tracker.Value.TerritoryId == 621)
                 {
                     data[0] = counter.Value;
                 }
+                else if (isItem)
+                {
+                    data[_dataManager.GetItemId(counter.Key)] = counter.Value;
+                }
+
                 else
                 {
                     data[_dataManager.GetNpcId(counter.Key)] = counter.Value;

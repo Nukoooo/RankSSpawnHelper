@@ -21,11 +21,14 @@ internal interface IConnectionManager
 
 internal partial class ConnectionManager : IConnectionManager, IUiModule
 {
-#if DEBUG || DEBUG_CN
-    private const string Url = "ws://127.0.0.1:8000/ws";
-#else
     private const string Url = "wss://nuko.me/ws";
-#endif
+
+    /*
+    #if DEBUG || DEBUG_CN
+        private const string Url = "ws://127.0.0.1:8000/ws";
+    #else
+        private const string Url = "wss://nuko.me/ws";
+    #endif*/
 
     private const    string           ServerVersion = "v5";
     private          WebsocketClient? _client;

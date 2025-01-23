@@ -54,7 +54,6 @@ internal partial class Counter
 
         DalamudApi.PluginLog.Debug($"{amount}, {itemId}, {_dataManager.GetItemName(itemId)}");
 
-        // filter it out, just in case..
         if (territoryType != 813 && territoryType != 961 && territoryType != 1189)
         {
             return;
@@ -65,7 +64,6 @@ internal partial class Counter
             return;
         }
 
-        // you can discard anything in The Lochs
         if (!value.ContainsValue(itemId))
         {
             return;
@@ -73,7 +71,7 @@ internal partial class Counter
 
         switch (territoryType)
         {
-            case 961 when amount  != 5:
+            case 961 when amount  < 5:
             case 1189 when amount < 50:
                 return;
         }
