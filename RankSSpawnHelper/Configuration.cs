@@ -71,6 +71,10 @@ internal class Configuration : IPluginConfiguration
 
     public bool AccurateWorldTravelQueue { get; set; } = true;
 
+    public List<uint> ItemsToDiscard   { get; set; } = [];
+    public bool       AutoDiscardItem  { get; set; } = false;
+    public bool       AutoSummonMinion { get; set; } = false;
+
     int IPluginConfiguration.Version { get; set; }
 
     public void Save()

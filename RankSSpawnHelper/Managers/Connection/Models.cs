@@ -57,11 +57,11 @@ internal partial class ConnectionManager
 
     internal record NetTracker
     {
-        public Dictionary<uint, int> Data        { get; init; }
-        public uint                  InstanceId  { get; init; }
-        public uint                  TerritoryId { get; init; }
-        public long                  Time        { get; init; }
-        public uint                  WorldId     { get; init; }
+        public required Dictionary<uint, int> Data        { get; init; }
+        public          uint                  InstanceId  { get; init; }
+        public          uint                  TerritoryId { get; init; }
+        public          long                  Time        { get; init; }
+        public          uint                  WorldId     { get; init; }
     }
 
     internal record NewConnectionMessage : BaseMessage
@@ -78,9 +78,9 @@ internal partial class ConnectionManager
     internal record CounterMessage : BaseMessage
     {
         // Mobs id, count
-        public Dictionary<uint, int> Data      { get; init; }
-        public long                  StartTime { get; init; }
-        public bool                  IsItem    { get; init; }
+        public required Dictionary<uint, int> Data      { get; init; }
+        public          long                  StartTime { get; init; }
+        public          bool                  IsItem    { get; init; }
     }
 
     internal record GetTrackerList : BaseMessage

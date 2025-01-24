@@ -27,7 +27,7 @@ internal record HuntStatus
 internal record SpawnPoints
 {
     [JsonPropertyName("key")]
-    public string Key { get; init; }
+    public required string Key { get; init; }
 
     [JsonPropertyName("x")]
     public float X { get; init; }
@@ -104,7 +104,7 @@ internal class TrackerApi
 
                 var content    = await response.Content.ReadAsStringAsync();
                 var huntStatus = JsonSerializer.Deserialize<HuntStatus>(content);
-                huntStatus.Instance = instance;
+                huntStatus!.Instance = instance;
                 _statuses.statusList.Add(huntStatus);
             }
 

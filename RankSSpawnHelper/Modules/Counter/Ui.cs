@@ -77,17 +77,13 @@ internal partial class Counter
 
         Widget.EndFramedGroup();
 
-        ImGui.BeginGroup();
-        ImGui.TextUnformatted("本地计数表格");
+        Widget.BeginFramedGroup("本地计数表格", new Vector2(-1, -1));
         DrawTrackerTable();
-        ImGui.EndGroup();
+        Widget.EndFramedGroup();
 
-        ImGui.NewLine();
-
-        ImGui.BeginGroup();
-        ImGui.TextUnformatted("服务器计数表格");
+        Widget.BeginFramedGroup("服务器计数表格", new Vector2(-1, -1));
         DrawServerTrackerTable();
-        ImGui.EndGroup();
+        Widget.EndFramedGroup();
     }
 
     private void DrawTrackerTable()

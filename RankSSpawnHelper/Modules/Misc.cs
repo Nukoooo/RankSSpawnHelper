@@ -104,7 +104,7 @@ internal class Misc : IUiModule
                                     .Select(i => i.LocalizedName)
                                     .ToArray();
 
-        foreach (var color in DalamudApi.DataManager.Excel.GetSheet<UIColor>())
+        foreach (var color in DalamudApi.DataManager.Excel.GetSheet<UIColor>()!)
         {
             var result = _colorInfos.FindIndex(info => info.Color == color.UIForeground);
 

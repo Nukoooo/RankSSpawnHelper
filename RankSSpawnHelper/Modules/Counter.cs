@@ -1,4 +1,5 @@
-﻿using Dalamud.Hooking;
+﻿using System.Diagnostics;
+using Dalamud.Hooking;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
@@ -72,7 +73,12 @@ internal partial class Counter : IUiModule, ICounter
     {
         DalamudApi.GameInterop.InitializeFromAttributes(this);
 
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
         InitializeData();
+        stopwatch.Stop();
+
+        DalamudApi.PluginLog.Info($"{stopwatch.Elapsed}");
 
         OnReceiveCreateNonPlayerBattleCharaPacket.Enable();
         ActorControl.Enable();

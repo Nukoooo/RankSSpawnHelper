@@ -90,6 +90,7 @@ public class SpawnHelper : IDalamudPlugin
         services.ImplSingleton<IUiModule, IConnectionManager, ConnectionManager>();
         services.ImplSingleton<IUiModule, ICounter, Counter>();
         services.AddSingleton<IUiModule, Misc>();
+        services.AddSingleton<IUiModule, Automation>();
     }
 
     private void InitModule<T>() where T : IModule
