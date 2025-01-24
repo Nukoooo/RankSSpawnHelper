@@ -233,7 +233,6 @@ internal unsafe class Automation : IUiModule
         foreach (var u in _minionMap.Where(u => UIState.Instance()->IsCompanionUnlocked(u.Value)))
         {
             _unlockedMinion.Add(u.Value);
-            DalamudApi.PluginLog.Debug($"Adding {u.Value}");
         }
     }
 
@@ -520,11 +519,6 @@ internal unsafe class Automation : IUiModule
         // 检查附属的是哪个addon
         var parentAddon = RaptureAtkUnitManager.Instance()->GetAddonById(addon->ContextMenuParentId);
 
-        if (parentAddon == null)
-        {
-            return;
-        }
-
         var parentAddonName = Encoding.UTF8.GetString(parentAddon->Name);
 
         // 傻逼SE我操你妈
@@ -557,17 +551,9 @@ internal unsafe class Automation : IUiModule
 
         var numericAddon = (AtkComponentNumericInput*) addon->UldManager.NodeList[4]->GetComponent();
 
-        var numVal = isEgg ? 5 : isFishMeal ? 50 : 1;
-
-        // clamp
-        if (isEgg)
-        {
-            numVal = Math.Min(5, numericAddon->Data.Max);
-        }
-        else if (isFishMeal)
-        {
-            numVal = Math.Min(50, numericAddon->Data.Max);
-        }
+        var numVal = isEgg ? Math.Min(5,  numericAddon->Data.Max) :
+            isFishMeal     ? Math.Min(50, numericAddon->Data.Max) :
+                             1;
 
         numericAddon->SetValue(numVal);
         var confirmButton = addon->UldManager.NodeList[3]->GetAsAtkComponentButton();
@@ -575,7 +561,7 @@ internal unsafe class Automation : IUiModule
         ClickAddonButton(addon, confirmButton, 0, AtkEventType.ButtonClick);
     }
 
-    private unsafe void AddonSelectYesnoHandler(AddonEvent type, AddonArgs args)
+    private void AddonSelectYesnoHandler(AddonEvent type, AddonArgs args)
     {
         if (!_discarded)
         {

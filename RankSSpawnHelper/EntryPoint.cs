@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,14 @@ public class SpawnHelper : IDalamudPlugin
 
 #if RELEASE
         if (_configuration.PluginVersion != pluginVersion)
+        {
+            Utils.Print([
+                new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
+                new UIForegroundPayload(35),
+                new TextPayload("  [-] 完全重写\n"),
+                new UIForegroundPayload(0),
+            ]);
+        }
 #endif
         _configuration.PluginVersion = pluginVersion;
 

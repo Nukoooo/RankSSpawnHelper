@@ -141,7 +141,7 @@ internal class Misc : IUiModule
 
     public void OnDrawUi()
     {
-        Widget.BeginFramedGroup("触发概率提醒");
+        Widget.BeginFramedGroup("触发概率提醒", new Vector2(-1, -1));
 
         {
             var spawnNotificationType = (int) _configuration.SpawnNotificationType;
@@ -197,7 +197,7 @@ internal class Misc : IUiModule
 
         Widget.EndFramedGroup();
 
-        Widget.BeginFramedGroup("触发消息相关");
+        Widget.BeginFramedGroup("触发消息相关", new Vector2(-1, -1));
 
         {
             ImGui.Text("接收来自服务器的触发消息");
@@ -278,7 +278,7 @@ internal class Misc : IUiModule
 
         Widget.EndFramedGroup();
 
-        Widget.BeginFramedGroup("查询S怪状态");
+        Widget.BeginFramedGroup("查询S怪状态", new Vector2(-1, -1));
         DrawQueryHuntStatus();
         Widget.EndFramedGroup();
 
@@ -374,7 +374,6 @@ internal class Misc : IUiModule
             ImGui.TextColored(percentage > 100.0 ? ImGuiColors.ParsedBlue : ImGuiColors.ParsedGreen,
                               $"{percentage:F2}%%");
 
-            // ReSharper disable once InvertIf
             if (now < maxTime)
             {
                 var delta = maxTime - now;
