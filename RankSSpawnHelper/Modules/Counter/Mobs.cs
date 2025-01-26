@@ -34,8 +34,9 @@ internal partial class Counter
             return;
         }
 
-        var target       = DalamudApi.ObjectTable.SearchById(entityId);
         var sourceTarget = DalamudApi.ObjectTable.SearchById(direct);
+
+        var target = DalamudApi.ObjectTable.SearchById(entityId);
 
         if (target == null)
         {

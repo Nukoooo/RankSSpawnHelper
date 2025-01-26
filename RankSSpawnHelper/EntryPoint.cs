@@ -1,11 +1,13 @@
 ﻿using System.Reflection;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Microsoft.Extensions.DependencyInjection;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Modules;
 using RankSSpawnHelper.Windows;
+#if RELEASE
+using Dalamud.Game.Text.SeStringHandling.Payloads;
+#endif
 
 namespace RankSSpawnHelper;
 
@@ -35,7 +37,8 @@ public class SpawnHelper : IDalamudPlugin
             Utils.Print([
                 new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] 完全重写\n"),
+                new TextPayload("  [-] 加回部分原来的功能\n"),
+                new TextPayload("  [-] 地图人数搜索现改为与大水晶互动获取"),
                 new UIForegroundPayload(0),
             ]);
         }
@@ -55,7 +58,7 @@ public class SpawnHelper : IDalamudPlugin
         InitModule<IModule>();
         InitModule<IUiModule>();
 
-        _mainWindow    = new (_serviceProvider);
+        _mainWindow = new (_serviceProvider);
         var counterWindow = new CounterWindow(_serviceProvider, _configuration);
         var huntMapWindow = new HuntMapWindow(_serviceProvider);
         _windowSystem.AddWindow(_mainWindow);
@@ -65,8 +68,9 @@ public class SpawnHelper : IDalamudPlugin
         PostInitModule<IModule>();
         PostInitModule<IUiModule>();
 
-        pluginInterface.UiBuilder.Draw       += UiBuilderOnDraw;
-        pluginInterface.UiBuilder.OpenMainUi += UiBuilderOnOpenMainUi;
+        pluginInterface.UiBuilder.Draw         += UiBuilderOnDraw;
+        pluginInterface.UiBuilder.OpenMainUi   += UiBuilderOnOpenMainUi;
+        pluginInterface.UiBuilder.OpenConfigUi += UiBuilderOnOpenMainUi;
     }
 
     public void Dispose()

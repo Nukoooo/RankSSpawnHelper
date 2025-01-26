@@ -60,4 +60,7 @@ internal class DalamudApi
 
     [PluginService]
     internal static IContextMenu ContextMenu { get; private set; } = null!;
+
+    [PluginService]
+    internal static IDtrBar DtrBar { get; private set; } = null!;
 }
