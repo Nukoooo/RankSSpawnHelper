@@ -63,8 +63,8 @@ internal class Configuration : IPluginConfiguration
 
     public AttemptMessageFromServerType AttemptMessageFromServer { get; set; } = AttemptMessageFromServerType.CurrentDataCenter;
 
-    public bool                    ShowAttemptMessageInDungeons { get; set; } = true;
-    public PlayerSearchDisplayType PlayerSearchDisplayType      { get; set; } = PlayerSearchDisplayType.Both;
+    public bool ShowAttemptMessageInDungeons { get; set; } = true;
+    public bool PlayerSearch                 { get; set; }
 
     public bool   UseProxy { get; set; } = false;
     public string ProxyUrl { get; set; } = "http://127.0.0.1:7890";

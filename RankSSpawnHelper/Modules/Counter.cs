@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
@@ -23,6 +24,8 @@ internal interface ICounter
     (List<string> nameList, int nonWeeEaCount) GetWeeEaCounter();
 
     void UpdateTrackerData(List<ConnectionManager.TrackerData> data);
+
+    bool CurrentInstanceHasSRank();
 }
 
 internal partial class Counter : IUiModule, ICounter
@@ -58,6 +61,8 @@ internal partial class Counter : IUiModule, ICounter
 
     private DateTime _lastCleanerRunTime = DateTime.Now;
 
+    private bool _hasSRank;
+
     public Counter(Configuration      configuration,
                    IDataManager       dataManager,
                    IConnectionManager connectionManager,
@@ -88,6 +93,8 @@ internal partial class Counter : IUiModule, ICounter
         DalamudApi.ChatGui.ChatMessage += ChatGui_OnChatMessage;
         DalamudApi.Framework.Update    += Framework_Update;
 
+        DalamudApi.Condition.ConditionChange += Condition_ConditionChange;
+
         return true;
     }
 
@@ -98,8 +105,9 @@ internal partial class Counter : IUiModule, ICounter
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
 
-        DalamudApi.ChatGui.ChatMessage -= ChatGui_OnChatMessage;
-        DalamudApi.Framework.Update    -= Framework_Update;
+        DalamudApi.ChatGui.ChatMessage       -= ChatGui_OnChatMessage;
+        DalamudApi.Framework.Update          -= Framework_Update;
+        DalamudApi.Condition.ConditionChange -= Condition_ConditionChange;
     }
 
     public void PostInit(ServiceProvider serviceProvider)
@@ -171,6 +179,9 @@ internal partial class Counter : IUiModule, ICounter
 
     public void UpdateTrackerData(List<ConnectionManager.TrackerData> data)
         => _trackerData = data;
+
+    public bool CurrentInstanceHasSRank()
+        => _hasSRank;
 
     private void InitializeData()
     {
@@ -270,6 +281,8 @@ internal partial class Counter : IUiModule, ICounter
         DalamudApi.PluginLog.Warning("SRank spotted.");
 #endif
 
+        _hasSRank = true;
+
         var territory = DalamudApi.ClientState.TerritoryType;
 
         if (territory == 960)
@@ -319,6 +332,14 @@ internal partial class Counter : IUiModule, ICounter
         = null!;
 
     private delegate void OnReceiveCreateNonPlayerBattleCharaPacketDelegate(nint a1, nint packetData);
+
+    private void Condition_ConditionChange(ConditionFlag flag, bool value)
+    {
+        if (flag == ConditionFlag.BetweenAreas51 && value)
+        {
+            _hasSRank = false;
+        }
+    }
 
     private void AddToTracker(string key, string targetName, uint targetId, bool isItem = false)
     {

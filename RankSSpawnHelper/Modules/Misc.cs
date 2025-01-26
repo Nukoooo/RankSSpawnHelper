@@ -1,13 +1,18 @@
 ﻿using System.Collections.Frozen;
 using System.Numerics;
+using Dalamud;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.Gui.Dtr;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Hooking;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
@@ -15,16 +20,19 @@ using Microsoft.Extensions.DependencyInjection;
 using OtterGui.Widgets;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Windows;
+using IDataManager = RankSSpawnHelper.Managers.IDataManager;
 
 namespace RankSSpawnHelper.Modules;
 
+// TODO: 选项用模块,不要都放一起
 internal class Misc : IUiModule
 {
-    private readonly TrackerApi    _trackerApi;
-    private readonly IDataManager  _dataManager;
-    private readonly Configuration _configuration;
-
-    private readonly WindowSystem  _windowSystem;
+    private readonly TrackerApi      _trackerApi;
+    private readonly IDataManager    _dataManager;
+    private readonly Configuration   _configuration;
+    private readonly ICommandHandler _commandHandler;
+    private readonly WindowSystem    _windowSystem;
+    private readonly ICounter        _counter;
 
     private HuntMapWindow _huntMapWindow = null!;
 
@@ -62,15 +70,29 @@ internal class Misc : IUiModule
     private readonly FrozenDictionary<ushort, uint> _mobIdMap;
     private readonly FrozenDictionary<uint, ushort> _mobMapId;
 
-    public Misc(TrackerApi    trackerApi,
-                IDataManager  dataManager,
-                Configuration configuration,
-                WindowSystem  windowSystem)
+    private IDtrBarEntry? _dtrBar;
+
+    private nint   _address1;
+    private nint   _address2;
+    private byte[] _bytes1 = [];
+
+    private byte[] _bytes2 = [];
+
+    private Hook<EventActionReceiveDelegate> EventActionReceiveHook { get; set; } = null!;
+
+    public Misc(TrackerApi      trackerApi,
+                IDataManager    dataManager,
+                Configuration   configuration,
+                WindowSystem    windowSystem,
+                ICommandHandler commandHandler,
+                ICounter        counter)
     {
-        _trackerApi    = trackerApi;
-        _dataManager   = dataManager;
-        _configuration = configuration;
-        _windowSystem  = windowSystem;
+        _trackerApi     = trackerApi;
+        _dataManager    = dataManager;
+        _configuration  = configuration;
+        _windowSystem   = windowSystem;
+        _commandHandler = commandHandler;
+        _counter        = counter;
 
         /*_expansions = Enum.GetNames<GameExpansion>();*/
 
@@ -121,7 +143,91 @@ internal class Misc : IUiModule
 
     public bool Init()
     {
+        if (!DalamudApi.SigScanner.TryScanText("81 C2 F5 ?? ?? ?? E8 ?? ?? ?? ?? 48 8B D0 48 8D 8C 24", out _address1))
+        {
+            DalamudApi.PluginLog.Error("Failed to get address #1");
+
+            return false;
+        }
+
+        if (!SafeMemory.ReadBytes(_address1 + 2, 2, out _bytes1))
+        {
+            DalamudApi.PluginLog.Error("Failed to read bytes #1");
+
+            return false;
+        }
+
+        if (!DalamudApi.SigScanner.TryScanText("83 F8 ?? 73 ?? 44 8B C0 1B D2", out _address2))
+        {
+            DalamudApi.PluginLog.Error("Failed to get address #2");
+
+            return false;
+        }
+
+        if (!SafeMemory.ReadBytes(_address2, 5, out _bytes2))
+        {
+            DalamudApi.PluginLog.Error("Failed to read bytes #2");
+
+            return false;
+        }
+
+        if (_bytes1[0] == 0xF4)
+        {
+            _bytes1[0] = 0xF5;
+        }
+
+        if (_bytes2[0] == 0x90)
+        {
+            _address2 = 0;
+        }
+
+        PatchWorldTravelQueue(_configuration.AccurateWorldTravelQueue);
+
         DalamudApi.Condition.ConditionChange += Condition_ConditionChange;
+        DalamudApi.Framework.Update          += Framework_OnUpdate;
+
+        _commandHandler.AddCommand("/获取点位",
+                                   new ((_, _) =>
+                                   {
+                                       var territory = DalamudApi.ClientState.TerritoryType;
+
+                                       if (!_mobIdMap.TryGetValue(territory, out var id))
+                                       {
+                                           Utils.Print("当前地图没有获取点位的必要");
+
+                                           return;
+                                       }
+
+                                       if (_dataManager.GetHuntData(id) is not { } huntData)
+                                       {
+                                           return;
+                                       }
+
+                                       Task.Run(() => FetchHuntSpawnPoints(huntData, territory));
+                                   })
+                                   {
+                                       HelpMessage = "获取当前地图的点位",
+                                       ShowInHelp  = true,
+                                   });
+
+        _dtrBar = DalamudApi.DtrBar.Get("S怪触发小助手-当前分线");
+
+        if (!DalamudApi.SigScanner
+                       .TryScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? B8 ?? ?? ?? ?? 49 8B F9",
+                                    out var eventActionReceive))
+        {
+            DalamudApi.PluginLog.Error("Failed to get EventActionReceive address");
+
+            return false;
+        }
+
+        unsafe
+        {
+            EventActionReceiveHook
+                = DalamudApi.GameInterop.HookFromAddress<EventActionReceiveDelegate>(eventActionReceive, hk_EventActionReceive);
+
+            EventActionReceiveHook.Enable();
+        }
 
         return true;
     }
@@ -129,6 +235,10 @@ internal class Misc : IUiModule
     public void Shutdown()
     {
         DalamudApi.Condition.ConditionChange -= Condition_ConditionChange;
+        DalamudApi.Framework.Update          -= Framework_OnUpdate;
+
+        _dtrBar?.Remove();
+        EventActionReceiveHook?.Dispose();
     }
 
     public void PostInit(ServiceProvider serviceProvider)
@@ -274,6 +384,46 @@ internal class Misc : IUiModule
 
                 ImGui.EndGroup();
             }
+        }
+
+        Widget.EndFramedGroup();
+
+        Widget.BeginFramedGroup("杂项");
+
+        var worldTravelQueue = _configuration.AccurateWorldTravelQueue;
+
+        if (ImGui.Checkbox("显示实际跨服人数", ref worldTravelQueue))
+        {
+            _configuration.AccurateWorldTravelQueue = worldTravelQueue;
+            _configuration.Save();
+        }
+
+        ImGui.SameLine();
+
+        var showCurrentInstance = _configuration.ShowInstance;
+
+        if (ImGui.Checkbox("显示当前分线", ref showCurrentInstance))
+        {
+            _configuration.ShowInstance = showCurrentInstance;
+            _configuration.Save();
+        }
+
+        ImGui.SameLine();
+
+        var playerSearch = _configuration.PlayerSearch;
+
+        if (ImGui.Checkbox("当前分线人数", ref playerSearch))
+        {
+            _configuration.PlayerSearch = playerSearch;
+            _configuration.Save();
+        }
+
+        ImGui.SameLine();
+        ImGui.TextColored(ImGuiColors.DalamudGrey, "(?)");
+
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip("需要右键大水晶，并且当前分线里有S怪才有用");
         }
 
         Widget.EndFramedGroup();
@@ -553,6 +703,34 @@ internal class Misc : IUiModule
         Utils.Print(payloads);
     }
 
+    private unsafe void hk_EventActionReceive(nint a1, uint type, ushort a3, byte a4, uint* payload, byte payloadCount)
+    {
+        EventActionReceiveHook.Original(a1, type, a3, a4, payload, payloadCount);
+        var id          = (ushort) type;
+        var handlerType = (EventHandlerType) (type >> 16);
+
+        if (id != 2 && handlerType != EventHandlerType.Aetheryte)
+        {
+            return;
+        }
+
+        if (!_configuration.PlayerSearch)
+        {
+            return;
+        }
+
+        if (!_counter.CurrentInstanceHasSRank())
+        {
+            return;
+        }
+
+        var currentInstance = _dataManager.GetCurrentInstance();
+
+        Utils.Print(currentInstance == 0
+                        ? $"当前地图的人数: {payload[currentInstance]}"
+                        : $"当前分线（{GetInstanceString()}） 的人数: {payload[currentInstance]}");
+    }
+
     private enum ColorPickerType
     {
         Failed,
@@ -579,6 +757,55 @@ internal class Misc : IUiModule
     {
         internal uint RowId { get; init; }
         internal uint Color { get; init; }
+    }
+
+    private void Framework_OnUpdate(IFramework framework)
+    {
+        if (_dtrBar == null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_configuration.ShowInstance)
+            {
+                var currentInstance = _dataManager.GetCurrentInstance();
+
+                if (currentInstance == 0)
+                {
+                    _dtrBar.Shown = false;
+
+                    return;
+                }
+
+                _dtrBar.Shown = true;
+
+                _dtrBar.Text = GetInstanceString();
+            }
+            else
+            {
+                _dtrBar.Shown = false;
+            }
+        }
+        catch (Exception)
+        {
+            _dtrBar.Shown = false;
+        }
+    }
+
+    private string GetInstanceString()
+    {
+        return _dataManager.GetCurrentInstance() switch
+        {
+            1 => "\xe0b1" + "线",
+            2 => "\xe0b2" + "线",
+            3 => "\xe0b3" + "线",
+            4 => "\xe0b4" + "线",
+            5 => "\xe0b5" + "线",
+            6 => "\xe0b6" + "线",
+            _ => "\xe060" + "线",
+        };
     }
 
     private void DrawColorPicker()
@@ -637,4 +864,21 @@ internal class Misc : IUiModule
         ImGui.Columns(1);
         ImGui.End();
     }
+
+    private void PatchWorldTravelQueue(bool enabled)
+    {
+        if (enabled)
+        {
+            SafeMemory.WriteBytes(_address1 + 2, [0xF4, 0x30]);
+            SafeMemory.WriteBytes(_address2,     [0x90, 0x90, 0x90, 0x90, 0x90]);
+        }
+        else
+        {
+            SafeMemory.WriteBytes(_address1 + 2, _bytes1);
+            SafeMemory.WriteBytes(_address2,     _bytes2);
+        }
+    }
+
+    private unsafe delegate void EventActionReceiveDelegate(nint a1, uint type, ushort a3, byte a4, uint* networkData,
+                                                            byte count);
 }

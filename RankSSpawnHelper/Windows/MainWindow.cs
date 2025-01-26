@@ -1,6 +1,7 @@
 ﻿using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Microsoft.Extensions.DependencyInjection;
+using RankSSpawnHelper.Managers;
 
 namespace RankSSpawnHelper.Windows;
 
@@ -30,6 +31,15 @@ internal class MainWindow : Window
                               return false;
                           })
                           .ToList();
+
+        var handler = service.GetService<ICommandHandler>() ?? throw new InvalidOperationException("获取 ICommandHandler失败");
+
+        handler.AddCommand("/shelper",
+                           new ((_, _) => Toggle())
+                           {
+                               HelpMessage = "打开设置菜单",
+                               ShowInHelp  = true,
+                           });
 
         SizeConstraints = new WindowSizeConstraints
         {

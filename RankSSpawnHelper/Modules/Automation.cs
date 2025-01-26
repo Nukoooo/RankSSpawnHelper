@@ -39,9 +39,9 @@ internal unsafe class Automation : IUiModule
 
     private readonly Configuration _configuration;
 
-    private readonly List<ItemInfo>                     _items = [];
-    private          bool                               _discarded;
-    private          Hook<OpenInventoryContextDelegate> _openInventoryContextHook;
+    private readonly List<ItemInfo>                      _items = [];
+    private          bool                                _discarded;
+    private          Hook<OpenInventoryContextDelegate>? _openInventoryContextHook;
 
     private       string          _searchText = string.Empty;
     private const ImGuiTableFlags TableFlags  = ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp;
@@ -379,7 +379,7 @@ internal unsafe class Automation : IUiModule
                                           ushort                 a5,
                                           byte                   a6)
     {
-        var original = _openInventoryContextHook.Original(agent, inventoryType, slot, a4, a5, a6);
+        var original = _openInventoryContextHook!.Original(agent, inventoryType, slot, a4, a5, a6);
 
         var territoryType = DalamudApi.ClientState.TerritoryType;
 
