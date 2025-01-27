@@ -143,7 +143,7 @@ internal class Misc : IUiModule
 
     public bool Init()
     {
-        if (!DalamudApi.SigScanner.TryScanText("81 C2 F5 ?? ?? ?? E8 ?? ?? ?? ?? 48 8B D0 48 8D 8C 24", out _address1))
+        if (!DalamudApi.SigScanner.TryScanText("81 C2 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B D0 48 8D 8C 24", out _address1))
         {
             DalamudApi.PluginLog.Error("Failed to get address #1");
 

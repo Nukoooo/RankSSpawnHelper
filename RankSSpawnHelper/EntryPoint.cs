@@ -38,7 +38,8 @@ public class SpawnHelper : IDalamudPlugin
                 new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                 new UIForegroundPayload(35),
                 new TextPayload("  [-] 加回部分原来的功能\n"),
-                new TextPayload("  [-] 地图人数搜索现改为与大水晶互动获取"),
+                new TextPayload("  [-] 地图人数搜索现改为与大水晶互动获取\n"),
+                new TextPayload("  [-] 修复特定情况下插件加载失败的BUG"),
                 new UIForegroundPayload(0),
             ]);
         }
