@@ -388,7 +388,7 @@ internal class Misc : IUiModule
 
         Widget.EndFramedGroup();
 
-        Widget.BeginFramedGroup("杂项");
+        Widget.BeginFramedGroup("杂项", new Vector2(-1, -1));
 
         var worldTravelQueue = _configuration.AccurateWorldTravelQueue;
 
@@ -503,7 +503,7 @@ internal class Misc : IUiModule
 
             var now = DateTimeOffset.Now;
 
-            var minTime = DateTimeOffset.FromUnixTimeMilliseconds((long) status.ExpectMinTime);
+            var minTime = DateTimeOffset.FromUnixTimeMilliseconds((long) status.ExpectMinTime).AddHours(-1);
             var maxTime = DateTimeOffset.FromUnixTimeMilliseconds((long) status.ExpectMaxTime);
 
             if (minTime > now)
@@ -631,7 +631,10 @@ internal class Misc : IUiModule
 
             payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
             payloads.Add(new UIForegroundPayload((ushort) _configuration.HighlightColor));
-            var delta = (DateTimeOffset.FromUnixTimeMilliseconds((long) minTime) - DateTimeOffset.Now).TotalMinutes;
+
+            var delta = (DateTimeOffset.FromUnixTimeMilliseconds((long) minTime).AddHours(-1) - DateTime.Now)
+                .TotalMinutes;
+
             payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
             payloads.Add(new UIForegroundPayload(0));
 
@@ -703,7 +706,7 @@ internal class Misc : IUiModule
         Utils.Print(payloads);
     }
 
-    private unsafe void hk_EventActionReceive(nint a1, uint type, ushort a3, byte a4, uint* payload, byte payloadCount)
+    private unsafe void hk_EventActionReceive(nint a1, uint type, ushort a3, nint a4, uint* payload, byte payloadCount)
     {
         EventActionReceiveHook.Original(a1, type, a3, a4, payload, payloadCount);
         var id          = (ushort) type;
@@ -879,6 +882,6 @@ internal class Misc : IUiModule
         }
     }
 
-    private unsafe delegate void EventActionReceiveDelegate(nint a1, uint type, ushort a3, byte a4, uint* networkData,
+    private unsafe delegate void EventActionReceiveDelegate(nint a1, uint type, ushort a3, nint a4, uint* networkData,
                                                             byte count);
 }
