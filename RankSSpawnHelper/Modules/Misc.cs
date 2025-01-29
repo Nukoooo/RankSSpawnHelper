@@ -501,10 +501,10 @@ internal class Misc : IUiModule
             ImGui.SameLine();
             ImGui.TextColored(status.Missing ? ImGuiColors.DPSRed : ImGuiColors.ParsedGreen, status.Missing ? "是" : "否");
 
-            var now = DateTimeOffset.Now;
+            var now = DateTime.Now;
 
-            var minTime = DateTimeOffset.FromUnixTimeMilliseconds((long) status.ExpectMinTime).AddHours(-1);
-            var maxTime = DateTimeOffset.FromUnixTimeMilliseconds((long) status.ExpectMaxTime);
+            var minTime = DateTime.UnixEpoch.AddMilliseconds(status.ExpectMinTime).ToLocalTime();
+            var maxTime = DateTime.UnixEpoch.AddMilliseconds(status.ExpectMaxTime).ToLocalTime();
 
             if (minTime > now)
             {
@@ -594,7 +594,7 @@ internal class Misc : IUiModule
             return;
         }
 
-        var time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        var time = DateTime.Now;
 
         var payloads = new List<Payload>
         {
@@ -602,8 +602,8 @@ internal class Misc : IUiModule
             new TextPayload($"{_dataManager.FormatCurrentTerritory()} - {huntData.LocalizedName}:"),
         };
 
-        var minTime   = huntStatus.ExpectMinTime;
-        var maxTIme   = huntStatus.ExpectMaxTime;
+        var minTime   = DateTime.UnixEpoch.AddMilliseconds(huntStatus.ExpectMinTime).ToLocalTime();
+        var maxTIme   = DateTime.UnixEpoch.AddMilliseconds(huntStatus.ExpectMaxTime).ToLocalTime();
         var spawnable = time > minTime;
 
         if (spawnable)
@@ -632,8 +632,7 @@ internal class Misc : IUiModule
             payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
             payloads.Add(new UIForegroundPayload((ushort) _configuration.HighlightColor));
 
-            var delta = (DateTimeOffset.FromUnixTimeMilliseconds((long) minTime).AddHours(-1) - DateTime.Now)
-                .TotalMinutes;
+            var delta = (minTime - DateTime.Now).TotalMinutes;
 
             payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
             payloads.Add(new UIForegroundPayload(0));

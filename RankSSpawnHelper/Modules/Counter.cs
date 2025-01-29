@@ -335,9 +335,18 @@ internal partial class Counter : IUiModule, ICounter
 
     private void Condition_ConditionChange(ConditionFlag flag, bool value)
     {
-        if (flag == ConditionFlag.BetweenAreas51 && value)
+        if (flag != ConditionFlag.BetweenAreas51)
+        {
+            return;
+        }
+
+        if (value)
         {
             _hasSRank = false;
+        }
+        else if (DalamudApi.ClientState.TerritoryType == 960)
+        {
+            _counterWindow!.IsOpen = true;
         }
     }
 
@@ -416,7 +425,7 @@ internal partial class Counter : IUiModule, ICounter
 
         foreach (var (k, v) in _localTracker)
         {
-            var delta = DateTimeOffset.Now - DateTimeOffset.FromUnixTimeSeconds(v.LastUpdateTime);
+            var delta = DateTime.Now - DateTime.UnixEpoch.AddSeconds(v.LastUpdateTime).ToLocalTime();
 
             if (delta.TotalMinutes <= _configuration.TrackerClearThreshold)
             {

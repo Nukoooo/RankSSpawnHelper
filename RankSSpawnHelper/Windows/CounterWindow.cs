@@ -60,15 +60,20 @@ internal class CounterWindow : Window
 
         var inUltima = territoryType == 960;
 
-        if ((inUltima && !_configuration.WeeEaCounter) || !_configuration.TrackKillCount)
+        if (inUltima)
         {
-            IsOpen = false;
+            if (!_configuration.WeeEaCounter)
+            {
+                IsOpen = false;
+            }
 
             return;
         }
 
-        if (inUltima)
+        if (!_configuration.TrackKillCount)
         {
+            IsOpen = false;
+
             return;
         }
 
@@ -89,13 +94,13 @@ internal class CounterWindow : Window
     {
         _dataManager.NotoSan24.Push();
 
-        if (DalamudApi.ClientState.TerritoryType != 960)
+        if (DalamudApi.ClientState.TerritoryType == 960)
         {
-            DrawTracker();
+            DrawWeeEaCounter();
         }
         else
         {
-            DrawWeeEaCounter();
+            DrawTracker();
         }
 
         _dataManager.NotoSan24.Pop();
@@ -143,8 +148,7 @@ internal class CounterWindow : Window
                 }
                 else
                 {
-                    var startTime = DateTimeOffset.FromUnixTimeSeconds(value.StartTime)
-                                                  .LocalDateTime;
+                    var startTime = DateTime.UnixEpoch.AddSeconds(value.StartTime).ToLocalTime();
 
                     var endTime = DateTimeOffset.Now.LocalDateTime;
 
@@ -175,8 +179,7 @@ internal class CounterWindow : Window
         ImGui.SameLine();
         ImGui.TextUnformatted(currentInstance);
 
-        var time = DateTimeOffset.FromUnixTimeSeconds(value.StartTime)
-                                 .LocalDateTime;
+        var time = DateTime.UnixEpoch.AddSeconds(value.StartTime).ToLocalTime();
 
         ImGui.Text($"\t开始时间: {time.Month}-{time.Day}@{time.ToShortTimeString()}");
 
@@ -197,11 +200,18 @@ internal class CounterWindow : Window
 
     private void DrawWeeEaCounter()
     {
+        if (!_configuration.WeeEaCounter)
+        {
+            IsOpen = false;
+
+            return;
+        }
+
         var (nameList, nonWeeEaCount) = _counter.GetWeeEaCounter();
 
         if (ImGui.Button("[ 寄了点我 ]"))
         {
-            SendWeeEaAttemptFail(nameList, nonWeeEaCount);
+            SendWeeEaAttemptFail(nameList);
         }
 
         ImGui.SameLine();
@@ -209,9 +219,9 @@ internal class CounterWindow : Window
         ImGui.Text($"附近的小异亚数量:{nameList.Count}\n非小异亚的数量: {nonWeeEaCount}");
     }
 
-    private void SendWeeEaAttemptFail(List<string> nameList, int count)
+    private void SendWeeEaAttemptFail(List<string> nameList)
     {
-        if (count < 10)
+        if (nameList.Count < 10)
         {
             Utils.Print(new List<Payload>
             {

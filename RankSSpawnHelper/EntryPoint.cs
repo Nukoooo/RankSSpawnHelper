@@ -40,7 +40,9 @@ public class SpawnHelper : IDalamudPlugin
                 new TextPayload("  [-] 加回部分原来的功能\n"),
                 new TextPayload("  [-] 地图人数搜索现改为与大水晶互动获取\n"),
                 new TextPayload("  [-] 修复特定情况下插件加载失败的BUG\n"),
-                new TextPayload("  [-] 修复加载插件后动画无法跳过/结束后无法操作的BUG"),
+                new TextPayload("  [-] 修复加载插件后动画无法跳过/结束后无法操作的BUG\n"),
+                new TextPayload("  [-] 修复异亚计数窗口不显示的问题\n"),
+                new TextPayload("  [-] 修复触发概率不准确的问题\n"),
                 new UIForegroundPayload(0),
             ]);
         }

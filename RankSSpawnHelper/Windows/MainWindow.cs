@@ -32,7 +32,7 @@ internal class MainWindow : Window
                           })
                           .ToList();
 
-        var handler = service.GetService<ICommandHandler>() ?? throw new InvalidOperationException("获取 ICommandHandler失败");
+        var handler = service.GetService<ICommandHandler>() ?? throw new InvalidOperationException("获取 ICommandHandler 失败");
 
         handler.AddCommand("/shelper",
                            new ((_, _) => Toggle())
