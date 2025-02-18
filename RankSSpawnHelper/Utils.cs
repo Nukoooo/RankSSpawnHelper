@@ -44,7 +44,7 @@ internal class Utils
 
     public static string FormatLocalPlayerName()
     {
-        if (DalamudApi.ClientState.LocalPlayer is { HomeWorld.GameData: { } world } local)
+        if (DalamudApi.ClientState.LocalPlayer is { HomeWorld.ValueNullable: { } world } local)
         {
             return $"{local.Name}@{world.Name}";
         }

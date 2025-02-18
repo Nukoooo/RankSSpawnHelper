@@ -15,7 +15,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using Microsoft.Extensions.DependencyInjection;
 using OtterGui.Widgets;
 using RankSSpawnHelper.Managers;
@@ -501,7 +501,7 @@ internal class Misc : IUiModule
             ImGui.SameLine();
             ImGui.TextColored(status.Missing ? ImGuiColors.DPSRed : ImGuiColors.ParsedGreen, status.Missing ? "是" : "否");
 
-            var now = DateTime.Now;
+            var now = DateTime.Now.ToLocalTime();
 
             var minTime = DateTime.UnixEpoch.AddMilliseconds(status.ExpectMinTime).ToLocalTime();
             var maxTime = DateTime.UnixEpoch.AddMilliseconds(status.ExpectMaxTime).ToLocalTime();
@@ -594,7 +594,7 @@ internal class Misc : IUiModule
             return;
         }
 
-        var time = DateTime.Now;
+        var time = DateTime.Now.ToLocalTime();
 
         var payloads = new List<Payload>
         {
@@ -632,9 +632,9 @@ internal class Misc : IUiModule
             payloads.Add(new TextPayload("\n距离进入可触发期还有 "));
             payloads.Add(new UIForegroundPayload((ushort) _configuration.HighlightColor));
 
-            var delta = (minTime - DateTime.Now).TotalMinutes;
+            var delta = (minTime - time).TotalMinutes;
 
-            payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分钟"));
+            payloads.Add(new TextPayload($"{(minTime - time).ToString()}"));
             payloads.Add(new UIForegroundPayload(0));
 
             if (_configuration.CoolDownNotificationSound)

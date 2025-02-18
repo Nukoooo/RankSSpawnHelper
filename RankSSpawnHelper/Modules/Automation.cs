@@ -16,7 +16,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using OtterGui.Widgets;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
@@ -48,7 +48,7 @@ internal unsafe class Automation : IUiModule
 
     private readonly Dictionary<ushort, uint> _minionMap = new ()
     {
-        { 1178, 180 },
+        { 1188, 180 },
         { 960, 423 },
         { 816, 303 },
         { 956, 434 },
@@ -63,18 +63,19 @@ internal unsafe class Automation : IUiModule
         _configuration = configuration;
 
         _items.AddRange(DalamudApi.DataManager.GetExcelSheet<Item>()!
-                                  .Where(i => !string.IsNullOrEmpty(i.Name)
+                                  .Where(i => !string.IsNullOrEmpty(i.Name.ExtractText())
                                               && (
-                                                  (i.FilterGroup               == 4
-                                                   && i.LevelItem.Value?.RowId == 1
-                                                   && !i.IsUnique)        // 普通装备且装等为1的物品 比如草布马裤，超级米饭的斗笠
+                                                  i is
+                                                  {
+                                                      FilterGroup: 4, LevelItem.Value.RowId: 1, IsUnique: false,
+                                                  }                       // 普通装备且装等为1的物品 比如草布马裤，超级米饭的斗笠
                                                   || (i.FilterGroup == 12 // 材料比如矮人棉，庵摩罗果等 但因为秧鸡胸脯肉，厄尔庇斯鸟蛋和鱼粉是特定地图扔的，所以不会加进列表里
                                                       && i.RowId    != 36256
                                                       && i.RowId    != 27850
                                                       && i.RowId    != 7767)
                                                   || i.FilterGroup == 17 // 鱼饵，比如沙蚕
                                               ))
-                                  .Select(i => new ItemInfo(i.RowId, i.Name)));
+                                  .Select(i => new ItemInfo(i.RowId, i.Name.ExtractText())));
 
         if (DalamudApi.ClientState.IsLoggedIn)
         {

@@ -7,7 +7,7 @@ using Dalamud.Interface.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 
 namespace RankSSpawnHelper.Managers;
@@ -117,16 +117,17 @@ internal class DataManger : IDataManager, IModule
                       ?? throw new InvalidOperationException("Failed to get World sheet");
 
         _npcName
-            = DalamudApi.DataManager.GetExcelSheet<BNpcName>()!.ToFrozenDictionary(i => i.RowId, i => i.Singular.RawString);
+            = DalamudApi.DataManager.GetExcelSheet<BNpcName>()!.ToFrozenDictionary(i => i.RowId, i => i.Singular.ExtractText());
 
         _territoryTypeSheet = DalamudApi.DataManager.GetExcelSheet<TerritoryType>()!;
 
         _territoryName = _territoryTypeSheet.ToFrozenDictionary(i => i.RowId,
-                                                                i => i.PlaceName.Value!.Name.RawString);
+                                                                i => i.PlaceName.Value!.Name.ExtractText());
 
-        _itemName = DalamudApi.DataManager.GetExcelSheet<Item>()!.ToFrozenDictionary(i => i.RowId, i => i.Singular.RawString);
+        _itemName
+            = DalamudApi.DataManager.GetExcelSheet<Item>()!.ToFrozenDictionary(i => i.RowId, i => i.Singular.ExtractText());
 
-        _worldName = _worldSheet.ToFrozenDictionary(i => i.RowId, i => i.Name.RawString);
+        _worldName = _worldSheet.ToFrozenDictionary(i => i.RowId, i => i.Name.ExtractText());
 
         SetupFont();
 
@@ -176,7 +177,7 @@ internal class DataManger : IDataManager, IModule
         => GetWorldName(worldId) + '@' + GetTerritoryName(territoryId) + (instance == 0 ? string.Empty : $"@{instance}");
 
     public uint GetCurrentWorldId()
-        => DalamudApi.ClientState.LocalPlayer is { } local ? local.CurrentWorld.Id : 0;
+        => DalamudApi.ClientState.LocalPlayer is { } local ? local.CurrentWorld.RowId : 0;
 
     public uint GetCurrentTerritoryId()
         => DalamudApi.ClientState.TerritoryType;
@@ -261,16 +262,16 @@ internal class DataManger : IDataManager, IModule
     private void ClientStateOnLogin()
     {
         if (DalamudApi.ClientState.LocalPlayer is not { } local
-            || local.HomeWorld.GameData is not { } homeWorld
-            || homeWorld.DataCenter.Value is not { } dc)
+            || local.HomeWorld.ValueNullable is not { } homeWorld
+            || homeWorld.DataCenter.ValueNullable is not { } dc)
         {
             return;
         }
 
         _currentDataCenterRowId = dc.RowId;
 
-        _serverList = _worldSheet.Where(i => i.DataCenter.Value != null && i.DataCenter.Value.RowId == dc.RowId)
-                                 .Select(i => i.Name.RawString)
+        _serverList = _worldSheet.Where(i => i.DataCenter.Value.RowId == dc.RowId)
+                                 .Select(i => i.Name.ExtractText())
                                  .ToList();
     }
 
@@ -318,7 +319,7 @@ internal class DataManger : IDataManager, IModule
             {
                 Expansion = GameExpansion.ARealmReborn,
                 LocalizedName = bNpcNames.GetRow(i)!
-                                         .Singular.RawString,
+                                         .Singular.ExtractText(),
                 Id = i,
             };
 
@@ -336,7 +337,7 @@ internal class DataManger : IDataManager, IModule
             {
                 Expansion = GameExpansion.Heavensward,
                 LocalizedName = bNpcNames.GetRow(i)!
-                                         .Singular.RawString,
+                                         .Singular.ExtractText(),
                 Id = i,
             };
 
@@ -349,7 +350,7 @@ internal class DataManger : IDataManager, IModule
             {
                 Expansion = GameExpansion.Stormblood,
                 LocalizedName = bNpcNames.GetRow(i)!
-                                         .Singular.RawString,
+                                         .Singular.ExtractText(),
                 Id = i,
             };
 
@@ -360,7 +361,7 @@ internal class DataManger : IDataManager, IModule
         {
             Expansion = GameExpansion.Shadowbringers,
             LocalizedName = bNpcNames.GetRow(8653)!
-                                     .Singular.RawString,
+                                     .Singular.ExtractText(),
             Id = 8653,
         }); // 阿格拉俄珀
 
@@ -370,7 +371,7 @@ internal class DataManger : IDataManager, IModule
             {
                 Expansion = GameExpansion.Shadowbringers,
                 LocalizedName = bNpcNames.GetRow(i)!
-                                         .Singular.RawString,
+                                         .Singular.ExtractText(),
                 Id = i,
             };
 
@@ -383,7 +384,7 @@ internal class DataManger : IDataManager, IModule
             {
                 Expansion = GameExpansion.Endwalker,
                 LocalizedName = bNpcNames.GetRow(i)!
-                                         .Singular.RawString,
+                                         .Singular.ExtractText(),
                 Id = i,
             };
 
@@ -395,7 +396,7 @@ internal class DataManger : IDataManager, IModule
             Expansion = GameExpansion.Dawntrail,
             Id        = 13156,
             LocalizedName = bNpcNames.GetRow(13156)!
-                                     .Singular.RawString,
+                                     .Singular.ExtractText(),
         });
 
         _huntData.Add(new ()
@@ -403,7 +404,7 @@ internal class DataManger : IDataManager, IModule
             Expansion = GameExpansion.Dawntrail,
             Id        = 13437,
             LocalizedName = bNpcNames.GetRow(13437)!
-                                     .Singular.RawString,
+                                     .Singular.ExtractText(),
         });
 
         _huntData.Add(new ()
@@ -411,7 +412,7 @@ internal class DataManger : IDataManager, IModule
             Expansion = GameExpansion.Dawntrail,
             Id        = 12754,
             LocalizedName = bNpcNames.GetRow(12754)!
-                                     .Singular.RawString,
+                                     .Singular.ExtractText(),
         });
 
         _huntData.Add(new ()
@@ -419,7 +420,7 @@ internal class DataManger : IDataManager, IModule
             Expansion = GameExpansion.Dawntrail,
             Id        = 13399,
             LocalizedName = bNpcNames.GetRow(13399)!
-                                     .Singular.RawString,
+                                     .Singular.ExtractText(),
         });
 
         _huntData.Add(new ()
@@ -427,7 +428,7 @@ internal class DataManger : IDataManager, IModule
             Expansion = GameExpansion.Dawntrail,
             Id        = 13444,
             LocalizedName = bNpcNames.GetRow(13444)!
-                                     .Singular.RawString,
+                                     .Singular.ExtractText(),
         });
 
         var region = DalamudApi.ClientState.ClientLanguage switch
@@ -463,12 +464,14 @@ internal class DataManger : IDataManager, IModule
 
     private string GetTerritoryMapPath(uint id)
     {
-        if (_territoryTypeSheet.GetRow(id) is not { } territoryType || territoryType.Map.Value is not { } map)
+        var territoryType = _territoryTypeSheet.GetRow(id);
+
+        if (territoryType.Map.ValueNullable is not { } map)
         {
             return string.Empty;
         }
 
-        var mapKey = map.Id.RawString;
+        var mapKey = map.Id.ExtractText();
         var rawKey = mapKey.Replace("/", "");
 
         return $"ui/map/{mapKey}/{rawKey}_m.tex";
@@ -476,21 +479,15 @@ internal class DataManger : IDataManager, IModule
 
     private float GetTerritorySizeFactor(uint id)
     {
-        if (_territoryTypeSheet.GetRow(id) is not { } territoryType || territoryType.Map.Value is not { } map)
-        {
-            return 1;
-        }
+        var territoryType = _territoryTypeSheet.GetRow(id);
 
-        return map.SizeFactor;
+        return territoryType.Map.ValueNullable is not { } map ? 1 : map.SizeFactor;
     }
 
     private uint GetTerritoryMapRowId(uint id)
     {
-        if (_territoryTypeSheet.GetRow(id) is not { } territoryType || territoryType.Map.Value is not { } map)
-        {
-            return 0;
-        }
+        var territoryType = _territoryTypeSheet.GetRow(id);
 
-        return map.RowId;
+        return territoryType.Map.ValueNullable is not { } map ? 0 : map.RowId;
     }
 }

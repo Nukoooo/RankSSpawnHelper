@@ -45,7 +45,7 @@ internal partial class Counter
 
                 var owner = (IPlayerCharacter) DalamudApi.ObjectTable[obj.ObjectIndex - 1]!;
 
-                var name = $"{owner.Name.TextValue}@{owner.HomeWorld.GameData!.Name.RawString}";
+                var name = $"{owner.Name.TextValue}@{owner.HomeWorld.Value.Name.ExtractText()}";
                 _weeEaNameList.Add(name);
             }
         }

@@ -59,7 +59,7 @@ internal partial class ConnectionManager : IConnectionManager, IUiModule
         Task.Run(() => Connect(Url));
     }
 
-    private void ClientState_OnLogout()
+    private void ClientState_OnLogout(int type, int code)
     {
         _client?.Dispose();
     }
