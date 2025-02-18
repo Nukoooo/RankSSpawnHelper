@@ -39,6 +39,7 @@ public class SpawnHelper : IDalamudPlugin
                 new UIForegroundPayload(35),
                 new TextPayload("  [-] API11\n"),
                 new TextPayload("  [-] 修复湿地不会自动召唤蓝闪蝶的BUG\n"),
+                new TextPayload("  [-] 修复开ACT的显示跨服人数插件时会导致小助手无法加载的BUG\n"),
                 new UIForegroundPayload(0),
             ]);
         }
