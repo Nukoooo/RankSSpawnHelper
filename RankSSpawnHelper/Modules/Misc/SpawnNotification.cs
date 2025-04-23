@@ -281,7 +281,7 @@ internal class SpawnNotification : IUiModule
 
             var delta = (minTime - time).TotalMinutes;
 
-            payloads.Add(new TextPayload($"{(minTime - time).ToString()}"));
+            payloads.Add(new TextPayload($"{delta / 60:F0}小时{delta % 60:F0}分"));
             payloads.Add(new UIForegroundPayload(0));
 
             if (_configuration.CoolDownNotificationSound)
