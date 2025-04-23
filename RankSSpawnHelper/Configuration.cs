@@ -75,6 +75,8 @@ internal class Configuration : IPluginConfiguration
     public bool       AutoDiscardItem  { get; set; } = false;
     public bool       AutoSummonMinion { get; set; } = false;
 
+    public List<uint> BlacklistedTerritories { get; set; } = [];
+
     int IPluginConfiguration.Version { get; set; }
 
     public void Save()

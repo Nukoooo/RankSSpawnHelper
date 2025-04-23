@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -168,7 +169,10 @@ internal class TrackerApi
 
             _isFetchingSpawnPoint = true;
 
-            var response = await _httpClient.PostAsync("public/huntmap", new FormUrlEncodedContent(body));
+            var response = await _httpClient.PostAsync("public/huntmap",
+                                                       new StringContent(JsonSerializer.Serialize(body),
+                                                                         Encoding.UTF8,
+                                                                         "application/json"));
 
             if (response.StatusCode != HttpStatusCode.OK)
             {

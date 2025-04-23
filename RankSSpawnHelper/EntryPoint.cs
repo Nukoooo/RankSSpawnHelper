@@ -37,9 +37,8 @@ public class SpawnHelper : IDalamudPlugin
             Utils.Print([
                 new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] API11\n"),
-                new TextPayload("  [-] 修复湿地不会自动召唤蓝闪蝶的BUG\n"),
-                new TextPayload("  [-] 修复开ACT的显示跨服人数插件时会导致小助手无法加载的BUG\n"),
+                new TextPayload("  [-] **可能**修复了湿地无法获取点位的BUG\n"),
+                new TextPayload("  [+] 增加了自动获取点位的黑名单，在黑名单里的地图在进图后不会自动获取"),
                 new UIForegroundPayload(0),
             ]);
         }
