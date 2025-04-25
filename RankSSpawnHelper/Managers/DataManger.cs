@@ -323,8 +323,6 @@ internal class DataManger : IDataManager, IModule
                 Id = i,
             };
 
-            DalamudApi.PluginLog.Info($"{item.LocalizedName}: {i}");
-
             _huntData.Add(item);
         }
 

@@ -18,6 +18,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
 using OtterGui.Widgets;
+using RankSSpawnHelper.Managers;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace RankSSpawnHelper.Modules;
@@ -58,9 +59,12 @@ internal unsafe class Automation : IUiModule
     private readonly List<uint> _unlockedMinion = [];
     private          DateTime   _lastUpDateTime;
 
-    public Automation(Configuration configuration)
+    private readonly ISigScannerModule _sigScanner;
+
+    public Automation(Configuration configuration, ISigScannerModule sigScanner)
     {
         _configuration = configuration;
+        _sigScanner    = sigScanner;
 
         _items.AddRange(DalamudApi.DataManager.GetExcelSheet<Item>()!
                                   .Where(i => !string.IsNullOrEmpty(i.Name.ExtractText())
@@ -85,7 +89,7 @@ internal unsafe class Automation : IUiModule
 
     public bool Init()
     {
-        if (!DalamudApi.SigScanner.TryScanText("83 B9 ?? ?? ?? ?? ?? 7E ?? 39 91", out var address))
+        if (!_sigScanner.TryScanText("83 B9 ?? ?? ?? ?? ?? 7E ?? 39 91", out var address))
         {
             return false;
         }

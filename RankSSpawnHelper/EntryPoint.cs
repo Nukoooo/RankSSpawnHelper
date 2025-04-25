@@ -37,6 +37,10 @@ public class SpawnHelper : IDalamudPlugin
             Utils.Print([
                 new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                 new UIForegroundPayload(35),
+                new TextPayload("  [-] 手搓SigScanner防止扫不到签名\n"),
+                new UIForegroundPayload(0),
+                new TextPayload("版本 2.0.2.0 的更新日志:\n"),
+                new UIForegroundPayload(35),
                 new TextPayload("  [-] **可能**修复了湿地无法获取点位的BUG\n"),
                 new TextPayload("  [+] 增加了自动获取点位的黑名单，在黑名单里的地图在进图后不会自动获取"),
                 new UIForegroundPayload(0),
@@ -86,8 +90,6 @@ public class SpawnHelper : IDalamudPlugin
                         .ForEach(x => x.Shutdown());
 
         _configuration.Save();
-
-        GC.SuppressFinalize(this);
     }
 
     private void UiBuilderOnOpenMainUi()
@@ -100,6 +102,8 @@ public class SpawnHelper : IDalamudPlugin
     {
         services.ImplSingleton<IModule, ICommandHandler, CommandHandler>();
         services.ImplSingleton<IModule, IDataManager, DataManger>();
+        services.ImplSingleton<IModule, ISigScannerModule, SigScanner>();
+
         services.ImplSingleton<IUiModule, IConnectionManager, ConnectionManager>();
         services.ImplSingleton<IUiModule, ICounter, Counter>();
         services.AddSingleton<IUiModule, Misc>();

@@ -10,22 +10,27 @@ internal class PlayerSearch : IUiModule
 {
     private Hook<EventActionReceiveDelegate> EventActionReceiveHook { get; set; } = null!;
 
-    private readonly Configuration _configuration;
-    private readonly ICounter      _counterModule;
-    private readonly IDataManager  _dataManager;
+    private readonly Configuration     _configuration;
+    private readonly ICounter          _counterModule;
+    private readonly IDataManager      _dataManager;
+    private readonly ISigScannerModule _sigScanner;
 
-    public PlayerSearch(Configuration configuration, ICounter counter, IDataManager dataManager)
+    public PlayerSearch(Configuration     configuration,
+                        ICounter          counter,
+                        ISigScannerModule sigScanner,
+                        IDataManager      dataManager)
     {
         _configuration = configuration;
         _counterModule = counter;
+        _sigScanner    = sigScanner;
         _dataManager   = dataManager;
     }
 
     public bool Init()
     {
-        if (!DalamudApi.SigScanner
-                       .TryScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? B8 ?? ?? ?? ?? 49 8B F9",
-                                    out var eventActionReceive))
+        if (!_sigScanner
+                .TryScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? B8 ?? ?? ?? ?? 49 8B F9",
+                             out var eventActionReceive))
         {
             DalamudApi.PluginLog.Error("Failed to get EventActionReceive address");
 

@@ -1,9 +1,7 @@
-﻿using System.Diagnostics;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility.Signatures;
 using Microsoft.Extensions.DependencyInjection;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Windows;
@@ -51,6 +49,7 @@ internal partial class Counter : IUiModule, ICounter
     private readonly Configuration      _configuration;
     private readonly IDataManager       _dataManager;
     private readonly IConnectionManager _connectionManager;
+    private readonly ISigScannerModule  _sigScanner;
     private          Window?            _counterWindow;
     private readonly WindowSystem       _windowSystem;
 
@@ -66,10 +65,12 @@ internal partial class Counter : IUiModule, ICounter
     public Counter(Configuration      configuration,
                    IDataManager       dataManager,
                    IConnectionManager connectionManager,
+                   ISigScannerModule  sigScanner,
                    WindowSystem       windowSystem)
     {
         _configuration     = configuration;
         _dataManager       = dataManager;
+        _sigScanner        = sigScanner;
         _connectionManager = connectionManager;
         _windowSystem      = windowSystem;
     }
@@ -78,17 +79,77 @@ internal partial class Counter : IUiModule, ICounter
     {
         DalamudApi.GameInterop.InitializeFromAttributes(this);
 
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
         InitializeData();
-        stopwatch.Stop();
 
-        DalamudApi.PluginLog.Info($"{stopwatch.Elapsed}");
+        if (!
+            _sigScanner.TryScanText("48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 48 8B DA 8B F9 E8 ?? ?? ?? ?? 3C ?? 75 ?? E8 ?? ?? ?? ?? 3C ?? 75 ?? 80 BB ?? ?? ?? ?? ?? 75 ?? 8B 05 ?? ?? ?? ?? 39 43 ?? 0F 85 ?? ?? ?? ?? 0F B6 53 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 0F B6 53 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 54 24 ?? C7 44 24 ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? 66 90 48 8D 92 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 42 ?? 0F 10 43 ?? 0F 11 4A ?? 0F 10 4B ?? 0F 11 42 ?? 0F 10 43 ?? 0F 11 4A ?? 0F 10 4B ?? 0F 11 42 ?? 0F 10 43 ?? 0F 11 4A ?? 0F 10 4B ?? 0F 11 42 ?? 0F 11 4A ?? 48 83 E8 ?? 75 ?? 48 8B 03",
+                                    out var playerBattleCharaAddress))
+        {
+            DalamudApi.PluginLog.Error("Failed to find signature for OnReceiveCreateNonPlayerBattleCharaPacket");
 
-        OnReceiveCreateNonPlayerBattleCharaPacket.Enable();
-        ActorControl.Enable();
-        SystemLogMessage.Enable();
-        InventoryTransactionDiscard.Enable();
+            return false;
+        }
+
+        if (!_sigScanner.TryScanText("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", out var actorControlAddress))
+        {
+            DalamudApi.PluginLog.Error("Failed to find signature for ActorControl");
+
+            return false;
+        }
+
+        if (!_sigScanner
+                .TryScanText("40 55 56 41 54 41 55 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 49 8B F1",
+                             out var processSystemLogAddress))
+        {
+            DalamudApi.PluginLog.Error("Failed to find signature for ProcessSystemLog");
+
+            return false;
+        }
+
+        if (!
+            _sigScanner.TryScanText(
+                                    "48 89 5C 24 ?? 55 56 57 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 ?? ?? ?? ?? 8B 5A ?? 48 8B EA 8B D3 48 8B F9 E8 ?? ?? ?? ?? 48 8B CF 80 78 ?? ?? 75 ?? 81 FB ?? ?? ?? ?? 75 ?? 8B D3 E8 ?? ?? ?? ?? 48 85 C0 0F 84 ?? ?? ?? ?? 33 F6 45 33 C9 45 33 C0 89 74 24 ?? 33 D2 B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 8B 97 ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 97 ?? ?? ?? ?? 8B CB E8 ?? ?? ?? ?? 8B 8F ?? ?? ?? ?? B8 ?? ?? ?? ?? FF C1 F7 E1 8B C1 2B C2 D1 E8 03 C2 C1 E8 ?? 69 C0 ?? ?? ?? ?? 2B C8 0F BA E9 ?? 89 8F ?? ?? ?? ?? E9 ?? ?? ?? ?? 8B 55 ?? E8 ?? ?? ?? ?? 33 F6 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8B 00 48 8B C8 0F BF 55 ?? 4C 89 B4 24 ?? ?? ?? ?? 41 FF 50 ?? 4C 8B F0 48 85 C0 0F 84 ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? C7 44 24 ?? ?? ?? ?? ?? 48 89 44 24 ?? 48 8D 4C 24 ?? 33 C0 66 89 74 24 ?? 49 8B D6 66 89 44 24 ?? 48 89 44 24 ?? 66 89 44 24 ?? 89 44 24 ?? 88 44 24 ?? 40 88 74 24 ?? 48 89 74 24 ?? 48 89 74 24 ?? 40 88 74 24 ?? C7 44 24 ?? ?? ?? ?? ?? 48 89 74 24 ?? E8 ?? ?? ?? ?? 49 8B 06 49 8B CE",
+                                    out var inventoryDiscardAddress))
+        {
+            DalamudApi.PluginLog.Info("Failed to find signature for InventoryTransactionDiscard");
+
+            return false;
+        }
+
+        {
+            OnReceiveCreateNonPlayerBattleCharaPacket
+                = DalamudApi.GameInterop
+                            .HookFromAddress<OnReceiveCreateNonPlayerBattleCharaPacketDelegate>(playerBattleCharaAddress,
+                                     Detour_OnReceiveCreateNonPlayerBattleCharaPacket);
+
+            OnReceiveCreateNonPlayerBattleCharaPacket.Enable();
+        }
+
+        {
+            ActorControl
+                = DalamudApi.GameInterop
+                            .HookFromAddress<ActorControlDelegate>(actorControlAddress,
+                                                                   Detour_ActorControl);
+
+            ActorControl.Enable();
+        }
+
+        unsafe
+        {
+            SystemLogMessage
+                = DalamudApi.GameInterop.HookFromAddress<SystemLogMessageDelegate>(processSystemLogAddress,
+                                                                                   Detour_ProcessSystemLogMessage);
+
+            SystemLogMessage.Enable();
+        }
+
+        {
+            InventoryTransactionDiscard
+                = DalamudApi.GameInterop.HookFromAddress<InventoryTransactionDiscardDelegate>(inventoryDiscardAddress,
+                         Detour_InventoryTransactionDiscard);
+
+            InventoryTransactionDiscard.Enable();
+        }
 
         DalamudApi.ChatGui.ChatMessage += ChatGui_OnChatMessage;
         DalamudApi.Framework.Update    += Framework_Update;
@@ -326,9 +387,7 @@ internal partial class Counter : IUiModule, ICounter
         });
     }
 
-    [Signature("48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 48 8B DA 8B F9 E8 ?? ?? ?? ?? 3C ?? 75 ?? E8 ?? ?? ?? ?? 3C ?? 75 ?? 80 BB ?? ?? ?? ?? ?? 75 ?? 8B 05 ?? ?? ?? ?? 39 43 ?? 0F 85 ?? ?? ?? ?? 0F B6 53 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 0F B6 53 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 54 24 ?? C7 44 24 ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? 66 90 48 8D 92 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 42 ?? 0F 10 43 ?? 0F 11 4A ?? 0F 10 4B ?? 0F 11 42 ?? 0F 10 43 ?? 0F 11 4A ?? 0F 10 4B ?? 0F 11 42 ?? 0F 10 43 ?? 0F 11 4A ?? 0F 10 4B ?? 0F 11 42 ?? 0F 11 4A ?? 48 83 E8 ?? 75 ?? 48 8B 03",
-               DetourName = nameof(Detour_OnReceiveCreateNonPlayerBattleCharaPacket))]
-    private Hook<OnReceiveCreateNonPlayerBattleCharaPacketDelegate> OnReceiveCreateNonPlayerBattleCharaPacket { get; init; }
+    private Hook<OnReceiveCreateNonPlayerBattleCharaPacketDelegate> OnReceiveCreateNonPlayerBattleCharaPacket { get; set; }
         = null!;
 
     private delegate void OnReceiveCreateNonPlayerBattleCharaPacketDelegate(nint a1, nint packetData);

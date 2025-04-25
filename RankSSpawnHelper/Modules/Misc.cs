@@ -60,12 +60,13 @@ internal class Misc : IUiModule
     private readonly FrozenDictionary<ushort, uint> _mobIdMap;
     private readonly FrozenDictionary<uint, ushort> _mobMapId;
 
-    public Misc(TrackerApi      trackerApi,
-                IDataManager    dataManager,
-                Configuration   configuration,
-                WindowSystem    windowSystem,
-                ICommandHandler commandHandler,
-                ICounter        counter)
+    public Misc(TrackerApi        trackerApi,
+                IDataManager      dataManager,
+                Configuration     configuration,
+                WindowSystem      windowSystem,
+                ICommandHandler   commandHandler,
+                ISigScannerModule sigScanner,
+                ICounter          counter)
     {
         _trackerApi     = trackerApi;
         _dataManager    = dataManager;
@@ -106,9 +107,9 @@ internal class Misc : IUiModule
                                     .Select(i => i.LocalizedName)
                                     .ToArray();
 
-        _miscModules.Add(new WorldTravel(configuration));
+        _miscModules.Add(new WorldTravel(configuration, sigScanner));
         _miscModules.Add(new ShowInstance(configuration, dataManager));
-        _miscModules.Add(new PlayerSearch(configuration, counter, dataManager));
+        _miscModules.Add(new PlayerSearch(configuration, counter, sigScanner, dataManager));
 
         _spawnNotificationModule = new (configuration,
                                         dataManager,

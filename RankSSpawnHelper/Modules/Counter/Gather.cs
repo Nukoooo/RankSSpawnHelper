@@ -1,14 +1,10 @@
 ﻿using Dalamud.Hooking;
-using Dalamud.Utility.Signatures;
 
 namespace RankSSpawnHelper.Modules;
 
 internal partial class Counter
 {
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("40 55 56 41 54 41 55 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 49 8B F1",
-               DetourName = nameof(Detour_ProcessSystemLogMessage))]
-    private Hook<SystemLogMessageDelegate> SystemLogMessage { get; init; } = null!;
+    private Hook<SystemLogMessageDelegate> SystemLogMessage { get; set; } = null!;
 
     private unsafe void Detour_ProcessSystemLogMessage(nint a1, uint eventId, uint logId, uint* data, byte length)
     {

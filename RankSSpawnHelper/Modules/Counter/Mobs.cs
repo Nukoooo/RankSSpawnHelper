@@ -1,14 +1,11 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
-using Dalamud.Utility.Signatures;
 
 namespace RankSSpawnHelper.Modules;
 
 internal partial class Counter
 {
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-    [Signature("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", DetourName = nameof(Detour_ActorControl))]
-    private Hook<ActorControlDelegate> ActorControl { get; init; } = null!;
+    private Hook<ActorControlDelegate> ActorControl { get; set; } = null!;
 
     private const int DeathEventId = 6;
 

@@ -2,6 +2,7 @@
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
+using RankSSpawnHelper.Managers;
 
 namespace RankSSpawnHelper.Modules;
 
@@ -15,23 +16,29 @@ internal class WorldTravel : IUiModule
 
     private readonly Configuration _configuration;
 
-    public WorldTravel(Configuration configuration)
-        => _configuration = configuration;
+    private          bool              _valid = false;
+    private readonly ISigScannerModule _sigScanner;
+
+    public WorldTravel(Configuration configuration, ISigScannerModule sigScanner)
+    {
+        _configuration = configuration;
+        _sigScanner    = sigScanner;
+    }
 
     public bool Init()
     {
-        if (!DalamudApi.SigScanner.TryScanText("81 C2 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B D0 48 8D 8C 24", out _address1))
+        if (!_sigScanner.TryScanText("81 C2 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B D0 48 8D 8C 24", out _address1))
         {
             DalamudApi.PluginLog.Error("[WorldTravel] Failed to get address #1");
 
-            return false;
+            return true;
         }
 
         if (!SafeMemory.ReadBytes(_address1 + 2, 2, out _bytes1))
         {
             DalamudApi.PluginLog.Error("[WorldTravel] Failed to read bytes #1");
 
-            return false;
+            return true;
         }
 
         if (_bytes1[0] == 0xF4)
@@ -39,24 +46,26 @@ internal class WorldTravel : IUiModule
             _bytes1[0] = 0xF5;
         }
 
-        if (!DalamudApi.SigScanner.TryScanText("83 F8 ?? 73 ?? 44 8B C0 1B D2", out _address2))
+        if (!_sigScanner.TryScanText("83 F8 ?? 73 ?? 44 8B C0 1B D2", out _address2))
         {
             DalamudApi.PluginLog.Error("[WorldTravel] Failed to get address #2");
 
-            return false;
+            return true;
         }
 
         if (!SafeMemory.ReadBytes(_address2, 5, out _bytes2))
         {
             DalamudApi.PluginLog.Error("[WorldTravel] Failed to read bytes #2");
 
-            return false;
+            return true;
         }
 
         if (_bytes2[0] == 0x90)
         {
             _address2 = 0;
         }
+
+        _valid = true;
 
         PatchWorldTravelQueue(_configuration.AccurateWorldTravelQueue);
 
@@ -91,10 +100,10 @@ internal class WorldTravel : IUiModule
 
     public void OnDrawUi()
     {
-        var isValid = _address1 != nint.Zero && _address2 != nint.Zero;
+        var isValid = _valid;
 
         {
-            using var disable          = ImRaii.Disabled(!isValid);
+            using var disable          = ImRaii.Disabled(!_valid);
             var       worldTravelQueue = _configuration.AccurateWorldTravelQueue;
 
             if (ImGui.Checkbox("显示实际跨服人数", ref worldTravelQueue))
