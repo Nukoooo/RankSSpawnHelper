@@ -80,7 +80,7 @@ internal class PlayerSearch : IUiModule
         var id          = (ushort) type;
         var handlerType = (EventHandlerType) (type >> 16);
 
-        if (id != 2 && handlerType != EventHandlerType.Aetheryte)
+        if (id != 2 || handlerType != EventHandlerType.Aetheryte)
         {
             return;
         }
