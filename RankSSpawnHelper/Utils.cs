@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
+using Lumina.Excel.Sheets;
 
 namespace RankSSpawnHelper;
 
@@ -44,9 +46,30 @@ internal class Utils
 
     public static string FormatLocalPlayerName()
     {
-        if (DalamudApi.ClientState.LocalPlayer is { HomeWorld.ValueNullable: { } world } local)
+        try
         {
-            return $"{local.Name}@{world.Name}";
+            if (DalamudApi.ClientState.LocalPlayer is { HomeWorld.ValueNullable: { } world } local)
+            {
+                return $"{local.Name}@{world.Name}";
+            }
+        }
+        catch (Exception e)
+        {
+            unsafe
+            {
+                var local = Control.GetLocalPlayer();
+
+                if (local == null)
+                {
+                    return string.Empty;
+                }
+
+                var homeWorld = local->HomeWorld;
+
+                return !DalamudApi.DataManager.GetExcelSheet<World>().TryGetRow(homeWorld, out var row)
+                    ? string.Empty
+                    : $"{local->NameString}@{row.Name}";
+            }
         }
 
         return string.Empty;

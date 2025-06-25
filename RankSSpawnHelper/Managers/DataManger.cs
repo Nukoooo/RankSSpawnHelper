@@ -2,8 +2,10 @@
 using System.Numerics;
 using System.Text;
 using Dalamud.Game;
+using Dalamud.Game.Gui.PartyFinder.Types;
 using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
 using Lumina.Excel;
@@ -93,6 +95,8 @@ internal interface IDataManager
 
     bool IsTerritoryItemThingy(uint territoryId);
 
+    DateTime GetLastPatchHotFixTimestamp();
+
     IFontHandle NotoSan24 { get; }
     IFontHandle NotoSan18 { get; }
 }
@@ -108,6 +112,8 @@ internal class DataManger : IDataManager, IModule
     private          List<string>                    _serverList    = [];
     private readonly List<HuntData>                  _huntData      = [];
     private readonly Dictionary<uint, TerritoryInfo> _territoryInfo = [];
+
+    private static DateTime _lastPatchHotFixTimestamp = DateTime.MinValue;
 
     private uint _currentDataCenterRowId;
 
@@ -177,7 +183,21 @@ internal class DataManger : IDataManager, IModule
         => GetWorldName(worldId) + '@' + GetTerritoryName(territoryId) + (instance == 0 ? string.Empty : $"@{instance}");
 
     public uint GetCurrentWorldId()
-        => DalamudApi.ClientState.LocalPlayer is { } local ? local.CurrentWorld.RowId : 0;
+    {
+        try
+        {
+            return DalamudApi.ClientState.LocalPlayer is { } local ? local.CurrentWorld.RowId : 0;
+        }
+        catch (Exception)
+        {
+            unsafe
+            {
+                var local = Control.GetLocalPlayer();
+
+                return local == null ? (uint) 0 : local->CurrentWorld;
+            }
+        }
+    }
 
     public uint GetCurrentTerritoryId()
         => DalamudApi.ClientState.TerritoryType;
@@ -242,6 +262,9 @@ internal class DataManger : IDataManager, IModule
     public bool IsTerritoryItemThingy(uint territoryId)
         => territoryId is 814 or 400 or 961 or 813 or 1189 or 1191;
 
+    public DateTime GetLastPatchHotFixTimestamp() =>
+        _lastPatchHotFixTimestamp;
+
     public IFontHandle NotoSan24 { get; private set; } = null!;
     public IFontHandle NotoSan18 { get; private set; } = null!;
 
@@ -249,21 +272,41 @@ internal class DataManger : IDataManager, IModule
     {
         DalamudApi.ClientState.Login += ClientStateOnLogin;
 
+        DalamudApi.PartyFinderGui.ReceiveListing += PartyFinderGuiOnReceiveListing;
+
         return true;
     }
 
     public void Shutdown()
     {
         DalamudApi.ClientState.Login -= ClientStateOnLogin;
+
+        DalamudApi.PartyFinderGui.ReceiveListing -= PartyFinderGuiOnReceiveListing;
+
         NotoSan18.Dispose();
         NotoSan24.Dispose();
     }
 
-    private void ClientStateOnLogin()
+    private static void PartyFinderGuiOnReceiveListing(IPartyFinderListing listing, IPartyFinderListingEventArgs args)
     {
-        if (DalamudApi.ClientState.LocalPlayer is not { } local
-            || local.HomeWorld.ValueNullable is not { } homeWorld
-            || homeWorld.DataCenter.ValueNullable is not { } dc)
+        _lastPatchHotFixTimestamp = DateTimeOffset.FromUnixTimeSeconds(listing.LastPatchHotfixTimestamp).DateTime;
+    }
+
+    private unsafe void ClientStateOnLogin()
+    {
+        var local = Control.GetLocalPlayer();
+
+        if (local == null)
+        {
+            return;
+        }
+
+        if (!DalamudApi.DataManager.GetExcelSheet<World>().TryGetRow(local->HomeWorld, out var worldRow))
+        {
+            return;
+        }
+
+        if (worldRow.DataCenter.ValueNullable is not { } dc)
         {
             return;
         }

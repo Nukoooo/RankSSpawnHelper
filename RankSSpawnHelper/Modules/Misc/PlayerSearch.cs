@@ -78,9 +78,9 @@ internal class PlayerSearch : IUiModule
     {
         EventActionReceiveHook.Original(a1, type, a3, a4, payload, payloadCount);
         var id          = (ushort) type;
-        var handlerType = (EventHandlerType) (type >> 16);
+        var handlerType = (EventHandlerContent) (type >> 16);
 
-        if (id != 2 || handlerType != EventHandlerType.Aetheryte)
+        if (id != 2 || handlerType != EventHandlerContent.Aetheryte)
         {
             return;
         }

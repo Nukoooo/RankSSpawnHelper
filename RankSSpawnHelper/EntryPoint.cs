@@ -37,8 +37,10 @@ public class SpawnHelper : IDalamudPlugin
             Utils.Print([
                 new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] 修复在部分情况下会显示当前地图人数的BUG"),
-                new UIForegroundPayload(0),
+                new TextPayload("  [-] API12"),
+                new TextPayload("  [-] 重新添加服务器重启时间"),
+                new TextPayload("  [-] 修复在非主线程里获取LocalPlayer时抛出异常的问题"),
+                new UIForegroundPayload(0)
             ]);
         }
 #endif

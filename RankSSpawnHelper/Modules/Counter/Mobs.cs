@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 
 namespace RankSSpawnHelper.Modules;
 
@@ -65,12 +66,37 @@ internal partial class Counter
             return;
         }
 
-        if (!nameIdMap.TryGetValue(targetName, out var npcId) || DalamudApi.ClientState.LocalPlayer is not { } local)
+        uint localEntityId = 0;
+
+        if (!nameIdMap.TryGetValue(targetName, out var npcId))
         {
             return;
         }
 
-        var localEntityId   = local.EntityId;
+        try
+        {
+            if (DalamudApi.ClientState.LocalPlayer is not { } local)
+            {
+                return;
+            }
+
+            localEntityId = local.EntityId;
+        }
+        catch (Exception e)
+        {
+            unsafe
+            {
+                var local = Control.GetLocalPlayer();
+
+                if (local == null)
+                {
+                    return;
+                }
+
+                localEntityId = local->EntityId;
+            }
+        }
+
         var currentInstance = _dataManager.FormatCurrentTerritory();
 
         var sourceOwner   = source.OwnerId;

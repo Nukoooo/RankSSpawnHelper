@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.WebSockets;
 using Dalamud.Interface.Colors;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using ImGuiNET;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -68,9 +69,12 @@ internal partial class ConnectionManager : IConnectionManager, IUiModule
     {
         _counter = serviceProvider.GetService<ICounter>() ?? throw new InvalidOperationException("ICounter is null");
 
-        if (DalamudApi.ClientState.LocalPlayer != null)
+        unsafe
         {
-            Task.Run(() => Connect(Url));
+            if (Control.GetLocalPlayer() != null)
+            {
+                Task.Run(() => Connect(Url));
+            }
         }
     }
 

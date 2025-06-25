@@ -1,5 +1,7 @@
-﻿using Dalamud.Game.ClientState.Objects.Enums;
+﻿using System.Numerics;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
 
 namespace RankSSpawnHelper.Modules;
 
@@ -10,9 +12,35 @@ internal partial class Counter
 
     private void UpdateNameList()
     {
-        if (DalamudApi.ClientState.LocalPlayer is not { } local || DalamudApi.ClientState.TerritoryType != 960)
+        if (DalamudApi.ClientState.TerritoryType != 960)
         {
             return;
+        }
+
+        Vector3 localPosition;
+
+        try
+        {
+            if (DalamudApi.ClientState.LocalPlayer is not { } local)
+            {
+                return;
+            }
+
+            localPosition = local.Position;
+        }
+        catch (Exception e)
+        {
+            unsafe
+            {
+                var local = Control.GetLocalPlayer();
+
+                if (local == null)
+                {
+                    return;
+                }
+
+                localPosition = local->Position;
+            }
         }
 
         lock (_weeEaNameList)
@@ -23,11 +51,9 @@ internal partial class Counter
             var enumerator = DalamudApi.ObjectTable.Where(i => i.Address       != nint.Zero
                                                                && i.ObjectKind == ObjectKind.Companion);
 
-            var localPlayerPos = DalamudApi.ClientState.LocalPlayer.Position;
-
             foreach (var obj in enumerator)
             {
-                var delta = obj.Position - localPlayerPos;
+                var delta = obj.Position - localPosition;
 
                 var length2D = Math.Sqrt((delta.X * delta.X) + (delta.Z * delta.Z));
 

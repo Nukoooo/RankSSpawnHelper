@@ -1,16 +1,17 @@
 ﻿using System.Collections.Frozen;
+using System.Globalization;
 using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using Lumina.Excel.Sheets;
 using Microsoft.Extensions.DependencyInjection;
+using OtterGui.Raii;
 using OtterGui.Widgets;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Windows;
 using IDataManager = RankSSpawnHelper.Managers.IDataManager;
+using UIColor = Lumina.Excel.Sheets.UIColor;
 
 namespace RankSSpawnHelper.Modules;
 
@@ -122,14 +123,14 @@ internal class Misc : IUiModule
 
         foreach (var color in DalamudApi.DataManager.Excel.GetSheet<UIColor>()!)
         {
-            var result = _colorInfos.FindIndex(info => info.Color == color.UIForeground);
+            var result = _colorInfos.FindIndex(info => info.Color == color.Dark);
 
             if (result == -1)
             {
                 _colorInfos.Add(new ()
                 {
                     RowId = color.RowId,
-                    Color = color.UIForeground,
+                    Color = color.Dark
                 });
             }
         }
@@ -272,6 +273,15 @@ internal class Misc : IUiModule
         foreach (var miscModule in _miscModules)
         {
             miscModule.OnDrawUi();
+        }
+
+        var datetime = _dataManager.GetLastPatchHotFixTimestamp();
+
+        if (datetime != DateTime.MinValue)
+        {
+            ImGui.Text("上一次服务器重启时间: ");
+            ImGui.SameLine();
+            ImGui.TextColored(ImGuiColors.ParsedGreen, datetime.ToLocalTime().ToString(CultureInfo.InvariantCulture));
         }
 
         Widget.EndFramedGroup();
