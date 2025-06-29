@@ -1,7 +1,8 @@
-﻿using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Hooking;
+﻿using System.Runtime.InteropServices;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Microsoft.Extensions.DependencyInjection;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Windows;
@@ -75,20 +76,20 @@ internal partial class Counter : IUiModule, ICounter
         _windowSystem      = windowSystem;
     }
 
-    public bool Init()
+    public unsafe bool Init()
     {
         DalamudApi.GameInterop.InitializeFromAttributes(this);
 
         InitializeData();
 
-        if (!
-            _sigScanner.TryScanText("48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 48 8B DA 8B F9 E8 ?? ?? ?? ?? 3C ?? 75 ?? E8 ?? ?? ?? ?? 3C ?? 75 ?? 80 BB ?? ?? ?? ?? ?? 75 ?? 8B 05 ?? ?? ?? ?? 39 43 ?? 0F 85 ?? ?? ?? ?? 0F B6 53 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 0F B6 53 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 44 24 ?? C7 44 24 ?? ?? ?? ?? ?? BA ?? ?? ?? ?? 66 90 48 8D 80 ?? ?? ?? ?? 0F 10 03 0F 10 4B ?? 48 8D 9B ?? ?? ?? ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 10 43 ?? 0F 11 48 ?? 0F 10 4B ?? 0F 11 40 ?? 0F 11 48 ?? 48 83 EA ?? 75 ?? 0F 10 03",
-                                    out var playerBattleCharaAddress))
+        if (!_sigScanner.TryScanText("E8 ?? ?? ?? ?? 48 8B C8 4D 8B CF 44 0F B6 C6", out var huntResourceManager))
         {
-            DalamudApi.PluginLog.Error("Failed to find signature for OnReceiveCreateNonPlayerBattleCharaPacket");
+            DalamudApi.PluginLog.Error("Failed to find signature for HuntResourceManager");
 
             return false;
         }
+
+        GetHuntResourceManager = (delegate* unmanaged<nint>) huntResourceManager;
 
         if (!_sigScanner.TryScanText("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", out var actorControlAddress))
         {
@@ -116,40 +117,22 @@ internal partial class Counter : IUiModule, ICounter
             return false;
         }
 
-        {
-            OnReceiveCreateNonPlayerBattleCharaPacket
-                = DalamudApi.GameInterop
-                            .HookFromAddress<OnReceiveCreateNonPlayerBattleCharaPacketDelegate>(playerBattleCharaAddress,
-                                     Detour_OnReceiveCreateNonPlayerBattleCharaPacket);
+        ActorControl
+            = DalamudApi.GameInterop.HookFromAddress<ActorControlDelegate>(actorControlAddress, Detour_ActorControl);
 
-            OnReceiveCreateNonPlayerBattleCharaPacket.Enable();
-        }
+        ActorControl.Enable();
 
-        {
-            ActorControl
-                = DalamudApi.GameInterop
-                            .HookFromAddress<ActorControlDelegate>(actorControlAddress,
-                                                                   Detour_ActorControl);
+        SystemLogMessage
+            = DalamudApi.GameInterop.HookFromAddress<SystemLogMessageDelegate>(processSystemLogAddress,
+                                                                               Detour_ProcessSystemLogMessage);
 
-            ActorControl.Enable();
-        }
+        SystemLogMessage.Enable();
 
-        unsafe
-        {
-            SystemLogMessage
-                = DalamudApi.GameInterop.HookFromAddress<SystemLogMessageDelegate>(processSystemLogAddress,
-                                                                                   Detour_ProcessSystemLogMessage);
+        InventoryTransactionDiscard
+            = DalamudApi.GameInterop.HookFromAddress<InventoryTransactionDiscardDelegate>(inventoryDiscardAddress,
+                Detour_InventoryTransactionDiscard);
 
-            SystemLogMessage.Enable();
-        }
-
-        {
-            InventoryTransactionDiscard
-                = DalamudApi.GameInterop.HookFromAddress<InventoryTransactionDiscardDelegate>(inventoryDiscardAddress,
-                         Detour_InventoryTransactionDiscard);
-
-            InventoryTransactionDiscard.Enable();
-        }
+        InventoryTransactionDiscard.Enable();
 
         DalamudApi.ChatGui.ChatMessage += ChatGui_OnChatMessage;
         DalamudApi.Framework.Update    += Framework_Update;
@@ -161,7 +144,6 @@ internal partial class Counter : IUiModule, ICounter
 
     public void Shutdown()
     {
-        OnReceiveCreateNonPlayerBattleCharaPacket.Dispose();
         ActorControl.Dispose();
         SystemLogMessage.Dispose();
         InventoryTransactionDiscard.Dispose();
@@ -320,78 +302,6 @@ internal partial class Counter : IUiModule, ICounter
             .Add(_dataManager.GetItemName(7767), 7767);
     }
 
-    private unsafe void Detour_OnReceiveCreateNonPlayerBattleCharaPacket(nint a1, nint packetData)
-    {
-        OnReceiveCreateNonPlayerBattleCharaPacket.Original(a1, packetData);
-
-        if (packetData == nint.Zero)
-        {
-            return;
-        }
-
-        var baseName = *(uint*) (packetData + 0x44);
-        DalamudApi.PluginLog.Debug($"baseName: {baseName}");
-
-        if (!_dataManager.IsSRank(baseName))
-        {
-            return;
-        }
-
-#if DEBUG || DEBUG_CN
-        Utils.Print("SRank spotted.");
-        DalamudApi.PluginLog.Warning("SRank spotted.");
-#endif
-
-        _hasSRank = true;
-
-        var territory = DalamudApi.ClientState.TerritoryType;
-
-        if (territory == 960)
-        {
-            lock (_weeEaNameList)
-            {
-                _connectionManager.SendMessage(new ConnectionManager.AttemptMessage
-                {
-                    Type        = "WeeEa",
-                    WorldId     = _dataManager.GetCurrentWorldId(),
-                    InstanceId  = _dataManager.GetCurrentInstance(),
-                    TerritoryId = territory,
-                    Failed      = false,
-                    Names       = _weeEaNameList,
-                });
-            }
-
-            return;
-        }
-
-        if (!_trackerConditions.ContainsKey(territory))
-        {
-            return;
-        }
-
-        /*2959*/
-        var currentInstance = _dataManager.FormatCurrentTerritory();
-
-        if (!_networkedTracker.ContainsKey(currentInstance))
-        {
-            return;
-        }
-
-        _connectionManager.SendMessage(new ConnectionManager.AttemptMessage
-        {
-            Type        = "ggnore",
-            WorldId     = _dataManager.GetCurrentWorldId(),
-            InstanceId  = _dataManager.GetCurrentInstance(),
-            TerritoryId = DalamudApi.ClientState.TerritoryType,
-            Failed      = false,
-        });
-    }
-
-    private Hook<OnReceiveCreateNonPlayerBattleCharaPacketDelegate> OnReceiveCreateNonPlayerBattleCharaPacket { get; set; }
-        = null!;
-
-    private delegate void OnReceiveCreateNonPlayerBattleCharaPacketDelegate(nint a1, nint packetData);
-
     private void Condition_ConditionChange(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.BetweenAreas51)
@@ -468,6 +378,7 @@ internal partial class Counter : IUiModule, ICounter
     private void Framework_Update(IFramework framework)
     {
         UpdateNameList();
+        LookForSRank();
 
         // check every 5 seconds
         if (DateTime.Now - _lastCleanerRunTime <= TimeSpan.FromSeconds(5))
@@ -495,4 +406,153 @@ internal partial class Counter : IUiModule, ICounter
             _localTracker.Remove(k);
         }
     }
+
+    private unsafe void LookForSRank()
+    {
+        if (DalamudApi.ClientState.LocalPlayer is null)
+        {
+            _hasSRank = false;
+
+            return;
+        }
+
+        var hasSRank = false;
+
+        var huntResourceManager = GetHuntResourceManager();
+
+        if (huntResourceManager == nint.Zero)
+        {
+            _hasSRank = false;
+
+            return;
+        }
+
+        var gameObjectManager = GameObjectManager.Instance();
+
+        for (var i = 0; i < 200; i++)
+        {
+            var gameObject = gameObjectManager->Objects.GameObjectIdSorted[i].Value;
+
+            if (gameObject == null)
+            {
+                continue;
+            }
+
+            if (gameObject->ObjectKind                    != ObjectKind.BattleNpc
+                || *(byte*) ((nint) gameObject   + 0x1BC) != 1
+                || *(ushort*) ((nint) gameObject + 0xE6)  != 32
+                || gameObject->IsDead())
+            {
+                continue;
+            }
+
+            hasSRank = IsSRank(gameObject);
+
+            if (hasSRank)
+            {
+                break;
+            }
+        }
+
+        if (_hasSRank == false && hasSRank)
+        {
+#if DEBUG || DEBUG_CN
+            Utils.Print("SRank spotted.");
+            DalamudApi.PluginLog.Warning("SRank spotted.");
+#endif
+            OnSRankSpotted();
+        }
+
+        _hasSRank = hasSRank;
+
+        return;
+
+        bool IsSRank(GameObject* obj)
+        {
+            var monsters = (NotoriousMonster*) (huntResourceManager + 0xf0);
+
+            var baseId = obj->BaseId;
+            var nameId = obj->GetNameId();
+
+            for (var i = 0; i < 10; i++)
+            {
+                ref var monster = ref monsters[i];
+
+                if (monster.BNpcBaseRowId == 0)
+                {
+                    break;
+                }
+
+                if (monster.Type != 3)
+                {
+                    continue;
+                }
+
+                if (monster.BNpcBaseRowId == baseId && monster.BNpcNameRowId == nameId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    private void OnSRankSpotted()
+    {
+        var territory = DalamudApi.ClientState.TerritoryType;
+
+        if (territory == 960)
+        {
+            lock (_weeEaNameList)
+            {
+                _connectionManager.SendMessage(new ConnectionManager.AttemptMessage
+                {
+                    Type        = "WeeEa",
+                    WorldId     = _dataManager.GetCurrentWorldId(),
+                    InstanceId  = _dataManager.GetCurrentInstance(),
+                    TerritoryId = territory,
+                    Failed      = false,
+                    Names       = _weeEaNameList
+                });
+            }
+
+            return;
+        }
+
+        if (!_trackerConditions.ContainsKey(territory))
+        {
+            return;
+        }
+
+        /*2959*/
+        var currentInstance = _dataManager.FormatCurrentTerritory();
+
+        if (!_networkedTracker.ContainsKey(currentInstance))
+        {
+            return;
+        }
+
+        _connectionManager.SendMessage(new ConnectionManager.AttemptMessage
+        {
+            Type        = "ggnore",
+            WorldId     = _dataManager.GetCurrentWorldId(),
+            InstanceId  = _dataManager.GetCurrentInstance(),
+            TerritoryId = DalamudApi.ClientState.TerritoryType,
+            Failed      = false
+        });
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 12)]
+    private ref struct NotoriousMonster
+    {
+        [FieldOffset(0)]
+        public uint BNpcNameRowId;
+        [FieldOffset(4)]
+        public uint BNpcBaseRowId;
+        [FieldOffset(0xA)]
+        public byte Type;
+    }
+
+    private unsafe delegate* unmanaged<nint> GetHuntResourceManager;
 }
