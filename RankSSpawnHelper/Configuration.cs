@@ -73,7 +73,7 @@ internal class Configuration : IPluginConfiguration
 
     public HashSet<uint> ItemsToDiscard { get; set; } = [];
 
-    public int DiscardTimes           { get; set; } = 50;
+    public int DiscardTimes           { get; set; } = 1;
     public int AmountToDiscardPerLoop { get; set; } = 1;
 
     public bool AutoDiscardItem  { get; set; } = false;

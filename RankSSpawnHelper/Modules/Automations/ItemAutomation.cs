@@ -93,7 +93,18 @@ internal unsafe class ItemAutomation : IUiModule
         InventoryManager_SplitItem = (delegate* unmanaged<InventoryManager*, InventoryType, short, int, int>) splitItemAddress;
         InventoryManager_DiscardItem = (delegate* unmanaged<InventoryManager*, InventoryType, short, int>) discardItemAddress;
 
-        _commandHandler.AddCommand("/自动拆分", new (OnCommandAutoSplit));
+        _commandHandler.AddCommand("/自动拆分",
+                                   new (OnCommandAutoSplit)
+                                   {
+                                       HelpMessage = "自动拆分对应物品，如果没有指定次数则拆分到无法拆分为止。 如 \"/自动拆分 2\" 就拆分 2 次"
+                                   });
+
+        _commandHandler.AddCommand("/自动舍弃",
+                                   new (OnCommandAutoDiscard)
+                                   {
+                                       HelpMessage = "自动舍弃对应物品，如果没有指定次数则按设置里的进行。 如 \"/自动舍弃 2\" 就舍弃 2 次"
+                                   });
+
         DalamudApi.ContextMenu.OnMenuOpened += OnMenuOpened;
 
         return true;
@@ -298,8 +309,61 @@ internal unsafe class ItemAutomation : IUiModule
 
     private void OnCommandAutoSplit(string command, string arguments)
     {
-        DalamudApi.Framework.RunOnFrameworkThread(() => StartSplitAndDiscard(_configuration.DiscardTimes,
-                                                                             _configuration.AmountToDiscardPerLoop));
+        if (!SplittableItemsByTerritory.TryGetValue(DalamudApi.ClientState.TerritoryType, out var targetItemInfo))
+        {
+            Utils.Print("当前所在的地图不支持该操作。");
+
+            return;
+        }
+
+        var amount = 999999;
+
+        if (!string.IsNullOrWhiteSpace(arguments) && int.TryParse(arguments.Split(' ')[0], out amount))
+        {
+            if (amount <= 0)
+            {
+                amount = 999999;
+            }
+        }
+
+        var performedCount = PerformSplits(InventoryManager.Instance(), targetItemInfo, amount);
+
+        Utils.Print($"拆分完毕，共拆分了 {performedCount} 次");
+    }
+
+    private void OnCommandAutoDiscard(string command, string arguments)
+    {
+        if (!SplittableItemsByTerritory.TryGetValue(DalamudApi.ClientState.TerritoryType, out var targetItemInfo))
+        {
+            Utils.Print("当前所在的地图不支持该操作。");
+
+            return;
+        }
+
+        var amount = 999999;
+
+        if (!string.IsNullOrWhiteSpace(arguments) && int.TryParse(arguments.Split(' ')[0], out amount))
+        {
+            if (amount <= 0)
+            {
+                amount = 999999;
+            }
+        }
+
+        var manager = InventoryManager.Instance();
+
+        var info = BuildInventoryItemInfo(manager, targetItemInfo.ItemId);
+
+        if (info.Count == 0)
+        {
+            StopLoop("操作中止: 背包里没有对应的物品");
+
+            return;
+        }
+
+        var performedCount = PerformDiscards(manager, info, targetItemInfo, amount);
+
+        Utils.Print($"拆分完毕，共拆分了 {performedCount} 次");
     }
 
     private void OnMenuOpened(IMenuOpenedArgs args)
@@ -314,38 +378,76 @@ internal unsafe class ItemAutomation : IUiModule
             return;
         }
 
-        if (targetItem.ContainerType is <= GameInventoryType.Inventory4
-             or GameInventoryType.SaddleBag1 or GameInventoryType.SaddleBag2
-            && IsAllowedToDiscard(targetItem.ItemId))
+        if (targetItem.ContainerType is not (<= GameInventoryType.Inventory4
+         or GameInventoryType.SaddleBag1 or GameInventoryType.SaddleBag2))
         {
+            return;
+        }
+
+        var itemId = targetItem.BaseItemId;
+
+        var canAddToList = _items.Any(i => i.Id == itemId);
+
+        if (canAddToList)
+        {
+            if (!_configuration.ItemsToDiscard.Contains(itemId))
+            {
+                args.AddMenuItem(new ()
+                {
+                    Name        = "添加进舍弃列表",
+                    Prefix      = SeIconChar.BoxedLetterS,
+                    PrefixColor = 70,
+                    OnClicked   = _ => _configuration.ItemsToDiscard.Add(itemId)
+                });
+
+                return;
+            }
+
             args.AddMenuItem(new ()
             {
-                Name        = "自动拆分舍弃",
+                Name        = "从进舍弃列表里移除",
                 Prefix      = SeIconChar.BoxedLetterS,
                 PrefixColor = 70,
-                OnClicked = _ =>
-                {
-                    StartSplitAndDiscard(_configuration.DiscardTimes,
-                                         _configuration.AmountToDiscardPerLoop,
-                                         targetItem.ItemId,
-                                         (InventoryType) targetItem.ContainerType);
-                }
+                OnClicked   = _ => _configuration.ItemsToDiscard.Remove(itemId)
             });
         }
+
+        if (!IsAllowedToDiscard(itemId))
+        {
+            return;
+        }
+
+        args.AddMenuItem(new ()
+        {
+            Name        = "自动拆分舍弃",
+            Prefix      = SeIconChar.BoxedLetterS,
+            PrefixColor = 70,
+            OnClicked = _ =>
+            {
+                var count = DalamudApi.ClientState.TerritoryType == 621 ? _configuration.DiscardTimes : 1;
+
+                StartSplitAndDiscard(count,
+                                     _configuration.AmountToDiscardPerLoop,
+                                     targetItem.ItemId,
+                                     (InventoryType) targetItem.ContainerType);
+            }
+        });
     }
 
     private bool IsAllowedToDiscard(uint id)
     {
-        if (_configuration.ItemsToDiscard.Contains(id))
+        var territoryType = DalamudApi.ClientState.TerritoryType;
+
+        var allowed = (territoryType    == 961  && id == 36256)
+                      || (territoryType == 813  && id == 27850)
+                      || (territoryType == 1189 && id == 7767);
+
+        if (allowed)
         {
             return true;
         }
 
-        var territoryType = DalamudApi.ClientState.TerritoryType;
-
-        return (territoryType    == 961  && id == 36256)
-               || (territoryType == 813  && id == 27850)
-               || (territoryType == 1189 && id == 7767);
+        return territoryType == 621 && _configuration.ItemsToDiscard.Contains(id);
     }
 
     private void StartSplitAndDiscard(int           totalCount,
