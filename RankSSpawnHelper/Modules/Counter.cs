@@ -205,13 +205,10 @@ internal partial class Counter : IUiModule, ICounter
             return;
         }
 
-        if (result.Counter.TryAdd(condition, value))
-        {
-            return;
-        }
+        result.Counter.TryGetValue(condition, out var currentValue);
+        result.Counter[condition] = Math.Max(currentValue, value);
 
-        result.Counter[condition] = value;
-        _counterWindow!.IsOpen    = true;
+        _counterWindow!.IsOpen = true;
 
         result.LastUpdateTime = DateTimeOffset.Now.ToUnixTimeSeconds();
         DalamudApi.PluginLog.Debug($"[SetValue] instance: {instance}, key: {condition}, value: {value}");
@@ -435,7 +432,7 @@ internal partial class Counter : IUiModule, ICounter
 
             if (gameObject == null)
             {
-                continue;
+                break;
             }
 
             if (gameObject->ObjectKind                    != ObjectKind.BattleNpc

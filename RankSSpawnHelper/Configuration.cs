@@ -71,9 +71,14 @@ internal class Configuration : IPluginConfiguration
 
     public bool AccurateWorldTravelQueue { get; set; } = true;
 
-    public List<uint> ItemsToDiscard   { get; set; } = [];
-    public bool       AutoDiscardItem  { get; set; } = false;
-    public bool       AutoSummonMinion { get; set; } = false;
+    public HashSet<uint> ItemsToDiscard { get; set; } = [];
+
+    public int DiscardTimes           { get; set; } = 50;
+    public int AmountToDiscardPerLoop { get; set; } = 1;
+
+    public bool AutoDiscardItem  { get; set; } = false;
+    public bool AutoSummonMinion { get; set; } = false;
+    public bool AutoLeaveDuty    { get; set; } = false;
 
     public List<uint> BlacklistedTerritories { get; set; } = [];
 

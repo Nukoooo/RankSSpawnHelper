@@ -15,7 +15,6 @@ using UIColor = Lumina.Excel.Sheets.UIColor;
 
 namespace RankSSpawnHelper.Modules;
 
-// TODO: 选项用模块,不要都放一起
 internal class Misc : IUiModule
 {
     private readonly TrackerApi      _trackerApi;

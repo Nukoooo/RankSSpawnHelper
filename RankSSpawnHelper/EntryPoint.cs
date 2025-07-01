@@ -29,17 +29,20 @@ public class SpawnHelper : IDalamudPlugin
                                     .Version!.ToString();
 
         Utils.PluginVersion = pluginVersion;
-        DalamudApi.PluginLog.Info($"Version: {Utils.PluginVersion}");
 
 #if RELEASE
         if (_configuration.PluginVersion != pluginVersion)
         {
             Utils.Print([
-                new TextPayload($"版本 {pluginVersion} 的更新日志:\n"),
+                new TextPayload($"版本 {pluginVersion} 的"),
+                new UIForegroundPayload(518),
+                new TextPayload("史诗级"),
+                new UIForegroundPayload(0),
+                new TextPayload("更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] API12"),
-                new TextPayload("  [-] 重新添加服务器重启时间"),
-                new TextPayload("  [-] 修复在非主线程里获取LocalPlayer时抛出异常的问题"),
+                new TextPayload("  [-] 更好的检测S怪的方法\n"),
+                new TextPayload("  [-] 舍弃和拆分全自动化，无需右键物品 (十分EPIC!!!!!!1111!!)\n"),
+                new TextPayload("  [-] 重新添加青魔自动退本的功能\n"),
                 new UIForegroundPayload(0)
             ]);
         }
