@@ -77,30 +77,37 @@ internal class PlayerSearch : IUiModule
     private unsafe void hk_EventActionReceive(nint a1, uint type, ushort a3, nint a4, uint* payload, byte payloadCount)
     {
         EventActionReceiveHook.Original(a1, type, a3, a4, payload, payloadCount);
-        var id          = (ushort) type;
-        var handlerType = (EventHandlerContent) (type >> 16);
-#if DEBUG
-        DalamudApi.PluginLog.Info($"{id}, {handlerType}");
-#endif
-        if (handlerType != EventHandlerContent.Aetheryte || (id != 210 && id != 205))
-        {
-            return;
-        }
 
         if (!_configuration.PlayerSearch)
         {
             return;
         }
 
-        if (!_counterModule.CurrentInstanceHasSRank())
+        var id          = (ushort) type;
+        var handlerType = (EventHandlerContent) (type >> 16);
+#if DEBUG
+        DalamudApi.PluginLog.Info($"{id}, {handlerType}");
+
+        for (var i = 0; i < payloadCount; i++)
+        {
+            DalamudApi.PluginLog.Info($"{i}: {payload[i]}");
+        }
+#endif
+        if (handlerType != EventHandlerContent.Aetheryte)
         {
             return;
         }
 
+#if RELEASE
+        if (!_counterModule.CurrentInstanceHasSRank())
+        {
+            return;
+        }
+#endif
         var currentInstance = _dataManager.GetCurrentInstance();
 
         Utils.Print(currentInstance == 0
-                        ? $"当前地图的人数: {payload[currentInstance]}"
+                        ? $"当前地图的人数: {payload[currentInstance + 1]}"
                         : $"当前分线（{GetInstanceString()}） 的人数: {payload[currentInstance]}");
     }
 

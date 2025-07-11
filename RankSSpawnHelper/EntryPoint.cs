@@ -40,7 +40,7 @@ public class SpawnHelper : IDalamudPlugin
                 new UIForegroundPayload(0),
                 new TextPayload("更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] 修复人数搜索失效的问题"),
+                new TextPayload("  [-] 真·修复人数搜索失效的问题"),
 
                 new UIForegroundPayload(0)
             ]);
