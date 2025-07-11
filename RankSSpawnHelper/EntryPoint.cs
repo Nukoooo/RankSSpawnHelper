@@ -40,11 +40,8 @@ public class SpawnHelper : IDalamudPlugin
                 new UIForegroundPayload(0),
                 new TextPayload("更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] 更好的检测S怪的方法\n"),
-                new TextPayload("  [-] 舍弃和拆分全自动化，无需右键物品 (十分EPIC!!!!!!1111!!)\n"),
-                new TextPayload("  [-] 重新添加青魔自动退本的功能\n"),
-                new TextPayload("  [-] 增加自动舍弃和自动拆分的指令\n"),
-                new TextPayload("  [x] 修改了重复次数的默认值，现在为1。如果原先设置了/用了上一版本的则不受影响\n"),
+                new TextPayload("  [-] 修复人数搜索失效的问题"),
+
                 new UIForegroundPayload(0)
             ]);
         }
