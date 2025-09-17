@@ -72,7 +72,7 @@ internal class SummonMinion : IModule
         }
 
         if (DalamudApi.Condition[ConditionFlag.Mounted]
-            || DalamudApi.Condition[ConditionFlag.Mounted2]
+            || DalamudApi.Condition[ConditionFlag.RidingPillion]
             || DalamudApi.Condition[ConditionFlag.MountOrOrnamentTransition]
             || DalamudApi.Condition[ConditionFlag.Mounting]
             || DalamudApi.Condition[ConditionFlag.Mounting71])

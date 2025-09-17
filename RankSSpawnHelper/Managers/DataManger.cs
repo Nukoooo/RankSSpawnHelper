@@ -1,13 +1,13 @@
 ﻿using System.Collections.Frozen;
 using System.Numerics;
 using System.Text;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game;
 using Dalamud.Game.Gui.PartyFinder.Types;
 using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
@@ -318,7 +318,7 @@ internal class DataManger : IDataManager, IModule
                                  .ToList();
     }
 
-    private void SetupFont()
+    private unsafe void SetupFont()
     {
         const string fontName = "NotoSansCJKsc-Medium.otf";
 

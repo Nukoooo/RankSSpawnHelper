@@ -1,5 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Inventory;
 using Dalamud.Game.Text;
@@ -7,7 +8,6 @@ using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using ImGuiNET;
 using Lumina.Excel.Sheets;
 using OtterGui.Raii;
 using RankSSpawnHelper.Managers;
@@ -33,13 +33,10 @@ internal unsafe class ItemAutomation : IUiModule
 
     private string _searchText           = string.Empty;
 
-    private static delegate* unmanaged<InventoryManager*, InventoryType, short, int, int> InventoryManager_SplitItem   = null!;
-    private static delegate* unmanaged<InventoryManager*, InventoryType, short, int>      InventoryManager_DiscardItem = null!;
-
-    private bool          _isLoopRunning;
-    private int           _loopTargetCount;
-    private int           _loopProcessedCount;
-    private int           _amountToProcessPerLoop;
+    private bool _isLoopRunning;
+    private int  _loopTargetCount;
+    private int  _loopProcessedCount;
+    private int  _amountToProcessPerLoop;
 
     private InventoryType _targetInventoryType = InventoryType.Invalid;
 
@@ -54,21 +51,24 @@ internal unsafe class ItemAutomation : IUiModule
         HashSet<ItemInfo> items = [];
 
         foreach (var item in DalamudApi.DataManager.GetExcelSheet<Item>()!
-                                       .AsValueEnumerable().Where(i => !string.IsNullOrEmpty(i.Name.ExtractText())
-                                                                       && (
-                                                                           i is
-                                                                           {
-                                                                               FilterGroup: 4,
-                                                                               LevelItem.Value.RowId: 1,
-                                                                               IsUnique: false
-                                                                           } // 普通装备且装等为1的物品 比如草布马裤
-                                                                           || (i.FilterGroup
-                                                                               == 12 // 材料比如矮人棉，庵摩罗果等 但因为秧鸡胸脯肉，厄尔庇斯鸟蛋和鱼粉是特定地图扔的，所以不会加进列表里
-                                                                               && i.RowId != 36256
-                                                                               && i.RowId != 27850
-                                                                               && i.RowId != 7767)
-                                                                           || i.FilterGroup == 17 // 鱼饵，比如沙蚕
-                                                                       )))
+                                       .AsValueEnumerable().Where(i =>
+                                       {
+                                           if (string.IsNullOrWhiteSpace(i.Name.ExtractText()))
+                                           {
+                                               return false;
+                                           }
+
+                                           return i is
+                                                  {
+                                                      FilterGroup: 4, LevelItem.Value.RowId: 1, IsUnique: false
+                                                  } // 普通装备且装等为1的物品 比如草布马裤
+                                                  || (i.FilterGroup
+                                                      == 12 // 材料比如矮人棉，庵摩罗果等 但因为秧鸡胸脯肉，厄尔庇斯鸟蛋和鱼粉是特定地图扔的，所以不会加进列表里
+                                                      && i.RowId != 36256
+                                                      && i.RowId != 27850
+                                                      && i.RowId != 7767)
+                                                  || i.FilterGroup == 17; // 鱼饵，比如沙蚕
+                                       }))
         {
             items.Add(new (item.RowId, item.Name.ExtractText()));
         }
@@ -78,21 +78,6 @@ internal unsafe class ItemAutomation : IUiModule
 
     public bool Init()
     {
-        if (!_scannerModule
-                .TryScanText("40 55 53 56 57 41 55 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 ?? 8D B2",
-                             out var splitItemAddress))
-        {
-            throw new InvalidOperationException("无法找到 InventoryManager::SplitItem 的地址");
-        }
-
-        if (!_scannerModule.TryScanText("40 56 57 41 57 48 83 EC ?? 45 0F BF F8", out var discardItemAddress))
-        {
-            throw new InvalidOperationException("无法找到 InventoryManager::DiscardItem 的地址");
-        }
-
-        InventoryManager_SplitItem = (delegate* unmanaged<InventoryManager*, InventoryType, short, int, int>) splitItemAddress;
-        InventoryManager_DiscardItem = (delegate* unmanaged<InventoryManager*, InventoryType, short, int>) discardItemAddress;
-
         _commandHandler.AddCommand("/自动拆分",
                                    new (OnCommandAutoSplit)
                                    {
@@ -586,7 +571,7 @@ internal unsafe class ItemAutomation : IUiModule
                     return splitsPerformed;
                 }
 
-                var errorCode = InventoryManager_SplitItem(manager, item.Type, item.Slot, targetItemInfo.Quantity);
+                var errorCode = manager->SplitItem(item.Type, (ushort) item.Slot, targetItemInfo.Quantity);
 
                 if (errorCode != 0)
                 {
@@ -625,7 +610,7 @@ internal unsafe class ItemAutomation : IUiModule
                 break;
             }
 
-            var errorCode = InventoryManager_DiscardItem(manager, item.Type, item.Slot);
+            var errorCode = manager->DiscardItem(item.Type, (ushort) item.Slot);
 
             if (errorCode != 0)
             {

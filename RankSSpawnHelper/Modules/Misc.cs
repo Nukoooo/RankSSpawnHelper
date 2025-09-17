@@ -1,10 +1,10 @@
 ﻿using System.Collections.Frozen;
 using System.Globalization;
 using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
 using Microsoft.Extensions.DependencyInjection;
 using OtterGui.Raii;
 using OtterGui.Widgets;

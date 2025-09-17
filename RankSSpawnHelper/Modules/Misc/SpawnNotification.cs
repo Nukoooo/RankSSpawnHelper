@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -6,7 +7,6 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using ImGuiNET;
 using Microsoft.Extensions.DependencyInjection;
 using RankSSpawnHelper.Managers;
 using RankSSpawnHelper.Windows;

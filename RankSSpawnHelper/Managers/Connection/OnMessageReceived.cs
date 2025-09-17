@@ -1,9 +1,9 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using ImGuiNET;
 using Newtonsoft.Json;
 using Websocket.Client;
 

@@ -35,12 +35,9 @@ public class SpawnHelper : IDalamudPlugin
         {
             Utils.Print([
                 new TextPayload($"版本 {pluginVersion} 的"),
-                new UIForegroundPayload(518),
-                new TextPayload("史诗级"),
-                new UIForegroundPayload(0),
                 new TextPayload("更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] 真·修复人数搜索失效的问题"),
+                new TextPayload("  [-] API13"),
 
                 new UIForegroundPayload(0)
             ]);

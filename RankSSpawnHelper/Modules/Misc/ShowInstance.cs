@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Gui.Dtr;
 using Dalamud.Plugin.Services;
-using ImGuiNET;
 using IDataManager = RankSSpawnHelper.Managers.IDataManager;
 
 namespace RankSSpawnHelper.Modules;

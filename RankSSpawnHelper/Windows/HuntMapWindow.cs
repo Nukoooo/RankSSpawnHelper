@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
 using Microsoft.Extensions.DependencyInjection;
 using RankSSpawnHelper.Managers;
 using IPluginDataManager = RankSSpawnHelper.Managers.IDataManager;
@@ -49,7 +49,7 @@ internal class HuntMapWindow : Window
         {
             var cursorScreenPos = ImGui.GetCursorScreenPos();
 
-            ImGui.Image(texture.ImGuiHandle, texture.Size * Scale, Vector2.Zero, Vector2.One, Vector4.One);
+            ImGui.Image(texture.Handle, texture.Size * Scale, Vector2.Zero, Vector2.One, Vector4.One);
 
             for (var i = 0; i < _spawnPoints.Count; i++)
             {
