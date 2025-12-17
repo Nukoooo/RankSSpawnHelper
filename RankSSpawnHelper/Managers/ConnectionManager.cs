@@ -105,8 +105,8 @@ internal partial class ConnectionManager : IConnectionManager, IUiModule
                 {
                     Options =
                     {
-                        KeepAliveInterval = TimeSpan.FromSeconds(40),
-                    },
+                        KeepAliveInterval = TimeSpan.FromSeconds(40)
+                    }
                 };
 
                 client.Options.SetRequestHeader("ranks-spawn-helper-user",
@@ -130,7 +130,7 @@ internal partial class ConnectionManager : IConnectionManager, IUiModule
             _client = new (new (url), ClientFactory)
             {
                 ReconnectTimeout      = TimeSpan.FromSeconds(120),
-                ErrorReconnectTimeout = TimeSpan.FromSeconds(60),
+                ErrorReconnectTimeout = TimeSpan.FromSeconds(60)
             };
 
             _client.ReconnectionHappened.Subscribe(info => { DalamudApi.Framework.Run(() => OnReconnection(info)); });
@@ -155,11 +155,11 @@ internal partial class ConnectionManager : IConnectionManager, IUiModule
         }
     }
 
-    public bool IsConnected()
-        => _client is { IsStarted: true, IsRunning: true };
+    public bool IsConnected() =>
+        _client is { IsStarted: true, IsRunning: true };
 
-    public void Reconnect()
-        => Task.Run(async () => await Connect(Url));
+    public void Reconnect() =>
+        Task.Run(async () => await Connect(Url));
 
     public void SendMessage(BaseMessage message)
     {

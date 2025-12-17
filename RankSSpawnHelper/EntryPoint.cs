@@ -37,7 +37,7 @@ public class SpawnHelper : IDalamudPlugin
                 new TextPayload($"版本 {pluginVersion} 的"),
                 new TextPayload("更新日志:\n"),
                 new UIForegroundPayload(35),
-                new TextPayload("  [-] API13"),
+                new TextPayload("  [-] API14"),
 
                 new UIForegroundPayload(0)
             ]);
