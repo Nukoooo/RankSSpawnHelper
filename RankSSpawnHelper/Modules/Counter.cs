@@ -415,7 +415,7 @@ internal partial class Counter : IUiModule, ICounter
 
     private unsafe void LookForSRank()
     {
-        if (DalamudApi.ClientState.LocalPlayer is null)
+        if (DalamudApi.ObjectTable.LocalPlayer is null)
         {
             _hasSRank = false;
 

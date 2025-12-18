@@ -49,7 +49,7 @@ internal class AutoLeaveDuty : IModule
             return;
         }
 
-        if (DalamudApi.ClientState.LocalPlayer is { ClassJob.RowId: 36 })
+        if (DalamudApi.PlayerState.ClassJob.RowId == 36)
         {
             EventFramework.LeaveCurrentContent(true);
         }

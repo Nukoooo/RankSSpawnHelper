@@ -10,10 +10,20 @@ internal partial class Counter
 
     private const int DeathEventId = 6;
 
-    private void Detour_ActorControl(uint entityId, int   type, uint buffId, uint direct, uint damage, uint sourceId, uint arg4,
-                                     uint arg5,     ulong targetId, byte a10)
+    private void Detour_ActorControl(uint  entityId,
+                                     int   type,
+                                     uint  buffId,
+                                     uint  direct,
+                                     uint  damage,
+                                     uint  sourceId,
+                                     uint  arg4,
+                                     uint  arg5,
+                                     int   a9,
+                                     int   a10,
+                                     ulong targetId,
+                                     byte  a12)
     {
-        ActorControl.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, targetId, a10);
+        ActorControl.Original(entityId, type, buffId, direct, damage, sourceId, arg4, arg5, a9, a10, targetId, a12);
 
         if (!_configuration.TrackKillCount)
         {
@@ -66,7 +76,7 @@ internal partial class Counter
             return;
         }
 
-        uint localEntityId = 0;
+        uint localEntityId;
 
         if (!nameIdMap.TryGetValue(targetName, out var npcId))
         {
@@ -75,14 +85,14 @@ internal partial class Counter
 
         try
         {
-            if (DalamudApi.ClientState.LocalPlayer is not { } local)
+            if (DalamudApi.ObjectTable.LocalPlayer is not { } local)
             {
                 return;
             }
 
             localEntityId = local.EntityId;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             unsafe
             {
@@ -111,14 +121,16 @@ internal partial class Counter
         AddToTracker(currentInstance, _dataManager.GetNpcName(npcId), npcId);
     }
 
-    private delegate void ActorControlDelegate(uint  entityId,
-                                               int   id,
-                                               uint  arg0,
-                                               uint  arg1,
-                                               uint  arg2,
-                                               uint  arg3,
-                                               uint  arg4,
-                                               uint  arg5,
+    private delegate void ActorControlDelegate(uint  entityId, // a1
+                                               int   id,       // a2
+                                               uint  arg0,     // a3
+                                               uint  arg1,     // a4
+                                               uint  arg2,     // a5
+                                               uint  arg3,     // a6
+                                               uint  arg4,     // a7
+                                               uint  arg5,     // a8
+                                               int   a9,
+                                               int   a10,
                                                ulong targetId,
-                                               byte  a10);
+                                               byte  a12);
 }

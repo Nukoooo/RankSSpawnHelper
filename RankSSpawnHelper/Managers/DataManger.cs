@@ -186,7 +186,7 @@ internal class DataManger : IDataManager, IModule
     {
         try
         {
-            return DalamudApi.ClientState.LocalPlayer is { } local ? local.CurrentWorld.RowId : 0;
+            return DalamudApi.PlayerState.CurrentWorld.RowId;
         }
         catch (Exception)
         {

@@ -106,7 +106,7 @@ internal class SummonMinion : IModule
             goto end;
         }
 
-        if (obj.DataId == minionId)
+        if (obj.BaseId == minionId)
         {
             goto end;
         }

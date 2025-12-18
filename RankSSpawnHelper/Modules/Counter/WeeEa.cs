@@ -21,14 +21,14 @@ internal partial class Counter
 
         try
         {
-            if (DalamudApi.ClientState.LocalPlayer is not { } local)
+            if (DalamudApi.ObjectTable.LocalPlayer is not { } local)
             {
                 return;
             }
 
             localPosition = local.Position;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             unsafe
             {

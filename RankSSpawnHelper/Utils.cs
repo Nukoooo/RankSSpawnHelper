@@ -48,12 +48,14 @@ internal class Utils
     {
         try
         {
-            if (DalamudApi.ClientState.LocalPlayer is { HomeWorld.ValueNullable: { } world } local)
+            var state = DalamudApi.PlayerState;
+
+            if (DalamudApi.PlayerState is { HomeWorld.ValueNullable: { } world } local)
             {
-                return $"{local.Name}@{world.Name}";
+                return $"{state.CharacterName}@{state.HomeWorld.Value.Name.ExtractText()}";
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             unsafe
             {
