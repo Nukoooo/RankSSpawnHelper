@@ -42,7 +42,7 @@ internal class Misc : IUiModule
     private readonly List<IUiModule>   _miscModules = [];
     private readonly SpawnNotification _spawnNotificationModule;
 
-    private readonly HashSet<ushort> _shouldShowHuntMapTerritories =
+    private readonly HashSet<uint> _shouldShowHuntMapTerritories =
     [
         1192, // 天气预报机器人
         1188, // 湿地
@@ -54,11 +54,11 @@ internal class Misc : IUiModule
         614,  // 伽马
         397,  // 凯撒贝希摩斯
         622,  // 兀鲁忽乃朝鲁
-        139,  // 南迪
+        139   // 南迪
     ];
 
-    private readonly FrozenDictionary<ushort, uint> _mobIdMap;
-    private readonly FrozenDictionary<uint, ushort> _mobMapId;
+    private readonly FrozenDictionary<uint, uint> _mobIdMap;
+    private readonly FrozenDictionary<uint, uint> _mobMapId;
 
     public Misc(TrackerApi        trackerApi,
                 IDataManager      dataManager,
@@ -74,7 +74,7 @@ internal class Misc : IUiModule
         _windowSystem   = windowSystem;
         _commandHandler = commandHandler;
 
-        Dictionary<ushort, uint> mobIdMap = new ()
+        Dictionary<uint, uint> mobIdMap = new ()
         {
             { 1192, 13437 }, // 天气预报机器人
             { 1188, 13444 }, // 伊努索奇
@@ -95,7 +95,7 @@ internal class Misc : IUiModule
             { 400, 4377 },   // 刚德瑞瓦
             { 397, 4374 },   // 凯撒贝希摩斯
             { 147, 2961 },   // 蚓螈巨虫
-            { 139, 2966 },   // 南迪
+            { 139, 2966 }    // 南迪
         };
 
         _mobIdMap = mobIdMap.ToFrozenDictionary();

@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
+using Dalamud.Game.Chat;
 using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 
 namespace RankSSpawnHelper.Modules;
@@ -10,16 +10,16 @@ internal partial class Counter
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
     private Hook<InventoryTransactionDiscardDelegate> InventoryTransactionDiscard { get; set; } = null!;
 
-    private void ChatGui_OnChatMessage(XivChatType  type,
-                                       int          timestamp,
-                                       ref SeString sender,
-                                       ref SeString message,
-                                       ref bool     ishandled)
+    private void ChatGui_OnChatMessage(IHandleableChatMessage handleableChatMessage)
     {
+        var type = handleableChatMessage.LogKind;
+
         if (type != XivChatType.SystemMessage || DalamudApi.ClientState.TerritoryType != 621)
         {
             return;
         }
+
+        var message = handleableChatMessage.Message;
 
         var reg = DiscardItemReg()
             .Match(message.ToString());

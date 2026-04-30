@@ -9,7 +9,7 @@ internal class SummonMinion : IModule
 {
     private readonly Configuration _configuration;
 
-    private readonly Dictionary<ushort, uint> _minionMap = new ()
+    private readonly Dictionary<uint, uint> _minionMap = new ()
     {
         { 1188, 180 },
         { 960, 423 },

@@ -29,7 +29,7 @@ internal interface ICounter
 
 internal partial class Counter : IUiModule, ICounter
 {
-    private readonly Dictionary<ushort, Dictionary<string, uint>> _trackerConditions = new ()
+    private readonly Dictionary<uint, Dictionary<string, uint>> _trackerConditions = new ()
     {
         { 1191, new () }, // 遗产之地
         { 1189, new () }, // 树海
@@ -44,7 +44,7 @@ internal partial class Counter : IUiModule, ICounter
         { 612, new () },  // 边区
         { 402, new () },  // 魔大陆
         { 400, new () },  // 翻云雾海
-        { 147, new () },  // 北萨
+        { 147, new () }   // 北萨
     };
 
     private readonly Configuration      _configuration;
@@ -164,7 +164,7 @@ internal partial class Counter : IUiModule, ICounter
 
     public void PostInit(ServiceProvider serviceProvider)
     {
-        _counterWindow = _windowSystem.Windows.FirstOrDefault(i => i.WindowName == CounterWindow.Name)
+        _counterWindow = _windowSystem.Windows.FirstOrDefault(i => i.WindowName == CounterWindow.Name) as Window
                          ?? throw new InvalidOperationException("Failed to get CounterWindow");
     }
 

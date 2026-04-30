@@ -65,7 +65,7 @@ internal partial class Counter
         Process(target, sourceTarget, territory);
     }
 
-    private void Process(IGameObject target, IGameObject source, ushort territory)
+    private void Process(IGameObject target, IGameObject source, uint territory)
     {
         var targetName = target.Name.TextValue.ToLower();
 

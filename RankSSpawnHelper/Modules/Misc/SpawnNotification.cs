@@ -23,21 +23,21 @@ internal class SpawnNotification : IUiModule
 
     private HuntMapWindow _huntMapWindow = null!;
 
-    private readonly HashSet<ushort> _shouldShowHuntMapTerritories;
+    private readonly HashSet<uint> _shouldShowHuntMapTerritories;
 
     private readonly string[] _spawnNotificationType = ["关闭", "只在可触发时", "一直"];
 
-    private readonly FrozenDictionary<ushort, uint> _mobIdMap;
-    private readonly FrozenDictionary<uint, ushort> _mobMapId;
+    private readonly FrozenDictionary<uint, uint> _mobIdMap;
+    private readonly FrozenDictionary<uint, uint> _mobMapId;
 
-    public SpawnNotification(Configuration                  configuration,
-                             IDataManager                   dataManager,
-                             TrackerApi                     trackerApi,
-                             ICommandHandler                commandHandler,
-                             WindowSystem                   windowSystem,
-                             FrozenDictionary<ushort, uint> modIdMap,
-                             FrozenDictionary<uint, ushort> mobMapId,
-                             HashSet<ushort>                shouldShowHuntMapSet)
+    public SpawnNotification(Configuration                configuration,
+                             IDataManager                 dataManager,
+                             TrackerApi                   trackerApi,
+                             ICommandHandler              commandHandler,
+                             WindowSystem                 windowSystem,
+                             FrozenDictionary<uint, uint> modIdMap,
+                             FrozenDictionary<uint, uint> mobMapId,
+                             HashSet<uint>                shouldShowHuntMapSet)
     {
         _configuration  = configuration;
         _dataManager    = dataManager;
@@ -309,7 +309,7 @@ internal class SpawnNotification : IUiModule
         await FetchHuntSpawnPoints(huntData, territory, (int) _dataManager.GetCurrentInstance());
     }
 
-    private async Task FetchHuntSpawnPoints(HuntData status, ushort territory, int instance)
+    private async Task FetchHuntSpawnPoints(HuntData status, uint territory, int instance)
     {
         var currentWorld = _dataManager.GetCurrentWorldId();
         var worldName    = _dataManager.GetWorldName(currentWorld);

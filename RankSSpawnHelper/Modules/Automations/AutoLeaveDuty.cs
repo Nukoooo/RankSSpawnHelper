@@ -22,7 +22,7 @@ internal class AutoLeaveDuty : IModule
         DalamudApi.ClientState.TerritoryChanged -= ClientStateOnTerritoryChanged;
     }
 
-    private void ClientStateOnTerritoryChanged(ushort obj)
+    private void ClientStateOnTerritoryChanged(uint obj)
     {
         if (!_configuration.AutoLeaveDuty)
         {
