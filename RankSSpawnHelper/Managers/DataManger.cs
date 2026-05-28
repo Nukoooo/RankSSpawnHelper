@@ -320,9 +320,36 @@ internal class DataManger : IDataManager, IModule
 
     private unsafe void SetupFont()
     {
-        const string fontName = "NotoSansCJKsc-Medium.otf";
+        var     uiResPath = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes");
+        string? fontPath  = null;
 
-        var fontPath = Path.Combine(DalamudApi.Interface.DalamudAssetDirectory.FullName, "UIRes", fontName);
+        if (Directory.Exists(uiResPath))
+        {
+            var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ".otf",
+                ".ttf",
+                ".ttc"
+            };
+
+            fontPath = Directory.EnumerateFiles(uiResPath)
+                                .FirstOrDefault(file =>
+                                {
+                                    var fileName = Path.GetFileName(file);
+                                    var ext      = Path.GetExtension(file);
+
+                                    return fileName.Contains("NotoSansCJK", StringComparison.OrdinalIgnoreCase)
+                                           && fileName.Contains("Medium", StringComparison.OrdinalIgnoreCase)
+                                           && allowedExtensions.Contains(ext);
+                                });
+        }
+
+        if (string.IsNullOrEmpty(fontPath))
+        {
+            DalamudApi.PluginLog.Error("未能在 UIRes 目录中找到包含 NotoSansCJK 和 Medium 的字体文件");
+
+            return;
+        }
 
         using (ImGuiHelpers.NewFontGlyphRangeBuilderPtrScoped(out var builder))
         {
@@ -337,7 +364,7 @@ internal class DataManger : IDataManager, IModule
                                                                               new ()
                                                                               {
                                                                                   SizePx      = 24,
-                                                                                  GlyphRanges = range,
+                                                                                  GlyphRanges = range
                                                                               })));
 
             NotoSan18
@@ -346,7 +373,7 @@ internal class DataManger : IDataManager, IModule
                                                                               new ()
                                                                               {
                                                                                   SizePx      = 18,
-                                                                                  GlyphRanges = range,
+                                                                                  GlyphRanges = range
                                                                               })));
         }
     }
